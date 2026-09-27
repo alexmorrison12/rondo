@@ -1,0 +1,85 @@
+---
+import { LANDING_PAGES } from '@/data/site';
+import { url } from '@/lib/url';
+import Logo from './Logo.astro';
+
+interface Props {
+  minimal?: boolean;
+}
+const { minimal = false } = Astro.props;
+const year = 2026;
+---
+
+<footer class="site-footer surface-night" data-header-theme="night">
+  <div class="wrap">
+    {
+      !minimal && (
+        <div class="site-footer__grid">
+          <div class="site-footer__news">
+            <h2>Field notes, once a month.</h2>
+            <p class="soft measure">
+              One email with a new loop, a behind-the-scenes photo and nothing else. Unsubscribe with one tap.
+            </p>
+            <form class="inline-form" data-newsletter style="margin-top: var(--s-5)">
+              <label class="visually-hidden" for="nl-email">Email address</label>
+              <input
+                class="input"
+                id="nl-email"
+                type="email"
+                name="email"
+                autocomplete="email"
+                placeholder="you@example.com"
+                required
+              />
+              <button class="btn btn--sun" type="submit">
+                Subscribe
+              </button>
+            </form>
+          </div>
+          <div>
+            <h3>Rondo</h3>
+            <ul role="list">
+              <li><a href={url('/instrument/')}>The instrument</a></li>
+              <li><a href={url('/play/')}>Play in browser</a></li>
+              <li><a href={url('/loops/')}>Loops</a></li>
+              <li><a href={url('/shop/')}>Shop</a></li>
+            </ul>
+          </div>
+          <div>
+            <h3>Company</h3>
+            <ul role="list">
+              <li><a href={url('/story/')}>Story</a></li>
+              <li><a href={url('/story/#promise')}>Ten-year promise</a></li>
+              <li><a href={url('/support/')}>Support</a></li>
+              <li><a href={url('/launch-plan/')}>Launch plan</a></li>
+            </ul>
+          </div>
+          <div>
+            <h3>Campaigns</h3>
+            <ul role="list">
+              {LANDING_PAGES.map((lp) => (
+                <li>
+                  <a href={url(lp.href)}>{lp.name}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )
+    }
+    <button class="footer-eclipse" type="button" data-eclipse aria-label="Rondo">
+      <Logo class="site-footer__word" eclipse title="Rondo" />
+    </button>
+    <div class="site-footer__base">
+      <p class="concept-note">
+        Rondo is a concept product and this site is a design prototype: no orders are taken and no payment details are
+        collected. People and quotes on this site are illustrative.
+      </p>
+      <p>
+        © {year} Rondo Instruments · <button class="footer-link" type="button" data-palette-open
+          >Press <kbd>⌘</kbd><kbd>K</kbd></button
+        >
+      </p>
+    </div>
+  </div>
+</footer>

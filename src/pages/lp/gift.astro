@@ -1,0 +1,1357 @@
+---
+/**
+ * Q4 gift campaign. Rondo ships in spring, so the gift today is a card carrying a loop the giver
+ * wrote; the instrument follows. Art direction: one evening, golden hour at the top of the page
+ * to night at the purchase end. Section skies are chained (each starts where the last ended).
+ */
+import Cta from '@/components/Cta.astro';
+import Icon from '@/components/Icon.astro';
+import Base from '@/layouts/Base.astro';
+import { ADDONS, COLORWAYS, DATES, PRODUCT, formatPrice } from '@/data/site';
+import { url } from '@/lib/url';
+
+const standard = COLORWAYS.filter((c) => !c.foundersOnly);
+const cutoff = new Date(DATES.giftCutoff);
+const cutoffDay = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', timeZone: 'UTC' }).format(cutoff);
+const cutoffIso = DATES.giftCutoff.slice(0, 10);
+const ship = PRODUCT.shipWindow;
+const shipTitle = ship.charAt(0).toUpperCase() + ship.slice(1);
+const allExtras = ADDONS.reduce((n, a) => n + a.price, 0);
+
+const cloud = (n: number) => `url(${url(`/textures/cloud-${n}.webp`)})`;
+
+const questions = [
+  {
+    id: 'who',
+    q: 'Who is it for?',
+    options: [
+      { v: 'partner', label: 'My partner' },
+      { v: 'parent', label: 'A parent' },
+      { v: 'musician', label: 'A friend who makes music' },
+      { v: 'kid', label: 'A curious kid, eight or older' },
+      { v: 'me', label: 'Me. It’s fine.' },
+    ],
+  },
+  {
+    id: 'vibe',
+    q: 'What’s their vibe?',
+    options: [
+      { v: 'sunny', label: 'Sunny. Plans the picnic.', swatch: 'var(--finish-noon)' },
+      { v: 'warm', label: 'Warm. First on the dance floor.', swatch: 'var(--finish-ember)' },
+      { v: 'quiet', label: 'Quiet. Likes things plain and good.', swatch: 'var(--finish-moon)' },
+    ],
+  },
+  {
+    id: 'depth',
+    q: 'Keep it simple, or go all in?',
+    options: [
+      { v: 'simple', label: 'Keep it simple', meta: formatPrice(PRODUCT.price) },
+      { v: 'extra', label: 'A little something extra', meta: 'plus one accessory' },
+      { v: 'all', label: 'Go all in', meta: `up to ${formatPrice(allExtras)} more` },
+    ],
+  },
+];
+
+const moments = ['Sunday pancakes', 'The long drive north', 'Dancing in the kitchen', 'First snow together'];
+---
+
+<Base
+  title="Give someone a song"
+  description={`Rondo ships in ${ship}, so give them a song today: write a loop, send it as a card by email or in print, and the instrument that plays it follows.`}
+  og="gift"
+  surface="sky"
+  headerTheme="day"
+  bodyClass="page-gift"
+  themeColor="oklch(0.68 0.08 262)"
+  minimal
+>
+  <!-- Golden hour: the offer ─────────────────────────────── -->
+  <section class="g-hero" aria-labelledby="gift-title" data-header-theme="day">
+    <div class="g-clouds" aria-hidden="true">
+      <i class="g-cloud" style={`--img:${cloud(1)};--x:-9%;--y:11%;--w:30rem;--d:140s`}></i>
+      <i class="g-cloud" style={`--img:${cloud(4)};--x:58%;--y:9%;--w:28rem;--d:170s;--o:.7`}></i>
+      <i class="g-cloud g-cloud--low" style={`--img:${cloud(5)};--x:24%;--y:83%;--w:30rem;--d:120s;--o:.75`}></i>
+    </div>
+
+    <div class="wrap g-hero__inner">
+      <div class="g-hero__copy">
+        <h1 id="gift-title" class="g-hero__title">
+          <span>Give</span>
+          <span>someone</span>
+          <span>a song.</span>
+        </h1>
+        <p class="lead g-hero__lead">
+          Write them a loop and give it as a card today. The Rondo that plays it arrives in {ship}.
+        </p>
+        <div class="g-hero__actions">
+          <Cta size="lg" showPrice />
+          <a class="btn btn--ghost btn--lg" href="#compose"><Icon name="wand" /> Write them a loop</a>
+        </div>
+        <ul class="trust g-hero__trust" role="list">
+          <li>Gift card by email or printed</li>
+          <li>They choose the finish</li>
+          <li>{PRODUCT.trialNights}-night trial starts when it arrives</li>
+        </ul>
+      </div>
+
+      <div class="g-stage">
+        <canvas class="g-stage__face" data-hero-face aria-hidden="true"></canvas>
+        <button class="sun-btn" type="button" data-hero-play aria-pressed="false" aria-label="Play the loop on the card">
+          <span class="sun-btn__icon" data-hero-play-icon><Icon name="play" /></span>
+        </button>
+        <canvas class="g-stage__card" data-hero-card width="300" height="420" aria-hidden="true"></canvas>
+        <i
+          class="g-cloud g-cloud--front"
+          aria-hidden="true"
+          style={`--img:${cloud(2)};--x:48%;--y:74%;--w:clamp(12rem,24vw,22rem);--d:110s;--o:.9`}></i>
+      </div>
+    </div>
+  </section>
+
+  <!-- Golden hour, lower: the gift finder ───────────────── -->
+  <section class="finder" id="finder" aria-labelledby="finder-title" data-header-theme="day">
+    <div class="wrap finder__grid" data-finder data-state="quiz">
+      <div class="finder__aside">
+        <h2 id="finder-title" class="display-l">Not sure which one?</h2>
+        <p class="lead finder__lead">
+          Three questions, ten seconds. We’ll suggest a finish and the extras worth adding, and you can change any of it.
+        </p>
+        <figure class="finder__stage" data-finder-stage>
+          <canvas class="finder__face" data-finder-face aria-hidden="true"></canvas>
+          <figcaption class="engrave finder__caption" data-finder-caption>{standard[0]!.name} · {standard[0]!.note}</figcaption>
+        </figure>
+      </div>
+
+      <div class="finder__main">
+        <div class="quiz" data-quiz>
+          <div class="quiz__status">
+            <ol class="quiz__dots" role="list" aria-hidden="true">
+              <li data-dot="0" data-state="current"></li>
+              <li data-dot="1"></li>
+              <li data-dot="2"></li>
+            </ol>
+            <p class="engrave quiz__count" data-quiz-count>Question 1 of 3</p>
+          </div>
+
+          {
+            questions.map((item, i) => (
+              <div class="quiz__step" data-step={i} role="group" aria-labelledby={`q-${item.id}`} hidden={i !== 0}>
+                <h3 class="quiz__q" id={`q-${item.id}`} tabindex="-1">
+                  {item.q}
+                </h3>
+                <ul class="quiz__options" role="list">
+                  {item.options.map((o) => (
+                    <li>
+                      <button class="opt" type="button" data-q={item.id} data-a={o.v} aria-pressed="false">
+                        {'swatch' in o && <span class="opt__swatch" style={`--sw:${o.swatch}`} aria-hidden="true" />}
+                        <span class="opt__label">{o.label}</span>
+                        {'meta' in o && <span class="opt__meta">{o.meta}</span>}
+                        <span class="opt__arrow" aria-hidden="true">
+                          <Icon name="arrowRight" />
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))
+          }
+
+          <button class="btn btn--quiet quiz__back" type="button" data-quiz-back hidden>
+            <Icon name="undo" /> Back
+          </button>
+        </div>
+
+        <article class="rec" data-rec hidden aria-labelledby="rec-title">
+          <p class="rec__for" data-rec-for>Our pick for them</p>
+          <h3 class="display-m rec__title" id="rec-title" tabindex="-1" data-rec-title>Rondo in Ember.</h3>
+          <p class="rec__why" data-rec-why>Sunset coral. Warm, a little bold, and impossible to lose in a bag.</p>
+
+          <fieldset class="rec__group">
+            <legend class="field__label">Finish</legend>
+            <div class="swatches" role="radiogroup" aria-label="Finish">
+              {
+                standard.map((c) => (
+                  <button
+                    class="swatch"
+                    type="button"
+                    role="radio"
+                    aria-checked={c.id === 'ember' ? 'true' : 'false'}
+                    aria-label={`${c.name}: ${c.note}`}
+                    data-finish={c.id}
+                    style={`--sw: ${c.swatch}`}
+                  />
+                ))
+              }
+            </div>
+          </fieldset>
+
+          <fieldset class="rec__group">
+            <legend class="field__label">Extras</legend>
+            <ul class="extras" role="list">
+              {
+                ADDONS.map((a) => (
+                  <li>
+                    <label class="extra">
+                      <input type="checkbox" data-addon={a.id} />
+                      <span class="extra__text">
+                        <span class="extra__name">{a.name}</span>
+                        <span class="extra__note">{a.note}</span>
+                      </span>
+                      <span class="extra__price num">+{formatPrice(a.price)}</span>
+                    </label>
+                  </li>
+                ))
+              }
+            </ul>
+          </fieldset>
+
+          <label class="field rec__engrave">
+            <span class="field__label">Engrave the base <span class="rec__free">free, up to 24 characters</span></span>
+            <input class="input" type="text" maxlength="24" autocomplete="off" data-engrave placeholder="For Sam, from A." />
+          </label>
+
+          <p class="rec__tip" data-rec-tip></p>
+
+          <div class="rec__actions">
+            <button class="btn btn--ink btn--lg" type="button" data-rec-add>
+              <Icon name="bag" />
+              <span data-rec-add-label>Add to bag · {formatPrice(PRODUCT.price)}</span>
+            </button>
+            <button class="btn btn--quiet" type="button" data-quiz-restart><Icon name="redo" /> Start again</button>
+          </div>
+          <p class="rec__note">Whatever you pick, they can switch finish any time before it ships.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dusk: write them a loop ─────────────────────────────── -->
+  <section class="compose surface-night is-dark" id="compose" aria-labelledby="compose-title" data-header-theme="night">
+    <div class="wrap">
+      <header class="compose__head">
+        <h2 id="compose-title" class="display-l">Write them a loop.</h2>
+        <p class="lead soft">
+          Tap the rings to place notes, turn them to shift the groove, or start from a moment you share. Whatever you make
+          becomes their card, with a code that plays it.
+        </p>
+      </header>
+
+      <div class="compose__grid">
+        <div class="compose__make">
+          <div class="step">
+            <span class="step__n num" aria-hidden="true">1</span>
+            <h3 class="step__title">Make the loop</h3>
+          </div>
+
+          <label class="loop-name">
+            <span class="visually-hidden">Loop name</span>
+            <input data-loop-name type="text" maxlength="40" value="Morning Orbit" spellcheck="false" autocomplete="off" />
+          </label>
+
+          <div class="face-wrap">
+            <canvas
+              class="face"
+              data-face
+              tabindex="0"
+              role="application"
+              aria-roledescription="instrument"
+              aria-label="Rondo instrument. Tap a ring to place a note, drag outward to raise it, drag around to turn the ring, tap the centre to play. Keyboard: arrows move, Enter toggles a note, plus and minus change pitch, brackets turn the ring, space plays."
+            ></canvas>
+          </div>
+          <p class="face-hint">Tap a ring to add a note · drag around to turn it · tap the sun to play</p>
+
+          <div class="transport" role="group" aria-label="Loop controls">
+            <button class="btn btn--sun btn--sm" type="button" data-play aria-pressed="false">
+              <span class="transport__icon" data-play-icon><Icon name="play" /></span>
+              <span data-play-label>Play</span>
+            </button>
+            <button class="btn btn--ghost btn--sm" type="button" data-dice><Icon name="dices" /> New loop</button>
+            <button class="btn btn--quiet btn--sm" type="button" data-clear><Icon name="x" /> Clear</button>
+          </div>
+
+          <form class="moment" data-moment>
+            <label class="field__label" for="moment-text">Or start from a moment you share</label>
+            <div class="inline-form">
+              <input
+                class="input"
+                id="moment-text"
+                type="text"
+                maxlength="60"
+                placeholder="the café where we met"
+                autocomplete="off"
+                data-moment-text
+              />
+              <button class="btn btn--ghost" type="submit"><Icon name="wand" /> Compose</button>
+            </div>
+            <div class="chip-row moment__chips">
+              {moments.map((m) => <button class="chip" type="button" data-moment-chip>{m}</button>)}
+            </div>
+          </form>
+
+          <div class="step step--later">
+            <span class="step__n num" aria-hidden="true">2</span>
+            <h3 class="step__title">Write the card</h3>
+          </div>
+
+          <div class="card-fields">
+            <label class="field">
+              <span class="field__label">To</span>
+              <input class="input" type="text" maxlength="24" autocomplete="off" placeholder="Their name" data-to />
+            </label>
+            <label class="field">
+              <span class="field__label">From</span>
+              <input class="input" type="text" maxlength="24" autocomplete="given-name" placeholder="Your name" data-from />
+            </label>
+            <div class="field card-fields__wide">
+              <label class="field__label" for="card-message">Message</label>
+              <textarea
+                class="textarea"
+                id="card-message"
+                rows="3"
+                maxlength="180"
+                placeholder="Something only they would understand."
+                aria-describedby="card-count"
+                data-message></textarea>
+              <p class="field__hint card-fields__count" id="card-count"><span class="num" data-count>0</span> of 180 characters</p>
+            </div>
+            <label class="check card-fields__wide">
+              <input type="checkbox" data-mention checked />
+              <span>Tell them a Rondo is on its way ({ship})</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="compose__send">
+          <figure class="card-preview">
+            <canvas class="card-preview__canvas" data-card width="600" height="840" role="img" aria-label="Your gift card"></canvas>
+            <figcaption class="card-preview__caption">Their card, as it will print</figcaption>
+          </figure>
+          <div class="step step--send">
+            <span class="step__n num" aria-hidden="true">3</span>
+            <h3 class="step__title">Send it</h3>
+          </div>
+          <div class="send">
+            <button class="btn btn--sun" type="button" data-download><Icon name="download" /> Download card (PNG)</button>
+            <button class="btn btn--ghost" type="button" data-copy><Icon name="link" /> Copy loop link</button>
+          </div>
+          <p class="send__note">5 × 7 inches at 300 dpi, ready for a home printer. The code plays the loop in any browser.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Evening: what arrives when ──────────────────────────── -->
+  <section class="deliver surface-night is-dark" aria-labelledby="deliver-title" data-header-theme="night">
+    <div class="wrap">
+      <h2 id="deliver-title" class="display-l deliver__title">What arrives, and when.</h2>
+      <ol class="timeline" role="list">
+        <li class="timeline__item" data-state="now">
+          <span class="timeline__mark" aria-hidden="true"></span>
+          <h3 class="timeline__head">
+            <span class="timeline__when">Now.</span>
+            <span class="timeline__what">The card, by email</span>
+          </h3>
+          <p>It goes out the moment you order, to you or straight to them, with the loop you wrote inside.</p>
+        </li>
+        <li class="timeline__item" data-cutoff>
+          <span class="timeline__mark" aria-hidden="true"></span>
+          <h3 class="timeline__head">
+            <span class="timeline__when"><time datetime={cutoffIso}>{cutoffDay}.</time></span>
+            <span class="timeline__what">The printed card</span>
+          </h3>
+          <p data-cutoff-copy>
+            Order by {cutoffDay} and we post it, in a proper envelope, in time for the holidays.
+          </p>
+        </li>
+        <li class="timeline__item">
+          <span class="timeline__mark" aria-hidden="true"></span>
+          <h3 class="timeline__head">
+            <span class="timeline__when">{shipTitle}.</span>
+            <span class="timeline__what">Their Rondo</span>
+          </h3>
+          <p>
+            Pre-orders ship in the order they were placed. The {PRODUCT.trialNights}-night trial starts the day it arrives,
+            not the day you paid.
+          </p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- Night: questions and the last word ──────────────────── -->
+  <section class="g-faq surface-night is-dark" aria-labelledby="gfaq-title" data-header-theme="night">
+    <div class="wrap g-faq__inner">
+      <h2 id="gfaq-title" class="display-m">Gift questions, answered straight.</h2>
+      <div class="faq">
+        <details>
+          <summary>What if they would rather return it?</summary>
+          <div>
+            <p>
+              They get the full {PRODUCT.trialNights}-night trial, counted from the day it arrives rather than the day you
+              ordered. Returns are free, the refund goes back to you, and we never mention the price to them.
+            </p>
+          </div>
+        </details>
+        <details>
+          <summary>Can they change the finish later?</summary>
+          <div>
+            <p>
+              Yes, any time before it ships. Reply to the gift email (or ask them to) and we’ll swap between Noon, Ember
+              and Moon for free. After it arrives, the trial covers an exchange too.
+            </p>
+          </div>
+        </details>
+        <details>
+          <summary>What if they already have one?</summary>
+          <div>
+            <p>
+              Then they have someone to play with: two Rondos lock to the same tempo over Bluetooth MIDI. If they’d still
+              rather not, they can return it within the trial for a full refund to you.
+            </p>
+          </div>
+        </details>
+        <details>
+          <summary>Will they see what I paid?</summary>
+          <div>
+            <p>No. Neither card shows a price, and the receipt comes to you.</p>
+          </div>
+        </details>
+        <details>
+          <summary>Can I send the loop without buying anything?</summary>
+          <div>
+            <p>
+              Of course. Download the card or copy the link above. The loop plays in any browser, with no account and
+              nothing to install.
+            </p>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <div class="wrap g-close">
+      <p class="g-close__line"><span>Give someone</span> <span>a song.</span></p>
+      <div class="g-close__actions">
+        <Cta size="lg" showPrice />
+        <a class="btn btn--ghost btn--lg" href="#compose"><Icon name="wand" /> Write the card first</a>
+      </div>
+      <p class="g-close__meta">
+        {formatPrice(PRODUCT.price)} · free shipping · {PRODUCT.warrantyYears}-year warranty · ships {ship}
+      </p>
+    </div>
+  </section>
+
+  <p class="visually-hidden" aria-live="polite" data-announce></p>
+</Base>
+
+<style>
+  @layer page {
+    :global(body.page-gift) {
+      /* One evening, top to bottom. Hues follow the golden → dusk → night skies (src/scripts/lib/skies.ts),
+         lifted where text sits so ink and starlight both clear 4.5:1. */
+      --g-zenith: oklch(0.68 0.08 262);
+      --g-haze: oklch(0.8 0.065 305);
+      --g-peach: oklch(0.87 0.085 52);
+      --g-gold: oklch(0.9 0.1 78);
+      --g-apricot: oklch(0.86 0.1 62);
+      --g-coral-lite: oklch(0.8 0.115 46);
+      --g-coral: oklch(0.68 0.15 34);
+      --g-rose: oklch(0.47 0.12 352);
+      --g-dusk: oklch(0.31 0.07 272);
+      --g-dusk-2: oklch(0.25 0.055 268);
+      --g-evening: oklch(0.2 0.045 265);
+      background: var(--night-900);
+    }
+    .is-dark {
+      color: var(--fg);
+    }
+
+    /* ── Hero ─────────────────────────────────────────────── */
+    .g-hero {
+      position: relative;
+      isolation: isolate;
+      overflow: clip;
+      min-height: 100svh;
+      display: grid;
+      align-items: center;
+      padding-block: calc(var(--header-h) + var(--s-6)) var(--s-8);
+      background: linear-gradient(to bottom, var(--g-zenith), var(--g-haze) 40%, var(--g-peach) 76%, var(--g-gold));
+      background: linear-gradient(to bottom in oklch, var(--g-zenith), var(--g-haze) 40%, var(--g-peach) 76%, var(--g-gold));
+    }
+    .g-hero__inner {
+      display: grid;
+      grid-template-columns: minmax(0, 0.92fr) minmax(0, 1fr);
+      align-items: center;
+      gap: var(--s-6);
+    }
+    .g-hero__copy {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      gap: var(--s-5);
+      justify-items: start;
+    }
+    .g-hero__title {
+      font-size: var(--text-display-xl);
+      font-weight: 800;
+      font-stretch: 125%;
+      letter-spacing: -0.025em;
+      line-height: 0.9;
+      animation: inhale 1100ms var(--ease-out) both;
+    }
+    .g-hero__title span {
+      display: block;
+      white-space: nowrap;
+    }
+    @keyframes inhale {
+      from {
+        font-stretch: 62%;
+        font-weight: 300;
+      }
+    }
+    .g-hero__lead {
+      max-width: 30rem;
+      color: var(--ink-sky-soft);
+    }
+    .g-hero__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s-3);
+    }
+    /* The shared trust row, with ring markers rather than separators, so a wrapped line never starts with a dot. */
+    .g-hero__trust {
+      color: var(--ink-sky-soft);
+      max-width: 36rem;
+    }
+    .g-hero__trust li::before {
+      content: '';
+      flex: none;
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 50%;
+      box-shadow: inset 0 0 0 1.5px currentColor;
+    }
+
+    /* Clouds: the site's cloud sprites, lit from below by a low sun. */
+    .g-clouds {
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+    }
+    .g-cloud {
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      width: min(var(--w), 78vw);
+      aspect-ratio: 2;
+      /* Screen keeps the sprite's own shading but lets the low sun warm its underside. */
+      background:
+        var(--img) center / contain no-repeat,
+        linear-gradient(to bottom, oklch(0.74 0.06 318), oklch(0.9 0.09 70) 80%);
+      background-blend-mode: screen;
+      -webkit-mask: var(--img) center / contain no-repeat;
+      mask: var(--img) center / contain no-repeat;
+      opacity: var(--o, 0.85);
+      animation: drift var(--d, 120s) linear infinite alternate;
+      pointer-events: none;
+    }
+    @keyframes drift {
+      to {
+        translate: 5vw 0;
+      }
+    }
+
+    /* The object: an Ember Rondo, low in the sky like the sun it is named after. */
+    .g-stage {
+      position: relative;
+      justify-self: end;
+      width: min(100%, 37rem, 70svh);
+      aspect-ratio: 1;
+      margin-top: var(--s-8);
+    }
+    /* The low sun's glow, behind the disc. */
+    .g-stage::before {
+      content: '';
+      position: absolute;
+      inset: -38%;
+      z-index: -1;
+      border-radius: 50%;
+      background: radial-gradient(
+        closest-side,
+        oklch(0.98 0.07 92) 30%,
+        oklch(0.95 0.1 82 / 0.62) 52%,
+        oklch(0.9 0.1 70 / 0) 100%
+      );
+    }
+    .g-stage__face {
+      width: 100%;
+      height: 100%;
+    }
+    .g-stage__card {
+      position: absolute;
+      left: -10%;
+      bottom: -3%;
+      width: 33%;
+      height: auto;
+      aspect-ratio: 5 / 7;
+      border-radius: 5px;
+      background: var(--white);
+      rotate: -8deg;
+      box-shadow:
+        0 22px 40px -18px oklch(0.3 0.08 30 / 0.55),
+        0 2px 5px oklch(0.3 0.08 30 / 0.18);
+      animation: card-float 7s var(--ease-io) infinite alternate;
+    }
+    @keyframes card-float {
+      to {
+        translate: 0 -10px;
+        rotate: -6.5deg;
+      }
+    }
+    .g-cloud--front {
+      z-index: 2;
+    }
+
+    .sun-btn {
+      position: absolute;
+      left: 36.25%;
+      top: 36.25%;
+      width: 27.5%;
+      height: 27.5%;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: var(--starlight);
+      transition: transform var(--t-press) var(--ease-out);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .sun-btn::after {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      box-shadow: 0 0 0 2px oklch(0.93 0.025 250 / 0);
+      transition: box-shadow var(--t-state) var(--ease-out);
+    }
+    .sun-btn:hover::after {
+      box-shadow: 0 0 0 2px oklch(0.93 0.025 250 / 0.7);
+    }
+    .sun-btn:active {
+      transform: scale(0.97);
+    }
+    .sun-btn:focus-visible {
+      outline: 3px solid var(--sun);
+      outline-offset: 6px;
+    }
+    .sun-btn__icon {
+      display: grid;
+      width: 30%;
+      aspect-ratio: 1;
+    }
+    .sun-btn__icon :global(svg) {
+      width: 100%;
+      height: 100%;
+      fill: currentColor;
+    }
+    .sun-btn[aria-pressed='false'] .sun-btn__icon {
+      translate: 6% 0;
+    }
+
+    @media (max-width: 900px) {
+      .g-hero {
+        min-height: auto;
+        padding-block: calc(var(--header-h) + var(--s-6)) var(--s-7);
+      }
+      .g-hero__inner {
+        grid-template-columns: 1fr;
+        gap: var(--s-6);
+      }
+      .g-stage {
+        justify-self: center;
+        width: min(84vw, 26rem);
+        margin-top: var(--s-4);
+      }
+      .g-stage__card {
+        left: -6%;
+        width: 34%;
+      }
+    }
+
+    /* ── Gift finder ──────────────────────────────────────── */
+    .finder {
+      position: relative;
+      padding-block: var(--section-tight);
+      background: linear-gradient(to bottom, var(--g-gold), var(--g-apricot) 55%, var(--g-coral-lite));
+      background: linear-gradient(to bottom in oklch, var(--g-gold), var(--g-apricot) 55%, var(--g-coral-lite));
+    }
+    .finder__grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+      gap: var(--s-7) clamp(2rem, 0.5rem + 5.5vw, 7rem);
+      align-items: start;
+    }
+    .finder__aside {
+      position: sticky;
+      top: calc(var(--header-h) + var(--s-5));
+      display: grid;
+      gap: var(--s-4);
+      justify-items: start;
+    }
+    .finder__lead {
+      color: var(--ink-sky-soft);
+      max-width: 30rem;
+    }
+    /* The Rondo being chosen: previews each finish as you consider it. */
+    .finder__stage {
+      margin: var(--s-4) 0 0;
+      justify-self: center;
+      width: min(100%, 25rem);
+      display: grid;
+      justify-items: center;
+      gap: var(--s-3);
+    }
+    .finder__face {
+      width: 100%;
+      aspect-ratio: 1;
+    }
+    .finder__caption {
+      color: var(--ink-sky-soft);
+    }
+
+    .quiz {
+      display: grid;
+      gap: var(--s-5);
+    }
+    .quiz__status {
+      display: flex;
+      align-items: center;
+      gap: var(--s-4);
+    }
+    .quiz__dots {
+      display: flex;
+      gap: var(--s-2);
+      padding: 0;
+      list-style: none;
+    }
+    .quiz__dots li {
+      width: 0.85rem;
+      height: 0.85rem;
+      border-radius: 50%;
+      box-shadow: inset 0 0 0 1.5px var(--ink);
+      transition:
+        background-color var(--t-state) var(--ease-out),
+        box-shadow var(--t-state) var(--ease-out);
+    }
+    .quiz__dots li[data-state='current'] {
+      background: radial-gradient(circle, var(--ink) 0 30%, transparent 32%);
+    }
+    .quiz__dots li[data-state='done'] {
+      background: var(--ink);
+    }
+    .quiz__count {
+      color: var(--ink-sky-soft);
+    }
+    .quiz__step {
+      display: grid;
+      gap: var(--s-5);
+    }
+    .quiz__step[data-enter] {
+      animation: step-in var(--t-panel) var(--ease-out) both;
+    }
+    @keyframes step-in {
+      from {
+        opacity: 0;
+        translate: 0 12px;
+      }
+    }
+    .quiz__q {
+      font-size: var(--text-display-m);
+      font-stretch: 116%;
+      font-weight: 760;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    .quiz__q:focus-visible {
+      outline-offset: 8px;
+    }
+    .quiz__options {
+      display: grid;
+      padding: 0;
+      list-style: none;
+      border-top: 1px solid oklch(0.2 0.03 258 / 0.22);
+    }
+    .quiz__options li {
+      border-bottom: 1px solid oklch(0.2 0.03 258 / 0.22);
+    }
+    .opt {
+      width: 100%;
+      min-height: 4.25rem;
+      display: flex;
+      align-items: center;
+      gap: var(--s-4);
+      padding: var(--s-3) var(--s-4);
+      border-radius: var(--r-panel);
+      text-align: left;
+      font-size: clamp(1.125rem, 1.02rem + 0.45vw, 1.375rem);
+      font-weight: 620;
+      font-stretch: 106%;
+      line-height: 1.2;
+      transition:
+        background-color var(--t-state) var(--ease-out),
+        color var(--t-state) var(--ease-out);
+    }
+    .opt:hover {
+      background: oklch(0.2 0.03 258 / 0.07);
+    }
+    .opt[aria-pressed='true'] {
+      background: var(--ink);
+      color: var(--starlight);
+    }
+    .opt__label {
+      flex: 1;
+    }
+    .opt__meta {
+      font-size: var(--text-small);
+      font-weight: 500;
+      font-stretch: 100%;
+      color: var(--ink-sky-soft);
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+    .opt[aria-pressed='true'] .opt__meta {
+      color: var(--star-soft);
+    }
+    .opt__swatch {
+      flex: none;
+      width: 1.6rem;
+      height: 1.6rem;
+      border-radius: 50%;
+      background: var(--sw);
+      box-shadow:
+        inset 0 1px 1px oklch(1 0 0 / 0.5),
+        inset 0 -2px 4px oklch(0 0 0 / 0.2);
+    }
+    .opt__arrow {
+      display: grid;
+      width: 1.25rem;
+      opacity: 0;
+      translate: -6px 0;
+      transition:
+        opacity var(--t-state) var(--ease-out),
+        translate var(--t-state) var(--ease-out);
+    }
+    .opt__arrow :global(svg) {
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+    .opt:hover .opt__arrow,
+    .opt:focus-visible .opt__arrow {
+      opacity: 1;
+      translate: 0 0;
+    }
+    .quiz__back {
+      justify-self: start;
+      margin-left: calc(var(--s-2) * -1);
+    }
+
+    /* Recommendation: same sky, same object, now with a name. */
+    .rec {
+      display: grid;
+      gap: var(--s-4);
+      justify-items: start;
+      animation: step-in var(--t-panel) var(--ease-out) both;
+    }
+    .rec__for {
+      font-weight: 600;
+      color: var(--ink-sky-soft);
+    }
+    .rec__title {
+      margin-top: calc(var(--s-3) * -1);
+    }
+    .rec__title:focus-visible {
+      outline-offset: 6px;
+    }
+    .rec__why {
+      color: var(--ink-sky-soft);
+      max-width: 34rem;
+      font-size: var(--text-lead);
+      line-height: 1.45;
+    }
+    .rec__group {
+      border: 0;
+      padding: 0;
+      margin: var(--s-2) 0 0;
+      display: grid;
+      gap: var(--s-3);
+      width: 100%;
+    }
+    .extras {
+      display: grid;
+      padding: 0;
+      list-style: none;
+      border-top: 1px solid oklch(0.2 0.03 258 / 0.22);
+    }
+    .extras li {
+      border-bottom: 1px solid oklch(0.2 0.03 258 / 0.22);
+    }
+    .extra {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: var(--s-3);
+      padding: var(--s-3) 0;
+      cursor: pointer;
+    }
+    .extra input {
+      width: 1.25rem;
+      height: 1.25rem;
+      accent-color: var(--ink);
+    }
+    .extra__text {
+      display: grid;
+    }
+    .extra__name {
+      font-weight: 640;
+    }
+    .extra__note {
+      font-size: var(--text-small);
+      color: var(--ink-sky-soft);
+    }
+    .extra__price {
+      font-weight: 640;
+    }
+    .rec__engrave {
+      width: 100%;
+    }
+    .rec__engrave .input {
+      background: oklch(0.99 0.012 80 / 0.72);
+      border-color: oklch(0.2 0.03 258 / 0.24);
+    }
+    .rec__free {
+      font-weight: 450;
+      color: var(--ink-sky-soft);
+    }
+    .rec__tip {
+      font-size: var(--text-small);
+      color: var(--ink-sky-soft);
+      max-width: 34rem;
+    }
+    .rec__tip:empty {
+      display: none;
+    }
+    .rec__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s-3);
+      align-items: center;
+      margin-top: var(--s-2);
+    }
+    .rec__note {
+      font-size: var(--text-small);
+      color: var(--ink-sky-soft);
+    }
+    @media (max-width: 860px) {
+      .finder__grid {
+        grid-template-columns: 1fr;
+        gap: var(--s-6);
+      }
+      .finder__aside {
+        position: static;
+      }
+      .finder__stage {
+        width: min(64vw, 16rem);
+        margin-top: 0;
+      }
+      .finder__grid[data-state='quiz'] .finder__stage {
+        display: none;
+      }
+      .opt {
+        min-height: 3.75rem;
+        padding-inline: var(--s-3);
+      }
+    }
+
+    /* ── Compose (dusk) ───────────────────────────────────── */
+    .compose {
+      --band: clamp(8rem, 5.5rem + 5vw, 12rem);
+      position: relative;
+      padding-block: calc(var(--band) + var(--s-5)) var(--section-tight);
+      background: linear-gradient(
+        to bottom,
+        var(--g-coral-lite) 0,
+        var(--g-coral) calc(var(--band) * 0.32),
+        var(--g-rose) calc(var(--band) * 0.68),
+        var(--g-dusk) var(--band),
+        var(--g-dusk-2) 100%
+      );
+      background: linear-gradient(
+        to bottom in oklch,
+        var(--g-coral-lite) 0,
+        var(--g-coral) calc(var(--band) * 0.32),
+        var(--g-rose) calc(var(--band) * 0.68),
+        var(--g-dusk) var(--band),
+        var(--g-dusk-2) 100%
+      );
+    }
+    .compose__head {
+      display: grid;
+      gap: var(--s-4);
+      max-width: 46rem;
+      margin-bottom: var(--s-7);
+    }
+    .compose__grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+      gap: var(--s-7) clamp(2rem, 1rem + 4vw, 6rem);
+      align-items: start;
+    }
+    .compose__make {
+      display: grid;
+      gap: var(--s-5);
+    }
+    .compose__send {
+      position: sticky;
+      top: calc(var(--header-h) + var(--s-5));
+      display: grid;
+      gap: var(--s-5);
+    }
+    .step {
+      display: flex;
+      align-items: center;
+      gap: var(--s-3);
+    }
+    .step--later {
+      margin-top: var(--s-6);
+    }
+    .step__n {
+      display: grid;
+      place-items: center;
+      flex: none;
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 50%;
+      box-shadow: inset 0 0 0 1.5px var(--sun);
+      color: var(--sun);
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+    .step__title {
+      font-size: var(--text-title);
+      font-stretch: 108%;
+      font-weight: 680;
+      letter-spacing: -0.01em;
+      line-height: 1.1;
+    }
+    .loop-name input {
+      width: 100%;
+      padding: 0.1em 0;
+      border: 0;
+      border-bottom: 1px dashed transparent;
+      background: transparent;
+      color: var(--fg);
+      font-size: clamp(1.5rem, 1.2rem + 1.2vw, 2.25rem);
+      font-weight: 740;
+      font-stretch: 116%;
+      letter-spacing: -0.015em;
+      transition: border-color var(--t-state) var(--ease-out);
+    }
+    .loop-name input:hover,
+    .loop-name input:focus-visible {
+      outline: none;
+      border-bottom-color: var(--star-soft);
+    }
+    .face-wrap {
+      width: min(100%, 36rem);
+      aspect-ratio: 1;
+      justify-self: center;
+    }
+    .face {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      outline-offset: 8px;
+    }
+    .face-hint {
+      justify-self: center;
+      text-align: center;
+      font-size: var(--text-small);
+      color: var(--star-soft);
+      margin-top: calc(var(--s-3) * -1);
+    }
+    .transport {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: var(--s-2);
+    }
+    .transport__icon {
+      display: grid;
+    }
+    .transport__icon :global(svg) {
+      width: 1.05em;
+      height: 1.05em;
+    }
+    .moment {
+      display: grid;
+      gap: var(--s-3);
+      margin-top: var(--s-3);
+    }
+    .moment .inline-form .input {
+      border-radius: var(--r-pill);
+    }
+    .moment__chips {
+      margin-top: var(--s-1);
+    }
+    .card-fields {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: var(--s-4);
+    }
+    .card-fields__wide {
+      grid-column: 1 / -1;
+    }
+    .card-fields .textarea {
+      resize: vertical;
+      min-height: 6.5rem;
+      line-height: 1.45;
+    }
+    .card-fields__count {
+      justify-self: end;
+      font-size: var(--text-label);
+    }
+    .check {
+      display: flex;
+      gap: var(--s-3);
+      align-items: center;
+      font-size: var(--text-small);
+      cursor: pointer;
+    }
+    .check input {
+      width: 1.2rem;
+      height: 1.2rem;
+      flex: none;
+      accent-color: var(--sun);
+    }
+    .card-preview {
+      margin: 0;
+      justify-self: center;
+      /* Shrinks on short screens so the sticky column (card, step, buttons) always fits. */
+      width: min(100%, 25rem, calc((100svh - 23rem) * 5 / 7));
+      min-width: min(100%, 15rem);
+    }
+    .card-preview__canvas {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 5 / 7;
+      border-radius: 6px;
+      background: var(--night-800);
+      box-shadow: 0 30px 60px -28px oklch(0.08 0.03 280 / 0.9);
+    }
+    .card-preview__caption {
+      margin-top: var(--s-3);
+      text-align: center;
+      font-size: var(--text-small);
+      color: var(--star-soft);
+    }
+    .step--send {
+      justify-self: center;
+      margin-top: var(--s-2);
+    }
+    .send {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: var(--s-2);
+    }
+    .send__note {
+      text-align: center;
+      font-size: var(--text-small);
+      color: var(--star-soft);
+      max-width: 26rem;
+      justify-self: center;
+    }
+    @media (max-width: 1024px) {
+      .compose__grid {
+        grid-template-columns: 1fr;
+      }
+      .compose__send {
+        position: static;
+      }
+    }
+    @media (max-width: 560px) {
+      .card-fields {
+        grid-template-columns: 1fr;
+      }
+      .send .btn {
+        flex: 1 1 100%;
+      }
+    }
+
+    /* ── Delivery ─────────────────────────────────────────── */
+    .deliver {
+      padding-block: var(--section-tight) var(--s-8);
+      background: linear-gradient(to bottom, var(--g-dusk-2), var(--g-evening));
+    }
+    .deliver__title {
+      max-width: 14ch;
+      margin-bottom: var(--s-7);
+    }
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--s-6);
+      padding: 0;
+      list-style: none;
+      position: relative;
+    }
+    .timeline__item {
+      position: relative;
+      display: grid;
+      gap: var(--s-3);
+      align-content: start;
+      padding-top: var(--s-6);
+    }
+    /* The connector: a hairline from this marker to the next. */
+    .timeline__item:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      top: 0.7rem;
+      left: 1.6rem;
+      right: calc(var(--s-6) * -1 + 0.2rem);
+      height: 1px;
+      background: oklch(0.93 0.025 250 / 0.28);
+    }
+    .timeline__mark {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1.4rem;
+      height: 1.4rem;
+      border-radius: 50%;
+      box-shadow: inset 0 0 0 1.5px var(--starlight);
+    }
+    .timeline__mark::after {
+      content: '';
+      position: absolute;
+      inset: 0.4rem;
+      border-radius: 50%;
+      background: var(--starlight);
+    }
+    .timeline__item[data-state='now'] .timeline__mark {
+      box-shadow:
+        inset 0 0 0 1.5px var(--sun),
+        0 0 18px oklch(0.92 0.15 95 / 0.55);
+    }
+    .timeline__item[data-state='now'] .timeline__mark::after {
+      background: var(--sun);
+    }
+    .timeline__item[data-state='past'] {
+      opacity: 0.62;
+    }
+    .timeline__head {
+      display: grid;
+      gap: var(--s-2);
+    }
+    .timeline__when {
+      font-size: var(--text-display-m);
+      font-stretch: 118%;
+      font-weight: 780;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    .timeline__what {
+      font-size: var(--text-body);
+      font-stretch: 100%;
+      font-weight: 650;
+      letter-spacing: 0;
+      color: var(--sun);
+    }
+    .timeline__item p {
+      color: var(--star-soft);
+      max-width: 30ch;
+    }
+    @media (max-width: 860px) {
+      .timeline {
+        grid-template-columns: 1fr;
+        gap: var(--s-7);
+      }
+      .timeline__item {
+        padding-top: 0;
+        padding-left: var(--s-7);
+      }
+      .timeline__item:not(:last-child)::after {
+        top: 1.9rem;
+        bottom: calc(var(--s-7) * -1 + 0.4rem);
+        left: 0.7rem;
+        right: auto;
+        width: 1px;
+        height: auto;
+      }
+      .timeline__mark {
+        top: 0.35rem;
+      }
+    }
+
+    /* ── FAQ & close ──────────────────────────────────────── */
+    .g-faq {
+      padding-block: var(--section-tight);
+      background: linear-gradient(to bottom, var(--g-evening), var(--night-900) 70%);
+    }
+    .g-faq__inner {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+      gap: var(--s-7);
+      align-items: start;
+    }
+    .g-faq__inner h2 {
+      max-width: 12ch;
+    }
+    .g-close {
+      margin-top: var(--section-tight);
+      display: grid;
+      justify-items: center;
+      text-align: center;
+      gap: var(--s-5);
+    }
+    .g-close__line {
+      font-size: var(--text-display-l);
+      font-stretch: 122%;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      line-height: 0.95;
+      text-wrap: balance;
+    }
+    .g-close__line span {
+      display: inline-block;
+    }
+    .g-close__actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: var(--s-3);
+    }
+    .g-close__meta {
+      font-size: var(--text-small);
+      color: var(--star-soft);
+    }
+    @media (max-width: 860px) {
+      .g-faq__inner {
+        grid-template-columns: 1fr;
+        gap: var(--s-5);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .g-hero__title,
+      .g-cloud,
+      .g-stage__card {
+        animation: none;
+      }
+    }
+  }
+</style>
+
+<script>
+  import '@/scripts/pages/gift';
+</script>

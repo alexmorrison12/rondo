@@ -1,0 +1,585 @@
+---
+import Cta from '@/components/Cta.astro';
+import Base from '@/layouts/Base.astro';
+import { PRODUCT, formatPrice } from '@/data/site';
+import { ICONS } from '@/lib/icons';
+import { url } from '@/lib/url';
+import { ENGINES, RINGS } from '@/scripts/seq/model';
+import { PRESETS } from '@/scripts/seq/presets';
+import { KEYS, SCALES } from '@/scripts/seq/scales';
+
+const moods = ['Rainy Sunday coffee', 'Night bus home', 'First warm day of spring', 'Snow falling on the lake', 'Deadline at midnight', 'Picnic with friends'];
+---
+
+<Base
+  title="Play Rondo in your browser"
+  description="The full Rondo instrument, in your browser. Four rings, five sound engines, no install. Make a loop in ten seconds and share it as a link."
+  og="play"
+  surface="sky"
+  bodyClass="page-play"
+>
+  <div class="play-sky" aria-hidden="true"></div>
+  <section class="play" aria-labelledby="play-title">
+    <div class="play__stage">
+      <div class="play__titlebar">
+        <h1 id="play-title" class="visually-hidden">Rondo Web</h1>
+        <label class="loop-name">
+          <span class="visually-hidden">Loop name</span>
+          <input data-loop-name type="text" maxlength="48" value="Morning Orbit" spellcheck="false" />
+        </label>
+        <p class="play__cycle engrave" data-cycle>Repeats every 336 steps</p>
+      </div>
+
+      <div class="face-wrap">
+        <canvas
+          class="face"
+          data-face
+          tabindex="0"
+          role="application"
+          aria-roledescription="instrument"
+          aria-label="Rondo instrument. Tap a ring to place a note, drag outward to raise it, drag around to turn the ring. Keyboard: arrows move, Enter toggles, plus and minus change pitch, brackets turn, space plays."
+        ></canvas>
+        <p class="face-hint" data-hint>
+          <span>Tap the sun to play.</span> Tap a ring to add notes · drag out to raise · drag around to turn.
+        </p>
+      </div>
+
+      <div class="transport" role="toolbar" aria-label="Transport">
+        <button class="transport__play" type="button" data-play aria-pressed="false">
+          <span data-play-icon set:html={ICONS.play} />
+          <span data-play-label>Play</span>
+        </button>
+        <div class="tempo" role="group" aria-label="Tempo">
+          <button class="icon-btn" type="button" data-bpm="-4" aria-label="Slower" set:html={ICONS.minus} />
+          <output class="num" data-bpm-out aria-live="polite">92</output><span class="tempo__unit">bpm</span>
+          <button class="icon-btn" type="button" data-bpm="4" aria-label="Faster" set:html={ICONS.plus} />
+        </div>
+        <span class="transport__sep" aria-hidden="true"></span>
+        <button class="icon-btn" type="button" data-dice aria-label="Roll a new loop" title="Roll a new loop (D)" set:html={ICONS.dices} />
+        <button class="icon-btn" type="button" data-undo aria-label="Undo" title="Undo (⌘Z)" set:html={ICONS.undo} />
+        <button class="icon-btn" type="button" data-redo aria-label="Redo" title="Redo (⇧⌘Z)" set:html={ICONS.redo} />
+        <span class="transport__sep" aria-hidden="true"></span>
+        <button class="icon-btn" type="button" data-export aria-label="Download 4 bars as WAV" title="Download WAV" set:html={ICONS.download} />
+        <button class="btn btn--sun btn--sm" type="button" data-share>
+          <Fragment set:html={ICONS.share} /> Share loop
+        </button>
+      </div>
+    </div>
+
+    <aside class="panel surface-haze" aria-label="Instrument controls">
+      <div class="tabs" role="tablist" aria-label="Controls">
+        <button role="tab" id="tab-rings" aria-controls="pane-rings" aria-selected="true" type="button">Rings</button>
+        <button role="tab" id="tab-mood" aria-controls="pane-mood" aria-selected="false" tabindex="-1" type="button">Mood</button>
+        <button role="tab" id="tab-loops" aria-controls="pane-loops" aria-selected="false" tabindex="-1" type="button">Loops</button>
+      </div>
+
+      <div class="pane" id="pane-rings" role="tabpanel" aria-labelledby="tab-rings">
+        <div class="global-controls">
+          <label class="field">
+            <span class="field__label">Key</span>
+            <select class="select" data-key>
+              {KEYS.map((k, i) => <option value={i}>{k}</option>)}
+            </select>
+          </label>
+          <label class="field">
+            <span class="field__label">Scale</span>
+            <select class="select" data-scale>
+              {SCALES.map((s) => <option value={s.id}>{s.name}</option>)}
+            </select>
+          </label>
+          <p class="scale-feel soft" data-scale-feel>No wrong notes</p>
+          <label class="slider">
+            <span>Swing</span>
+            <input type="range" min="0" max="60" value="14" data-swing />
+          </label>
+          <label class="slider">
+            <span>Space</span>
+            <input type="range" min="0" max="100" value="42" data-space />
+          </label>
+          <label class="slider">
+            <span>Drift <small class="soft">evolves on its own</small></span>
+            <input type="range" min="0" max="100" value="0" data-drift />
+          </label>
+        </div>
+
+        <ol class="ring-controls" role="list">
+          {
+            RINGS.map((r, i) => (
+              <li class="ring-ctl" data-ring={i} style={`--ring: var(${r.colorVar})`}>
+                <div class="ring-ctl__head">
+                  <span class="ring-dot" aria-hidden="true" />
+                  <p>
+                    <strong>{r.name}</strong> <span class="soft">{r.role}</span>
+                  </p>
+                  <div class="stepper" role="group" aria-label={`${r.name} loop length`}>
+                    <button type="button" data-steps="-1" aria-label="Fewer steps" set:html={ICONS.minus} />
+                    <output data-steps-out>16</output>
+                    <button type="button" data-steps="1" aria-label="More steps" set:html={ICONS.plus} />
+                  </div>
+                  <button class="chip ring-mute" type="button" data-mute aria-pressed="false">
+                    Mute
+                  </button>
+                </div>
+                <div class="ring-ctl__engines" role="radiogroup" aria-label={`${r.name} sound`}>
+                  {ENGINES.map((e) => (
+                    <button type="button" class="engine-chip" role="radio" aria-checked="false" data-engine={e.id} title={e.blurb}>
+                      {e.name}
+                    </button>
+                  ))}
+                </div>
+                <div class="ring-ctl__row">
+                  <label class="slider slider--compact">
+                    <span class="visually-hidden">{r.name} volume</span>
+                    <input type="range" min="0" max="100" value="80" data-volume />
+                  </label>
+                  <button class="btn btn--quiet btn--sm" type="button" data-clear>
+                    Clear
+                  </button>
+                </div>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+
+      <div class="pane" id="pane-mood" role="tabpanel" aria-labelledby="tab-mood" hidden>
+        <h2 class="title">Describe a moment.</h2>
+        <p class="soft">Rondo turns words into a loop: the mood picks the scale and the sky, the energy picks the tempo. Same words, same song.</p>
+        <form class="mood-form" data-mood-form>
+          <label class="visually-hidden" for="mood-text">A moment, in a few words</label>
+          <textarea class="textarea" id="mood-text" rows="3" maxlength="120" placeholder="e.g. rain on the window, second coffee, nowhere to be" data-mood-text></textarea>
+          <button class="btn btn--ink" type="submit"><Fragment set:html={ICONS.wand} /> Compose</button>
+        </form>
+        <p class="field__label" style="margin-top: var(--s-5)">Or try</p>
+        <div class="chip-row">
+          {moods.map((m) => <button class="chip" type="button" data-mood-chip>{m}</button>)}
+        </div>
+      </div>
+
+      <div class="pane" id="pane-loops" role="tabpanel" aria-labelledby="tab-loops" hidden>
+        <ul class="preset-list" role="list">
+          {
+            PRESETS.map((p) => (
+              <li>
+                <button type="button" class="preset" data-preset={p.id}>
+                  <span class="preset__name">{p.pattern.name}</span>
+                  <span class="preset__meta soft">
+                    {p.author} · {p.place} · {p.mood}
+                  </span>
+                </button>
+              </li>
+            ))
+          }
+        </ul>
+        <a class="btn btn--quiet" href={url('/loops/')}>Browse the gallery <Fragment set:html={ICONS.arrowRight} /></a>
+      </div>
+    </aside>
+  </section>
+
+  <section class="play-more wrap" aria-labelledby="more-title">
+    <div class="play-more__copy">
+      <h2 id="more-title" class="display-m">Now imagine it under your thumbs.</h2>
+      <p class="lead">
+        Everything you just did works the same on the real Rondo. The difference is that the rings click as you turn them,
+        the sun is sapphire, and it fits in a coat pocket.
+      </p>
+      <div class="play-more__actions">
+        <Cta size="lg" variant="ink" showPrice />
+        <a class="btn btn--ghost btn--lg" href={url('/instrument/')}>See the instrument</a>
+      </div>
+      <p class="soft">{formatPrice(PRODUCT.price)} · {PRODUCT.trialNights}-night trial · no subscription, ever</p>
+    </div>
+    <dl class="shortcuts">
+      <div><dt><kbd>Space</kbd></dt><dd>Play / stop</dd></div>
+      <div><dt><kbd>←</kbd> <kbd>→</kbd></dt><dd>Move along a ring</dd></div>
+      <div><dt><kbd>↑</kbd> <kbd>↓</kbd></dt><dd>Change ring</dd></div>
+      <div><dt><kbd>Enter</kbd></dt><dd>Add or remove a note</dd></div>
+      <div><dt><kbd>+</kbd> <kbd>−</kbd></dt><dd>Raise or lower a note</dd></div>
+      <div><dt><kbd>[</kbd> <kbd>]</kbd></dt><dd>Turn the ring</dd></div>
+      <div><dt><kbd>D</kbd></dt><dd>Roll a new loop</dd></div>
+      <div><dt><kbd>⌘</kbd> <kbd>Z</kbd></dt><dd>Undo</dd></div>
+    </dl>
+  </section>
+  <p class="visually-hidden" aria-live="polite" data-announce></p>
+</Base>
+
+<style>
+  @property --sky-a {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: oklch(0.64 0.12 244);
+  }
+  @property --sky-b {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: oklch(0.93 0.03 215);
+  }
+  @layer page {
+    :global(body.page-play) {
+      --sky-a: oklch(0.64 0.12 244);
+      --sky-b: oklch(0.93 0.03 215);
+      transition:
+        --sky-a 1.6s var(--ease-io),
+        --sky-b 1.6s var(--ease-io),
+        color 0.6s var(--ease-io);
+      background: var(--sky-b);
+    }
+    :global(body.page-play[data-dark='true']) {
+      --fg: var(--starlight);
+      --fg-soft: var(--star-soft);
+    }
+    .play-sky {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background:
+        radial-gradient(120% 70% at 50% 110%, color-mix(in oklch, var(--sky-b) 90%, white) 0%, transparent 60%),
+        linear-gradient(to bottom, var(--sky-a), var(--sky-b));
+    }
+    .play {
+      min-height: 100dvh;
+      padding: calc(var(--header-h) + var(--s-3)) var(--gutter) var(--s-6);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(20rem, 24rem);
+      gap: var(--s-6);
+      max-width: 1500px;
+      margin-inline: auto;
+      align-items: start;
+    }
+    .play__stage {
+      display: grid;
+      justify-items: center;
+      gap: var(--s-4);
+      position: sticky;
+      top: calc(var(--header-h) + var(--s-4));
+    }
+    .play__titlebar {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--s-4);
+      width: min(100%, 44rem);
+    }
+    .loop-name input {
+      background: transparent;
+      border: 0;
+      border-bottom: 1px dashed transparent;
+      font-size: var(--text-title);
+      font-weight: 720;
+      font-stretch: 112%;
+      letter-spacing: -0.01em;
+      color: var(--fg);
+      width: 100%;
+      min-width: 8ch;
+      padding: 0.1em 0;
+    }
+    .loop-name input:hover,
+    .loop-name input:focus-visible {
+      border-bottom-color: currentColor;
+      outline: none;
+    }
+    .play__cycle {
+      white-space: nowrap;
+      color: var(--fg-soft);
+    }
+    .face-wrap {
+      position: relative;
+      width: min(100%, 44rem, calc(100dvh - var(--header-h) - 15.5rem));
+      aspect-ratio: 1;
+    }
+    .face {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      outline-offset: 8px;
+    }
+    .face-hint {
+      position: absolute;
+      left: 50%;
+      bottom: -0.25rem;
+      translate: -50% 100%;
+      width: max-content;
+      max-width: 100%;
+      text-align: center;
+      font-size: var(--text-small);
+      color: var(--fg-soft);
+      transition: opacity var(--t-panel) var(--ease-out);
+    }
+    .face-hint span {
+      color: var(--fg);
+      font-weight: 650;
+    }
+    .face-hint[data-hidden='true'] {
+      opacity: 0;
+    }
+    .transport {
+      margin-top: var(--s-5);
+      display: flex;
+      align-items: center;
+      gap: var(--s-1);
+      padding: 0.4rem;
+      border-radius: var(--r-pill);
+      background: var(--night-800);
+      color: var(--starlight);
+      box-shadow: 0 12px 32px -14px oklch(0.1 0.03 262 / 0.5);
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .transport__play {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      min-height: 2.75rem;
+      padding: 0 1.1rem 0 0.9rem;
+      border-radius: var(--r-pill);
+      background: var(--sun);
+      color: var(--ink);
+      font-weight: 700;
+    }
+    .transport__play :global(svg) {
+      width: 1.1rem;
+      height: 1.1rem;
+    }
+    .transport__sep {
+      width: 1px;
+      height: 1.5rem;
+      background: oklch(0.93 0.025 250 / 0.2);
+      margin-inline: var(--s-1);
+    }
+    .tempo {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.15rem;
+      font-weight: 650;
+    }
+    .tempo output {
+      min-width: 2.2ch;
+      text-align: right;
+    }
+    .tempo__unit {
+      font-size: var(--text-label);
+      font-stretch: 80%;
+      color: var(--star-soft);
+      margin-right: 0.2rem;
+    }
+
+    .panel {
+      background: var(--surface);
+      color: var(--ink);
+      border-radius: var(--r-panel-l);
+      padding: var(--s-4);
+      box-shadow: 0 20px 50px -24px oklch(0.15 0.035 262 / 0.45);
+      max-height: calc(100dvh - var(--header-h) - 2.5rem);
+      overflow: auto;
+      position: sticky;
+      top: calc(var(--header-h) + var(--s-4));
+    }
+    .tabs {
+      display: flex;
+      gap: var(--s-1);
+      padding: 0.25rem;
+      border-radius: var(--r-pill);
+      background: var(--haze-2);
+      margin-bottom: var(--s-4);
+    }
+    .tabs [role='tab'] {
+      flex: 1;
+      min-height: 2.5rem;
+      border-radius: var(--r-pill);
+      font-weight: 620;
+      font-size: var(--text-small);
+    }
+    .tabs [aria-selected='true'] {
+      background: var(--white);
+      box-shadow: var(--shadow-1);
+    }
+    .pane {
+      display: grid;
+      gap: var(--s-4);
+    }
+    .global-controls {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: var(--s-3);
+      padding-bottom: var(--s-4);
+      border-bottom: 1px solid var(--line);
+    }
+    .scale-feel {
+      grid-column: 1 / -1;
+      margin-top: calc(var(--s-2) * -1);
+      font-size: var(--text-small);
+    }
+    .slider {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 6.5rem 1fr;
+      align-items: center;
+      gap: var(--s-3);
+      font-size: var(--text-small);
+      font-weight: 600;
+    }
+    .slider small {
+      display: block;
+      font-weight: 450;
+      font-size: var(--text-micro);
+    }
+    .slider--compact {
+      grid-template-columns: 1fr;
+      flex: 1;
+    }
+    input[type='range'] {
+      width: 100%;
+      accent-color: var(--ink);
+      height: 1.5rem;
+    }
+    .ring-controls {
+      display: grid;
+      gap: var(--s-3);
+      padding: 0;
+      list-style: none;
+    }
+    .ring-ctl {
+      display: grid;
+      gap: var(--s-3);
+      padding: var(--s-3);
+      border-radius: var(--r-panel);
+      background: var(--haze);
+    }
+    .ring-ctl__head {
+      display: flex;
+      align-items: center;
+      gap: var(--s-2);
+    }
+    .ring-ctl__head p {
+      flex: 1;
+      font-size: var(--text-small);
+    }
+    .ring-dot {
+      width: 0.85rem;
+      height: 0.85rem;
+      border-radius: 50%;
+      background: var(--ring);
+      box-shadow: 0 0 10px var(--ring);
+    }
+    .ring-mute {
+      min-height: 2.25rem;
+      padding-inline: 0.8rem;
+    }
+    .ring-ctl__engines {
+      display: flex;
+      gap: 0.25rem;
+      flex-wrap: wrap;
+    }
+    .engine-chip {
+      flex: 1;
+      min-height: 2.25rem;
+      padding: 0 0.5rem;
+      border-radius: var(--r-input);
+      font-size: var(--text-label);
+      font-weight: 620;
+      box-shadow: inset 0 0 0 1px var(--line);
+      background: var(--white);
+      transition: background-color var(--t-state) var(--ease-out);
+    }
+    .engine-chip[aria-checked='true'] {
+      background: var(--ink);
+      color: var(--white);
+      box-shadow: none;
+    }
+    .ring-ctl__row {
+      display: flex;
+      align-items: center;
+      gap: var(--s-3);
+    }
+    .mood-form {
+      display: grid;
+      gap: var(--s-3);
+    }
+    .preset-list {
+      display: grid;
+      gap: 2px;
+    }
+    .preset {
+      width: 100%;
+      text-align: left;
+      display: grid;
+      padding: 0.8rem 0.9rem;
+      border-radius: var(--r-input);
+    }
+    .preset:hover,
+    .preset[aria-current='true'] {
+      background: var(--haze-2);
+    }
+    .preset__name {
+      font-weight: 650;
+    }
+    .preset__meta {
+      font-size: var(--text-small);
+    }
+
+    .play-more {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap: var(--s-8);
+      align-items: end;
+      padding-block: var(--section-tight);
+      position: relative;
+    }
+    .play-more__copy {
+      display: grid;
+      gap: var(--s-5);
+      max-width: 40rem;
+    }
+    .play-more__actions {
+      display: flex;
+      gap: var(--s-3);
+      flex-wrap: wrap;
+    }
+    .shortcuts {
+      display: grid;
+      gap: var(--s-2);
+      padding: var(--s-5);
+      border-radius: var(--r-panel-l);
+      background: var(--surface);
+      color: var(--ink);
+      font-size: var(--text-small);
+    }
+    .shortcuts div {
+      display: grid;
+      grid-template-columns: 6rem 1fr;
+      gap: var(--s-3);
+    }
+    .shortcuts dd {
+      margin: 0;
+    }
+
+    @media (max-width: 640px) {
+      .play__titlebar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--s-1);
+      }
+    }
+    @media (max-width: 1024px) {
+      .play {
+        grid-template-columns: 1fr;
+      }
+      .play__stage,
+      .panel {
+        position: static;
+        max-height: none;
+      }
+      .face-wrap {
+        width: min(100%, 36rem);
+      }
+      .play-more {
+        grid-template-columns: 1fr;
+        gap: var(--s-6);
+      }
+    }
+  }
+</style>
+
+<script>
+  import '@/scripts/pages/play';
+</script>

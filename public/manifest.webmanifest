@@ -1,0 +1,15 @@
+{
+  "name": "Rondo",
+  "short_name": "Rondo",
+  "description": "Play in circles. The Rondo instrument, in your browser.",
+  "start_url": "/rondo/play/",
+  "scope": "/rondo/",
+  "display": "standalone",
+  "background_color": "#0d1624",
+  "theme_color": "#0d1624",
+  "icons": [
+    { "src": "/rondo/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/rondo/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/rondo/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Disallow: /rondo/launch-plan/
+Sitemap: https://alexmorrison12.github.io/rondo/sitemap.xml

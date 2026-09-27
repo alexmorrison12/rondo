@@ -1,0 +1,44 @@
+---
+/**
+ * Teaser film renderer (not linked from the site). Records a 12 s vertical teaser of the
+ * real scene, with the product's own synthesised audio, via MediaRecorder.
+ * Driven by tools/record-film.mjs.
+ */
+import '@/styles/global.css';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex" />
+    <title>Rondo film</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #040b1a;
+      }
+      canvas {
+        display: block;
+        max-width: none;
+      }
+      #gl,
+      #out {
+        position: fixed;
+        left: 0;
+        top: 0;
+      }
+      #out {
+        z-index: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="gl"></canvas>
+    <canvas id="out"></canvas>
+    <script>
+      import '@/scripts/pages/film';
+    </script>
+  </body>
+</html>

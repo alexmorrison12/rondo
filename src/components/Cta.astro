@@ -1,0 +1,36 @@
+---
+/**
+ * The phase-aware primary CTA. Server-renders the default phase; the client swaps
+ * label, price and destination if Mission Control is previewing another phase.
+ */
+import { DEFAULT_PHASE, PHASES } from '@/data/site';
+import { RING_GLYPH } from '@/lib/icons';
+import { url } from '@/lib/url';
+
+interface Props {
+  variant?: 'sun' | 'ink';
+  size?: 'sm' | 'md' | 'lg';
+  showPrice?: boolean;
+  class?: string;
+  block?: boolean;
+}
+const { variant = 'sun', size = 'md', showPrice = false, class: className, block = false } = Astro.props;
+const def = PHASES[DEFAULT_PHASE];
+---
+
+<a
+  class:list={[
+    'btn',
+    `btn--${variant}`,
+    size === 'sm' && 'btn--sm',
+    size === 'lg' && 'btn--lg',
+    block && 'btn--block',
+    className,
+  ]}
+  href={url(def.cta.href)}
+  data-cta
+>
+  <Fragment set:html={RING_GLYPH} />
+  <span data-cta-label>{def.cta.label}</span>
+  {showPrice && <span class="btn__meta" data-cta-price>{def.cta.price}</span>}
+</a>

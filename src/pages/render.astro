@@ -1,0 +1,34 @@
+---
+/**
+ * Asset renderer (not linked from the site): renders the procedural Rondo on a transparent
+ * background for product images, OG cards and press. Driven by tools/render-assets.mjs.
+ *   /render/?finish=noon|ember|moon|eclipse&pose=hero|top|side|base|exploded&size=1600
+ */
+import '@/styles/global.css';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Rondo render</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: transparent;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="render"></canvas>
+    <script>
+      import '@/scripts/pages/render';
+    </script>
+  </body>
+</html>

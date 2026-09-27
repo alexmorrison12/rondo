@@ -1,0 +1,1103 @@
+---
+import Cta from '@/components/Cta.astro';
+import Base from '@/layouts/Base.astro';
+import { COLORWAYS, PRODUCT, formatPrice, perMonthOverTenYears } from '@/data/site';
+import { ICONS } from '@/lib/icons';
+import { url } from '@/lib/url';
+import { ENGINES } from '@/scripts/seq/model';
+import { PRESETS } from '@/scripts/seq/presets';
+
+const perMonth = formatPrice(perMonthOverTenYears(PRODUCT.price), { cents: true });
+const quarter = formatPrice(PRODUCT.price / 4, { cents: true });
+const loops = PRESETS.slice(1, 9);
+const standard = COLORWAYS.filter((c) => !c.foundersOnly);
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: 'Rondo',
+  description: PRODUCT.oneLiner,
+  brand: { '@type': 'Brand', name: 'Rondo' },
+  offers: { '@type': 'Offer', price: PRODUCT.price, priceCurrency: 'USD', availability: 'https://schema.org/PreOrder' },
+};
+---
+
+<Base
+  title="Rondo"
+  description="Rondo is a palm-sized instrument with four turning rings. Tap a ring to place a note, turn it to shift the groove. Play it right here, in your browser."
+  surface="sky"
+  bodyClass="page-home"
+  jsonLd={jsonLd}
+>
+  <Fragment slot="head">
+    <noscript><style>.stage{display:none!important}.stage-fallback{display:block!important}</style></noscript>
+  </Fragment>
+  <Fragment slot="stage">
+    <canvas class="stage" data-stage aria-hidden="true"></canvas>
+    <div class="stage-fallback" data-stage-fallback aria-hidden="true" style={`--fallback-img: url(${url('/renders/rondo-hero.webp')})`}></div>
+    <p class="sky-clock" data-sky-clock aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="18" height="18"
+        ><path d="M3 17a9 9 0 0 1 18 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+        ></path><circle data-sky-sun cx="12" cy="8" r="2.4" fill="currentColor"></circle></svg
+      >
+      <span class="num" data-sky-time>08:40</span>
+      <span data-sky-label>Morning</span>
+    </p>
+  </Fragment>
+
+  <!-- 1 · Hero ─────────────────────────────────────────── -->
+  <section class="scene hero" data-scene="hero" data-sky="0.9" aria-labelledby="hero-title">
+    <div class="wrap hero__inner">
+      <p class="phase-note" data-phase-status>Pre-orders open</p>
+      <h1 id="hero-title" class="hero__title" data-breathe>
+        <span class="hero__line">Play in</span>
+        <span class="hero__line">circles.</span>
+      </h1>
+      <p class="lead hero__lead">
+        Rondo is a palm-sized instrument with four turning rings. Tap a ring to place a note, turn it to shift the groove.
+        You'll make music in ten seconds, and still be finding new songs in ten years.
+      </p>
+      <div class="hero__actions">
+        <Cta size="lg" showPrice />
+        <button class="btn btn--ghost btn--lg" type="button" data-hear aria-pressed="false">
+          <span data-hear-icon set:html={ICONS.play} />
+          <span data-hear-label>Hear it</span>
+        </button>
+      </div>
+      <ul class="trust hero__trust" role="list">
+        <li>{PRODUCT.trialNights}-night trial</li>
+        <li>Free shipping</li>
+        <li>No subscription, ever</li>
+      </ul>
+    </div>
+    <p class="device-hint" data-device-hint hidden>Tap the rings. Tap the sun to play.</p>
+  </section>
+
+  <!-- 2 · Three moves ───────────────────────────────────── -->
+  <section class="scene manual" data-scene="manual" data-sky="1.3" aria-labelledby="manual-title">
+    <div class="manual__sticky">
+      <div class="wrap manual__inner">
+        <h2 id="manual-title" class="display-l">The whole manual<br />is three moves.</h2>
+        <ol class="moves" role="list" data-moves>
+          <li class="move" data-move="0" data-state="active">
+            <span class="move__n num">1</span>
+            <div>
+              <h3 class="title">Tap a ring to place a note.</h3>
+              <p>Each ring is a loop. Tap anywhere on it and a light appears; when the sweep passes, it plays.</p>
+              <p class="move__try" data-try>Try it on the Rondo →</p>
+            </div>
+          </li>
+          <li class="move" data-move="1">
+            <span class="move__n num">2</span>
+            <div>
+              <h3 class="title">Turn a ring to shift the groove.</h3>
+              <p>Same notes, new rhythm. The rings turn on steel bearings and click into place like a watch bezel.</p>
+              <p class="move__try" data-try>Drag around a ring →</p>
+            </div>
+          </li>
+          <li class="move" data-move="2">
+            <span class="move__n num">3</span>
+            <div>
+              <h3 class="title">Tilt to open the sound.</h3>
+              <p>Rondo knows which way is up. Tip it towards you and the sound opens like a window.</p>
+              <p class="move__try" data-try>Move your pointer up and down →</p>
+            </div>
+          </li>
+        </ol>
+        <div class="manual__done" data-manual-done hidden>
+          <p class="title">That's everything. The rest is taste.</p>
+          <div class="manual__done-actions">
+            <a class="btn btn--ink" href={url('/play/')} data-keep-loop>Keep playing this loop <Fragment set:html={ICONS.arrowRight} /></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 · Polymeter ─────────────────────────────────────── -->
+  <section class="scene rings" data-scene="rings" data-sky="2.2" aria-labelledby="rings-title">
+    <div class="wrap rings__inner">
+      <div class="rings__copy">
+        <h2 id="rings-title" class="display-l">Four rings that never quite agree.</h2>
+        <p class="lead">
+          Each ring loops at its own length. Pulse plays drums over sixteen steps, Root plays bass over twelve, Glow plays
+          chords over eight and Spark plays a melody over seven. They drift apart and fall back into line, so a loop keeps
+          changing without you touching it.
+        </p>
+        <div class="lcm" aria-live="polite">
+          <p class="lcm__label">Change Spark's length:</p>
+          <div class="chip-row" role="radiogroup" aria-label="Spark ring length" data-spark-steps>
+            {
+              [5, 6, 7, 9, 11].map((n) => (
+                <button class="chip" type="button" role="radio" aria-checked={n === 7 ? 'true' : 'false'} data-n={n}>
+                  {n} steps
+                </button>
+              ))
+            }
+          </div>
+          <p class="lcm__result">
+            Together they repeat every <strong class="num" data-lcm>336</strong> steps, which is
+            <strong class="num" data-bars>21</strong> bars before the same moment comes round again.
+          </p>
+        </div>
+      </div>
+      <figure class="orbit-diagram" aria-label="Four rings with 16, 12, 8 and 7 steps drifting against each other">
+        <svg viewBox="-200 -200 400 400" data-orbits role="img" aria-hidden="true"></svg>
+        <figcaption class="orbit-diagram__legend">
+          <span style="--c: var(--ember)" class="engrave">Pulse · 16</span>
+          <span style="--c: var(--sunlit)" class="engrave">Root · 12</span>
+          <span style="--c: var(--tide)" class="engrave">Glow · 8</span>
+          <span style="--c: var(--lilac)" class="engrave" data-spark-label>Spark · 7</span>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- 4 · Voices ────────────────────────────────────────── -->
+  <section class="scene voices" data-scene="voices" data-sky="3.1" aria-labelledby="voices-title">
+    <div class="wrap voices__inner">
+      <div class="voices__head">
+        <h2 id="voices-title" class="display-l">Five voices. Zero samples.</h2>
+        <p class="lead">
+          Every sound is synthesised as you play it: a string modelled in software, bells made of frequency modulation,
+          warm tape chords, a round bass and a dusty drum kit. Nothing is a recording, so nothing sounds quite the same
+          twice.
+        </p>
+      </div>
+      <ul class="voice-list" role="list" data-voices>
+        {
+          ENGINES.map((e, i) => (
+            <li>
+              <button class="voice" type="button" data-voice={e.id} aria-pressed="false">
+                <span class="voice__n engrave num">0{i + 1}</span>
+                <span class="voice__name">{e.name}</span>
+                <span class="voice__blurb">{e.blurb}</span>
+                <span class="voice__play" aria-hidden="true" set:html={ICONS.play} />
+                <canvas class="voice__scope" width="240" height="48" aria-hidden="true" />
+              </button>
+            </li>
+          ))
+        }
+      </ul>
+      <p class="voices__foot">
+        And it is very hard to play a wrong note: every ring is locked to one of twelve scales, from bright Lydian to
+        moonlit Hirajōshi.
+      </p>
+    </div>
+  </section>
+
+  <!-- 5 · Craft / exploded ──────────────────────────────── -->
+  <section class="scene craft" data-scene="craft" data-sky="4.1" aria-labelledby="craft-title">
+    <div class="craft__sticky">
+      <div class="wrap craft__inner">
+        <h2 id="craft-title" class="display-l craft__title">Built like a watch.<br />Played like a toy.</h2>
+        <ul class="callouts" role="list">
+          <li data-callout="0"><strong>Unibody aluminium,</strong> bead-blasted, then anodised in four colours.</li>
+          <li data-callout="1"><strong>Four turned rings</strong> on stainless bearings, with magnetic detents you can feel.</li>
+          <li data-callout="2"><strong>384 micro-LEDs</strong> under frosted glass, so any rhythm fits any ring.</li>
+          <li data-callout="3"><strong>A sapphire sun.</strong> Press to play, turn to change tempo.</li>
+          <li data-callout="4"><strong>A 28 mm driver</strong> with a passive radiator. Big sound for a pocket.</li>
+          <li data-callout="5"><strong>A 14-hour battery</strong> held in by four screws, not glue.</li>
+        </ul>
+        <dl class="specs engrave">
+          <div><dt>Diameter</dt><dd>108 mm</dd></div>
+          <div><dt>Weight</dt><dd>238 g</dd></div>
+          <div><dt>Battery</dt><dd>14 h</dd></div>
+          <div><dt>Ports</dt><dd>USB-C · MIDI in/out · 3.5 mm</dd></div>
+          <div><dt>Wireless</dt><dd>Bluetooth MIDI</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 · Promise ───────────────────────────────────────── -->
+  <section class="scene promise on-dark" data-scene="promise" data-sky="5.05" data-header-theme="night" aria-labelledby="promise-title">
+    <div class="wrap promise__inner">
+      <h2 id="promise-title" class="display-l">Built for the next ten years, not the next upgrade.</h2>
+      <ol class="promises" role="list">
+        <li><span><strong>No subscription. Ever.</strong> Every sound and every update is included in the price.</span></li>
+        <li><span><strong>No account, no app, no cloud.</strong> It works on a mountain, on a plane, in 2036.</span></li>
+        <li><span><strong>Open firmware.</strong> If we disappear, Rondo doesn't. The code is yours to keep.</span></li>
+        <li><span><strong>Made to be opened.</strong> Parts at cost, repair guides online, a battery you can swap in five minutes.</span></li>
+        <li><span><strong>Updates until 2036,</strong> promised in writing, on the receipt.</span></li>
+      </ol>
+      <p class="promise__math">
+        <span class="promise__big num">{perMonth}</span>
+        <span>a month, if Rondo lasts ten years. Less than the app you forgot you pay for.</span>
+      </p>
+      <p class="promise__sign">— Ines &amp; Theo, who made it</p>
+    </div>
+  </section>
+
+  <!-- 7 · Loops & people ────────────────────────────────── -->
+  <section class="scene loops on-dark" data-scene="loops" data-sky="6.1" data-header-theme="night" aria-labelledby="loops-title">
+    <div class="wrap">
+      <div class="loops__head">
+        <h2 id="loops-title" class="display-l">Everyone plays it differently.</h2>
+        <a class="btn btn--ghost" href={url('/loops/')}>All loops <Fragment set:html={ICONS.arrowRight} /></a>
+      </div>
+    </div>
+    <ul class="loop-rail" role="list" data-loop-rail>
+      {
+        loops.map((p) => (
+          <li>
+            <button class="loop-card" type="button" data-loop={p.id} aria-pressed="false">
+              <canvas class="loop-card__face" aria-hidden="true" />
+              <span class="loop-card__name">{p.pattern.name}</span>
+              <span class="loop-card__meta">
+                {p.author} · {p.place}
+              </span>
+            </button>
+          </li>
+        ))
+      }
+    </ul>
+    <div class="wrap quotes">
+      <figure>
+        <blockquote>“I'm not musical. I made my first loop on the bus and missed my stop.”</blockquote>
+        <figcaption>Maya, beta tester, Lisbon</figcaption>
+      </figure>
+      <figure>
+        <blockquote>“The first instrument my daughter and I both actually play.”</blockquote>
+        <figcaption>Tom, beta tester, Leeds</figcaption>
+      </figure>
+      <figure>
+        <blockquote>“It replaced my phone at bedtime. Ten minutes of turning rings and I'm out.”</blockquote>
+        <figcaption>Priya, beta tester, Pune</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- 8 · Offer ─────────────────────────────────────────── -->
+  <section class="scene offer on-dark" data-scene="offer" data-sky="7" data-header-theme="night" id="buy" aria-labelledby="offer-title">
+    <div class="wrap offer__inner">
+      <div class="offer__card" data-offer>
+        <h2 id="offer-title" class="display-m">Rondo, for {formatPrice(PRODUCT.price)}.</h2>
+        <p class="soft">or {quarter} × 4, interest-free · <span data-phase-shipping>Ships spring 2027</span></p>
+        <fieldset class="offer__finish">
+          <legend class="field__label">Finish: <span data-finish-name>Noon</span></legend>
+          <div class="swatches" role="radiogroup" aria-label="Finish">
+            {
+              standard.map((c, i) => (
+                <button
+                  class="swatch"
+                  type="button"
+                  role="radio"
+                  aria-checked={i === 0 ? 'true' : 'false'}
+                  aria-label={`${c.name}: ${c.note}`}
+                  data-finish={c.id}
+                  style={`--sw: ${c.swatch}`}
+                />
+              ))
+            }
+          </div>
+        </fieldset>
+        <button class="btn btn--sun btn--lg btn--block" type="button" data-add-rondo>
+          <Fragment set:html={ICONS.bag} /> <span data-add-label>Pre-order Noon</span>
+        </button>
+        <ul class="offer__list" role="list">
+          <li><Fragment set:html={ICONS.check} /> Rondo, braided USB-C cable, wrist loop and a printed field guide</li>
+          <li><Fragment set:html={ICONS.check} /> Free engraving on the base, up to 24 characters</li>
+          <li><Fragment set:html={ICONS.check} /> {PRODUCT.trialNights}-night trial, free returns, {PRODUCT.warrantyYears}-year warranty</li>
+        </ul>
+        <a class="offer__founders" href={url('/lp/founders/')}>
+          <span><strong>Founders Edition</strong> · numbered, black and brass, {formatPrice(PRODUCT.foundersPrice)}</span>
+          <Fragment set:html={ICONS.arrowUpRight} />
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 · FAQ ───────────────────────────────────────────── -->
+  <section class="scene faq-section on-dark" data-scene="faq" data-sky="7" data-header-theme="night" aria-labelledby="faq-title">
+    <div class="wrap faq-section__inner">
+      <h2 id="faq-title" class="display-m">Questions, answered straight.</h2>
+      <div class="faq">
+        <details>
+          <summary>I'm not musical at all. Will I actually use it?</summary>
+          <div>
+            <p>
+              That's who we designed it for. Every ring is locked to a scale, so there are no wrong notes, and the
+              polymeter does the arranging for you. Most beta testers made something they liked within a minute. You can
+              find out right now on this page, before spending anything.
+            </p>
+          </div>
+        </details>
+        <details>
+          <summary>Does it need an app, an account or a subscription?</summary>
+          <div>
+            <p>No, no and no. Rondo works on its own, out of the box, forever. Updates arrive over USB-C and are optional.</p>
+          </div>
+        </details>
+        <details>
+          <summary>Can I use it with my music software?</summary>
+          <div>
+            <p>
+              Yes. Rondo is a class-compliant USB audio and MIDI device, with 3.5 mm TRS MIDI in and out and Bluetooth
+              MIDI. It sends and receives clock, so it can lead or follow anything with a tempo.
+            </p>
+          </div>
+        </details>
+        <details>
+          <summary>What happens if it breaks?</summary>
+          <div>
+            <p>
+              For five years, we fix or replace it for free. After that we sell parts at cost and publish repair guides.
+              The battery comes out with four T5 screws.
+            </p>
+          </div>
+        </details>
+        <details>
+          <summary>When will it ship, and what if I change my mind?</summary>
+          <div>
+            <p>
+              Pre-orders ship in spring 2027, in order. You can cancel for a full refund at any time before it ships, and
+              you have {PRODUCT.trialNights} nights to return it after it arrives.
+            </p>
+          </div>
+        </details>
+      </div>
+      <p class="faq-section__more">
+        More in <a href={url('/support/')}>Support</a>, or play it first in <a href={url('/play/')}>Rondo Web</a>.
+      </p>
+    </div>
+  </section>
+
+  <aside class="buybar" data-buybar aria-label="Quick buy">
+    <span class="buybar__swatch" data-buybar-swatch aria-hidden="true"></span>
+    <span class="buybar__name">Rondo · <span data-buybar-finish>Noon</span></span>
+    <span class="buybar__price num">{formatPrice(PRODUCT.price)}</span>
+    <Cta size="sm" />
+  </aside>
+</Base>
+
+<style>
+  @layer page {
+    :global(body.page-home) {
+      background: var(--sky-300);
+    }
+    .stage,
+    .stage-fallback {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100lvh;
+      z-index: var(--z-stage);
+      display: block;
+    }
+    .stage-fallback {
+      display: none;
+      background:
+        var(--fallback-img) 72% 50% / min(62vmin, 640px) no-repeat,
+        linear-gradient(to bottom, var(--sky-500), var(--sky-100));
+    }
+    :global(html[data-webgl='false']) .stage {
+      display: none;
+    }
+    :global(html[data-webgl='false']) .stage-fallback {
+      display: block;
+    }
+    .scene {
+      position: relative;
+      z-index: var(--z-content);
+    }
+    /* Let pointer events fall through empty layout to the playable instrument behind. */
+    .scene,
+    .scene .wrap,
+    .scene [class*='__inner'],
+    .scene [class*='__sticky'] {
+      pointer-events: none;
+    }
+    .scene :is(h1, h2, h3, p, a, button, ol, ul, figure, dl, fieldset, form, details, blockquote, input, label, canvas, svg, .lcm, .offer__card, .loop-rail) {
+      pointer-events: auto;
+    }
+    .on-dark {
+      --fg: var(--starlight);
+      --fg-soft: var(--star-soft);
+      --border: oklch(0.93 0.025 250 / 0.18);
+      --focus: var(--sun);
+      color: var(--fg);
+    }
+
+    /* Sky clock */
+    .sky-clock {
+      position: fixed;
+      left: var(--gutter);
+      bottom: calc(var(--s-4) + env(safe-area-inset-bottom));
+      z-index: var(--z-sticky);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.45rem 0.8rem;
+      border-radius: var(--r-pill);
+      font-size: var(--text-label);
+      font-weight: 620;
+      font-stretch: 88%;
+      color: var(--clock-fg, var(--ink));
+      background: var(--clock-bg, oklch(1 0 0 / 0.55));
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      transition:
+        color var(--t-panel) var(--ease-out),
+        background-color var(--t-panel) var(--ease-out);
+      pointer-events: none;
+    }
+    :global(body[data-dark='true']) .sky-clock {
+      --clock-fg: var(--starlight);
+      --clock-bg: oklch(0.21 0.045 262 / 0.6);
+    }
+    @media (max-width: 640px) {
+      .sky-clock {
+        display: none;
+      }
+    }
+
+    /* 1 · Hero */
+    .hero {
+      min-height: 100svh;
+      display: flex;
+      align-items: flex-end;
+      padding-block: calc(var(--header-h) + var(--s-7)) var(--s-8);
+    }
+    .hero__inner {
+      display: grid;
+      gap: var(--s-5);
+      justify-items: start;
+    }
+    .hero__title {
+      font-size: var(--text-display-xl);
+      font-weight: 800;
+      font-stretch: 125%;
+      letter-spacing: -0.025em;
+      line-height: 0.92;
+      max-width: 9ch;
+    }
+    .hero__line {
+      display: block;
+    }
+    .hero__lead {
+      max-width: 34rem;
+      color: var(--ink-sky-soft);
+    }
+    .hero__actions {
+      display: flex;
+      gap: var(--s-3);
+      flex-wrap: wrap;
+    }
+    .hero__trust {
+      color: var(--ink-sky-soft);
+    }
+    .hero__trust li + li::before {
+      content: '·';
+      margin-right: var(--s-3);
+    }
+    .hero__trust {
+      gap: var(--s-3);
+    }
+    .device-hint {
+      position: absolute;
+      right: 12%;
+      top: 22%;
+      padding: 0.5rem 0.9rem;
+      border-radius: var(--r-pill);
+      background: var(--night-800);
+      color: var(--starlight);
+      font-size: var(--text-small);
+      font-weight: 560;
+      animation: hint-in var(--t-enter) var(--ease-out) both;
+    }
+    @keyframes hint-in {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+    }
+    @media (max-width: 860px) {
+      .hero {
+        align-items: flex-end;
+        padding-top: 52svh;
+      }
+      .device-hint {
+        right: 50%;
+        translate: 50% 0;
+        top: 44svh;
+      }
+    }
+
+    /* Breathing type (driven by --breathe from the audio level) */
+    [data-breathe] {
+      font-variation-settings: 'wdth' calc(118 + var(--breathe, 0) * 7), 'wght' calc(780 + var(--breathe, 0) * 120);
+    }
+
+    /* 2 · Manual */
+    .manual {
+      height: 300vh;
+    }
+    .manual__sticky {
+      position: sticky;
+      top: 0;
+      height: 100svh;
+      display: flex;
+      align-items: center;
+    }
+    .manual__inner {
+      display: grid;
+      gap: var(--s-6);
+      align-content: center;
+    }
+    .manual__inner > * {
+      max-width: 34rem;
+    }
+    .moves {
+      display: grid;
+      gap: var(--s-4);
+    }
+    .move {
+      display: grid;
+      grid-template-columns: 2.5rem 1fr;
+      gap: var(--s-4);
+      opacity: 0.42;
+      transition: opacity var(--t-panel) var(--ease-out);
+    }
+    .move[data-state='active'],
+    .move[data-state='done'] {
+      opacity: 1;
+    }
+    .move__n {
+      width: 2.5rem;
+      height: 2.5rem;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      box-shadow: inset 0 0 0 1.5px currentColor;
+      font-weight: 700;
+      transition:
+        background-color var(--t-state) var(--ease-out),
+        color var(--t-state) var(--ease-out);
+    }
+    .move[data-state='done'] .move__n {
+      background: var(--ink);
+      color: var(--sun);
+      box-shadow: none;
+    }
+    .move h3 {
+      font-size: clamp(1.25rem, 1rem + 0.8vw, 1.6rem);
+      margin-bottom: var(--s-2);
+    }
+    .move p {
+      color: var(--ink-sky-soft);
+    }
+    .move__try {
+      margin-top: var(--s-2);
+      font-weight: 650;
+      color: var(--ink) !important;
+      display: none;
+    }
+    .move[data-state='active'] .move__try {
+      display: block;
+    }
+    .manual__done {
+      display: grid;
+      gap: var(--s-3);
+      animation: hint-in var(--t-enter) var(--ease-out) both;
+    }
+    @media (max-width: 860px) {
+      .manual__sticky {
+        align-items: flex-end;
+        padding-bottom: var(--s-6);
+      }
+      .manual__inner h2 {
+        font-size: var(--text-display-m);
+      }
+      .move:not([data-state='active']) {
+        display: none;
+      }
+    }
+
+    /* 3 · Rings */
+    .rings {
+      padding-block: var(--section);
+    }
+    .rings__inner {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: var(--s-8);
+      align-items: center;
+    }
+    .rings__copy {
+      display: grid;
+      gap: var(--s-5);
+    }
+    .rings__copy .lead {
+      color: var(--ink-sky-soft);
+    }
+    .lcm {
+      display: grid;
+      gap: var(--s-3);
+      padding: var(--s-5);
+      border-radius: var(--r-panel-l);
+      background: oklch(0.97 0.02 228 / 0.7);
+    }
+    .lcm__label {
+      font-weight: 650;
+      font-size: var(--text-small);
+    }
+    .lcm__result strong {
+      font-size: 1.35em;
+      font-stretch: 115%;
+    }
+    .orbit-diagram {
+      position: relative;
+      margin: 0;
+      aspect-ratio: 1;
+      width: 100%;
+      max-width: 34rem;
+      justify-self: end;
+    }
+    .orbit-diagram svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+    .orbit-diagram__legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s-2) var(--s-4);
+      justify-content: center;
+      margin-top: var(--s-4);
+    }
+    .orbit-diagram__legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .orbit-diagram__legend span::before {
+      content: '';
+      width: 0.6rem;
+      height: 0.6rem;
+      border-radius: 50%;
+      background: var(--c);
+      box-shadow: 0 0 0 1.5px var(--ink);
+    }
+    @media (max-width: 900px) {
+      .rings__inner {
+        grid-template-columns: 1fr;
+      }
+      .orbit-diagram {
+        justify-self: center;
+      }
+    }
+
+    /* 4 · Voices */
+    .voices {
+      padding-block: var(--section) var(--section-tight);
+    }
+    .voices__inner {
+      display: grid;
+      gap: var(--s-7);
+    }
+    .voices__head {
+      display: grid;
+      gap: var(--s-5);
+      max-width: 44rem;
+      margin-left: auto;
+    }
+    .voices__head .lead {
+      color: var(--ink-sky-soft);
+    }
+    .voice-list {
+      display: grid;
+      gap: 0;
+      border-top: 1px solid oklch(0.2 0.03 258 / 0.2);
+      margin-left: auto;
+      width: min(100%, 44rem);
+    }
+    .voice-list li {
+      border-bottom: 1px solid oklch(0.2 0.03 258 / 0.2);
+    }
+    .voice {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 2.5rem minmax(8rem, 12rem) 1fr 2.75rem;
+      grid-template-areas: 'n name blurb play' 'n scope scope scope';
+      align-items: center;
+      gap: 0 var(--s-4);
+      padding: var(--s-4) var(--s-2);
+      text-align: left;
+      border-radius: var(--r-panel);
+      transition: background-color var(--t-state) var(--ease-out);
+    }
+    .voice:hover,
+    .voice[aria-pressed='true'] {
+      background: oklch(0.97 0.02 228 / 0.55);
+    }
+    .voice__n {
+      grid-area: n;
+      color: var(--ink-sky-soft);
+    }
+    .voice__name {
+      grid-area: name;
+      font-size: clamp(1.6rem, 1.2rem + 1.5vw, 2.4rem);
+      font-weight: 780;
+      font-stretch: 122%;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    .voice__blurb {
+      grid-area: blurb;
+      color: var(--ink-sky-soft);
+      font-size: var(--text-small);
+    }
+    .voice__play {
+      grid-area: play;
+      width: 2.75rem;
+      height: 2.75rem;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--ink);
+      color: var(--sun);
+    }
+    .voice__play :global(svg) {
+      width: 1rem;
+      height: 1rem;
+    }
+    .voice__scope {
+      grid-area: scope;
+      width: 100%;
+      height: 0;
+      opacity: 0;
+      transition:
+        height var(--t-panel) var(--ease-out),
+        opacity var(--t-panel) var(--ease-out);
+    }
+    .voice[aria-pressed='true'] .voice__scope {
+      height: 3rem;
+      opacity: 1;
+      margin-top: var(--s-3);
+    }
+    .voices__foot {
+      margin-left: auto;
+      width: min(100%, 44rem);
+      color: var(--ink-sky-soft);
+    }
+    @media (max-width: 700px) {
+      .voice {
+        grid-template-columns: 2rem 1fr 2.75rem;
+        grid-template-areas: 'n name play' 'n blurb blurb' 'n scope scope';
+        row-gap: var(--s-2);
+      }
+    }
+
+    /* 5 · Craft */
+    .craft {
+      height: 260vh;
+    }
+    .craft__sticky {
+      position: sticky;
+      top: 0;
+      height: 100svh;
+      display: flex;
+      align-items: center;
+    }
+    .craft__inner {
+      display: grid;
+      grid-template-columns: minmax(0, 22rem) 1fr;
+      grid-template-rows: auto 1fr auto;
+      gap: var(--s-6);
+      height: 100%;
+      padding-block: calc(var(--header-h) + var(--s-5)) var(--s-6);
+    }
+    .craft__title {
+      grid-column: 1 / -1;
+      max-width: 14ch;
+    }
+    .callouts {
+      display: grid;
+      gap: var(--s-3);
+      align-content: center;
+    }
+    .callouts li {
+      opacity: 0.35;
+      transition: opacity var(--t-panel) var(--ease-out);
+      color: var(--ink-sky-soft);
+      font-size: var(--text-body);
+    }
+    .callouts li strong {
+      color: var(--ink);
+    }
+    .callouts li[data-on='true'] {
+      opacity: 1;
+    }
+    .specs {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s-3) var(--s-6);
+      font-size: 0.875rem;
+    }
+    .specs div {
+      display: grid;
+      gap: 0.15rem;
+    }
+    .specs dt {
+      color: var(--ink-sky-soft);
+    }
+    .specs dd {
+      margin: 0;
+      font-weight: 700;
+      font-stretch: 90%;
+    }
+    @media (max-width: 860px) {
+      .craft__inner {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr auto auto;
+      }
+      .callouts {
+        align-content: end;
+      }
+      .callouts li:not([data-on='true']) {
+        display: none;
+      }
+    }
+
+    /* 6 · Promise */
+    .promise {
+      padding-block: var(--section);
+    }
+    .promise__inner {
+      display: grid;
+      gap: var(--s-6);
+      max-width: 46rem;
+    }
+    .promises {
+      display: grid;
+      gap: var(--s-4);
+      counter-reset: p;
+      font-size: var(--text-lead);
+    }
+    .promises li {
+      counter-increment: p;
+      display: grid;
+      grid-template-columns: 2rem 1fr;
+      gap: var(--s-3);
+      color: var(--star-soft);
+    }
+    .promises li::before {
+      content: counter(p) '.';
+      font-weight: 700;
+      color: var(--sun);
+      font-variant-numeric: tabular-nums;
+    }
+    .promises strong {
+      color: var(--starlight);
+    }
+    .promise__math {
+      display: flex;
+      align-items: baseline;
+      gap: var(--s-4);
+      flex-wrap: wrap;
+      padding-top: var(--s-5);
+      border-top: 1px solid var(--border);
+      color: var(--star-soft);
+      max-width: 40rem;
+    }
+    .promise__big {
+      font-size: var(--text-display-m);
+      font-weight: 800;
+      font-stretch: 120%;
+      color: var(--sun);
+      letter-spacing: -0.02em;
+    }
+    .promise__sign {
+      font-weight: 600;
+      color: var(--starlight);
+    }
+
+    /* 7 · Loops */
+    .loops {
+      padding-block: var(--section-tight);
+    }
+    .loops__head {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: var(--s-5);
+      flex-wrap: wrap;
+      margin-bottom: var(--s-6);
+    }
+    .loops__head h2 {
+      max-width: 14ch;
+    }
+    .loop-rail {
+      display: flex;
+      gap: var(--s-4);
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      padding: var(--s-2) var(--gutter) var(--s-5);
+      scroll-padding-inline: var(--gutter);
+      scrollbar-width: thin;
+      scrollbar-color: oklch(0.93 0.025 250 / 0.3) transparent;
+    }
+    .loop-card {
+      scroll-snap-align: start;
+      display: grid;
+      gap: var(--s-2);
+      width: clamp(11rem, 18vw, 15rem);
+      text-align: left;
+      padding: var(--s-3);
+      border-radius: var(--r-panel-l);
+      transition: background-color var(--t-state) var(--ease-out);
+    }
+    .loop-card:hover,
+    .loop-card[aria-pressed='true'] {
+      background: oklch(0.93 0.025 250 / 0.08);
+    }
+    .loop-card__face {
+      width: 100%;
+      aspect-ratio: 1;
+      margin-bottom: var(--s-2);
+    }
+    .loop-card__name {
+      font-weight: 700;
+      font-stretch: 110%;
+      font-size: 1.125rem;
+    }
+    .loop-card__meta {
+      font-size: var(--text-small);
+      color: var(--star-soft);
+    }
+    .quotes {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--s-6);
+      margin-top: var(--s-8);
+    }
+    .quotes figure {
+      margin: 0;
+      display: grid;
+      gap: var(--s-3);
+    }
+    .quotes figure:nth-child(2) {
+      margin-top: var(--s-7);
+    }
+    .quotes figure:nth-child(3) {
+      margin-top: var(--s-4);
+    }
+    .quotes blockquote {
+      margin: 0;
+      font-size: clamp(1.25rem, 1.05rem + 0.8vw, 1.6rem);
+      font-weight: 560;
+      font-stretch: 104%;
+      line-height: 1.3;
+    }
+    .quotes figcaption {
+      color: var(--star-soft);
+      font-size: var(--text-small);
+    }
+    @media (max-width: 860px) {
+      .quotes {
+        grid-template-columns: 1fr;
+      }
+      .quotes figure:nth-child(n) {
+        margin-top: 0;
+      }
+    }
+
+    /* 8 · Offer */
+    .offer {
+      padding-block: var(--section) var(--section-tight);
+    }
+    .offer__inner {
+      display: flex;
+      justify-content: flex-end;
+    }
+    .offer__card {
+      width: min(100%, 30rem);
+      display: grid;
+      gap: var(--s-5);
+      padding: var(--s-6);
+      border-radius: var(--r-panel-l);
+      background: var(--night-800);
+      box-shadow: 0 30px 80px -30px oklch(0 0 0 / 0.6);
+    }
+    .offer__finish {
+      border: 0;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: var(--s-3);
+    }
+    .offer__list {
+      display: grid;
+      gap: var(--s-3);
+      font-size: var(--text-small);
+      color: var(--star-soft);
+    }
+    .offer__list li {
+      display: grid;
+      grid-template-columns: 1.1rem 1fr;
+      gap: var(--s-3);
+    }
+    .offer__list :global(svg) {
+      width: 1.1rem;
+      height: 1.1rem;
+      color: var(--success-bright);
+      margin-top: 0.15rem;
+    }
+    .offer__founders {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--s-3);
+      padding-top: var(--s-4);
+      border-top: 1px solid var(--border);
+      text-decoration: none;
+      font-size: var(--text-small);
+    }
+    .offer__founders :global(svg) {
+      width: 1.2rem;
+      height: 1.2rem;
+      flex: none;
+    }
+    @media (max-width: 860px) {
+      .offer__inner {
+        justify-content: center;
+        padding-top: 48svh;
+      }
+    }
+
+    /* 9 · FAQ */
+    .faq-section {
+      padding-block: var(--section-tight) var(--section);
+      background: linear-gradient(to bottom, transparent, var(--night-900) 30%);
+    }
+    .faq-section__inner {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+      gap: var(--s-7);
+    }
+    .faq-section__more {
+      grid-column: 2;
+      color: var(--star-soft);
+    }
+    @media (max-width: 860px) {
+      .faq-section__inner {
+        grid-template-columns: 1fr;
+      }
+      .faq-section__more {
+        grid-column: 1;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      [data-breathe] {
+        font-variation-settings: normal;
+      }
+    }
+  }
+</style>
+
+<script>
+  import '@/scripts/pages/home';
+</script>

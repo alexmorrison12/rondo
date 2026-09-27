@@ -1,0 +1,295 @@
+---
+import Icon from '@/components/Icon.astro';
+import Base from '@/layouts/Base.astro';
+import { url } from '@/lib/url';
+import { encodePattern } from '@/scripts/seq/codec';
+import { drumsFrom, emptyPattern, notesFrom } from '@/scripts/seq/model';
+
+/* A small loop to play while you're lost. Count the notes on the outer three rings. */
+const lost = emptyPattern();
+lost.name = 'Lost and found';
+lost.key = 2;
+lost.scale = 'lydian';
+lost.bpm = 88;
+lost.swing = 0.12;
+lost.space = 0.55;
+lost.rings[0].notes = drumsFrom('k...s...k...s...');
+lost.rings[0].volume = 0.6;
+lost.rings[1].volume = 0.75;
+lost.rings[2].engine = 'pluck';
+lost.rings[2].notes = notesFrom('0.3.0.5.');
+lost.rings[2].volume = 0.4;
+lost.rings[3].engine = 'glass';
+lost.rings[3].notes = notesFrom('7.9.6.8');
+lost.rings[3].volume = 0.55;
+---
+
+<Base
+  title="Page not found"
+  description="This page drifted out of orbit. The rest of Rondo is right where you left it."
+  surface="sky"
+  bodyClass="page-lost"
+  noindex
+>
+  <section class="lost" aria-labelledby="lost-title">
+    <div class="lost__clouds" aria-hidden="true">
+      <img class="cloud cloud--a" src={url('/textures/cloud-2.webp')} alt="" width="768" height="384" />
+      <img class="cloud cloud--b" src={url('/textures/cloud-5.webp')} alt="" width="768" height="384" />
+    </div>
+    <div class="wrap lost__inner">
+      <div class="lost__copy">
+        <h1 id="lost-title" class="lost__title">This page drifted out of orbit.</h1>
+        <p class="lead lost__lead">
+          The link may be old, or it may have a typo in it. Everything else is right where you left it.
+        </p>
+        <p class="lost__path" data-lost-path hidden>
+          We looked for <code data-lost-path-text></code> and found only sky.
+        </p>
+        <nav class="lost__ways" aria-label="Ways back">
+          <a class="btn btn--ink btn--lg" href={url('/')}>Back home</a>
+          <a class="btn btn--ghost btn--lg" href={url('/play/')}>Play Rondo</a>
+          <a class="btn btn--ghost btn--lg" href={url('/shop/')}>Shop</a>
+        </nav>
+        <p class="lost__search">
+          <button class="lost__search-btn" type="button" data-palette-open>
+            <Icon name="search" /> Search the site
+          </button>
+          <span class="lost__kbd" aria-hidden="true"><kbd data-mod>⌘</kbd><kbd>K</kbd></span>
+        </p>
+      </div>
+
+      <figure class="lost__object">
+        <div class="lost__float">
+          <canvas
+            class="lost__face"
+            data-lost-face
+            data-loop={encodePattern(lost)}
+            tabindex="0"
+            role="application"
+            aria-roledescription="instrument"
+            aria-label="A Rondo, drifting. Tap a ring to add a note, tap the sun to play. Keyboard: arrows move, Enter adds a note, Space plays."
+          ></canvas>
+        </div>
+        <figcaption class="lost__caption">While you’re here: tap the rings, then tap the sun.</figcaption>
+      </figure>
+    </div>
+  </section>
+  <p class="visually-hidden" aria-live="polite" data-lost-announce></p>
+</Base>
+
+<style>
+  @layer page {
+    :global(body.page-lost) {
+      background: oklch(0.9 0.045 222);
+    }
+    .lost {
+      position: relative;
+      overflow: clip;
+      min-height: 100svh;
+      display: grid;
+      align-items: center;
+      padding-block: calc(var(--header-h) + var(--s-7)) var(--s-8);
+      background: linear-gradient(to bottom, oklch(0.7 0.11 244), oklch(0.9 0.045 222));
+      background: linear-gradient(in oklab to bottom, oklch(0.7 0.11 244), oklch(0.9 0.045 222));
+    }
+    .lost__clouds {
+      position: absolute;
+      inset: 0;
+    }
+    .cloud {
+      position: absolute;
+      width: var(--w);
+      max-width: none;
+      height: auto;
+      opacity: var(--o, 0.85);
+      pointer-events: none;
+      user-select: none;
+    }
+    .cloud--a {
+      --w: clamp(20rem, 36vw, 40rem);
+      top: 12%;
+      left: -9%;
+    }
+    .cloud--b {
+      --w: clamp(16rem, 26vw, 30rem);
+      --o: 0.7;
+      bottom: 6%;
+      right: -5%;
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .cloud {
+        animation: drift var(--d, 100s) var(--ease-io) infinite alternate;
+      }
+      .cloud--b {
+        --d: 130s;
+        --dx: -6vw;
+      }
+    }
+    @keyframes drift {
+      to {
+        translate: var(--dx, 7vw) 0;
+      }
+    }
+
+    .lost__inner {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      gap: var(--s-7);
+      align-items: center;
+    }
+    .lost__copy {
+      display: grid;
+      gap: var(--s-5);
+      justify-items: start;
+    }
+    .lost__title {
+      font-size: clamp(2.5rem, 1.3rem + 4vw, 5rem);
+      font-weight: 800;
+      font-stretch: 122%;
+      letter-spacing: -0.025em;
+      line-height: 0.96;
+      max-width: 11ch;
+    }
+    .lost__lead {
+      max-width: 32rem;
+      color: var(--ink-sky-soft);
+    }
+    .lost__path {
+      color: var(--ink-sky-soft);
+      max-width: 34rem;
+      overflow-wrap: anywhere;
+    }
+    .lost__path code {
+      font: inherit;
+      font-weight: 650;
+      color: var(--ink);
+      padding: 0.1em 0.45em;
+      border-radius: var(--r-input);
+      background: oklch(0.97 0.02 228 / 0.7);
+    }
+    .lost__ways {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s-3);
+      margin-top: var(--s-2);
+    }
+    .lost__search {
+      display: flex;
+      align-items: center;
+      gap: var(--s-3);
+      color: var(--ink-sky-soft);
+    }
+    .lost__search-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--s-2);
+      min-height: 2.75rem;
+      padding-inline: 0.2rem;
+      font-weight: 600;
+      color: var(--ink);
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 0.25em;
+    }
+    .lost__search-btn:hover {
+      text-decoration-thickness: 2px;
+    }
+    .lost__search-btn :global(svg) {
+      width: 1.1rem;
+      height: 1.1rem;
+    }
+    .lost__kbd kbd {
+      border-color: oklch(0.2 0.03 258 / 0.3);
+      margin-right: 0.2rem;
+    }
+    @media (hover: none) {
+      .lost__kbd {
+        display: none;
+      }
+    }
+
+    .lost__object {
+      margin: 0;
+      display: grid;
+      justify-items: center;
+      gap: var(--s-4);
+    }
+    .lost__float {
+      width: min(100%, 28rem);
+      aspect-ratio: 1;
+    }
+    .lost__face {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      outline-offset: 8px;
+    }
+    .lost__caption {
+      color: var(--ink-sky-soft);
+      text-align: center;
+      text-wrap: balance;
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .lost__float {
+        animation: bob 7s var(--ease-io) infinite alternate;
+      }
+      .lost__object:is(:hover, :focus-within) .lost__float {
+        animation-play-state: paused;
+      }
+      .lost__title,
+      .lost__lead {
+        animation: arrive var(--t-enter) var(--ease-out) both;
+      }
+      .lost__lead {
+        animation-delay: 100ms;
+      }
+      .lost__object {
+        animation: arrive-far 1200ms var(--ease-out) 150ms both;
+      }
+    }
+    @keyframes bob {
+      from {
+        translate: 0 -10px;
+      }
+      to {
+        translate: 0 10px;
+      }
+    }
+    @keyframes arrive {
+      from {
+        opacity: 0;
+        translate: 0 12px;
+        filter: blur(6px);
+      }
+    }
+    @keyframes arrive-far {
+      from {
+        opacity: 0;
+        translate: 12vw -6vh;
+      }
+    }
+
+    @media (max-width: 860px) {
+      .lost {
+        align-items: start;
+        padding-top: calc(var(--header-h) + var(--s-6));
+      }
+      .lost__inner {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .lost__float {
+        width: min(78vw, 20rem);
+      }
+      .cloud--a {
+        top: auto;
+        bottom: 16%;
+        left: -18%;
+      }
+    }
+  }
+</style>
+
+<script>
+  import '@/scripts/pages/notfound';
+</script>

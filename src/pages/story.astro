@@ -1,0 +1,1604 @@
+---
+import Cta from '@/components/Cta.astro';
+import Icon from '@/components/Icon.astro';
+import Base from '@/layouts/Base.astro';
+import { DEFAULT_PHASE, PHASES, PRODUCT } from '@/data/site';
+import { ICONS } from '@/lib/icons';
+import { url } from '@/lib/url';
+import { encodePattern } from '@/scripts/seq/codec';
+import { morningOrbit } from '@/scripts/seq/generate';
+import { clonePattern, drumsFrom, emptyPattern, notesFrom, type EngineId, type Pattern } from '@/scripts/seq/model';
+import { presetById } from '@/scripts/seq/presets';
+import { scaleById, type ScaleId } from '@/scripts/seq/scales';
+
+/* ── Loops. Defined once here, shipped to the client as share codes (data-loop). ── */
+interface RingSpec {
+  steps: number;
+  engine: EngineId;
+  notes?: string;
+  volume?: number;
+}
+function loop(
+  name: string,
+  o: { key: number; scale: ScaleId; bpm: number; swing?: number; space?: number },
+  rings: [RingSpec, RingSpec, RingSpec, RingSpec],
+): Pattern {
+  const p = emptyPattern();
+  p.name = name;
+  p.key = o.key;
+  p.scale = o.scale;
+  p.bpm = o.bpm;
+  p.swing = o.swing ?? 0.1;
+  p.space = o.space ?? 0.4;
+  p.drift = 0;
+  rings.forEach((spec, i) => {
+    const r = p.rings[i]!;
+    r.steps = spec.steps;
+    r.engine = spec.engine;
+    r.notes = spec.engine === 'dust' ? drumsFrom(spec.notes ?? '') : notesFrom(spec.notes ?? '');
+    r.volume = spec.volume ?? 0.7;
+  });
+  return p;
+}
+
+/* The flea-market music box: one 12-step waltz bar on every ring, three teeth missing
+   from the melody (slots 2, 7 and 11 should be 4, 2 and 1). */
+const musicBox = loop('The music box', { key: 7, scale: 'major', bpm: 72, swing: 0, space: 0.55 }, [
+  { steps: 12, engine: 'glass', notes: '4..54.2.3.1.', volume: 0.8 },
+  { steps: 12, engine: 'pluck', notes: '0...........', volume: 0.55 },
+  { steps: 12, engine: 'glass', notes: '....0...0...', volume: 0.3 },
+  { steps: 12, engine: 'glass', notes: '.........7..', volume: 0.35 },
+]);
+
+const protos = [
+  {
+    year: '2023',
+    title: 'Cardboard rings and a phone',
+    text: 'Four rings cut from a cereal box, spinning on a lazy Susan, with a phone underneath reading them through its camera. It managed one drum ring and one melody, and it crashed every four minutes. We played it until two in the morning anyway.',
+    finish: 'moon',
+    cardboard: true,
+    pattern: loop('Test loop no. 1', { key: 0, scale: 'pentatonic', bpm: 96, swing: 0.05, space: 0.25 }, [
+      { steps: 16, engine: 'dust', notes: 'k...s...k.k.s...', volume: 0.75 },
+      { steps: 12, engine: 'sub' },
+      { steps: 8, engine: 'tape' },
+      { steps: 8, engine: 'pluck', notes: '0.2.4.2.', volume: 0.6 },
+    ]),
+  },
+  {
+    year: '2024',
+    title: 'Printed prototype no. 7',
+    text: 'Numbers one to six were too big, too loud or too fragile. Number seven was printed in orange, turned on skateboard bearings and glowed through frosted tape. It had three rings of different lengths, and for the first time the loop drifted on its own. Nobody wanted to put it down.',
+    finish: 'ember',
+    pattern: loop('Prototype no. 7', { key: 5, scale: 'dorian', bpm: 100, swing: 0.14, space: 0.35 }, [
+      { steps: 16, engine: 'dust', notes: 'k.h.s.hkk.h.s.h.', volume: 0.7 },
+      { steps: 12, engine: 'sub', notes: '0..0..3..4..', volume: 0.75 },
+      { steps: 8, engine: 'tape' },
+      { steps: 7, engine: 'glass', notes: '4.65.7.', volume: 0.55 },
+    ]),
+  },
+  {
+    year: '2025',
+    title: 'The first aluminium',
+    text: 'Fifty bodies turned from solid aluminium for our engineering validation test, EVT for short. The rings finally clicked like a watch bezel, Glow arrived to play chords, and we found one hundred and twelve things to fix. We fixed them.',
+    finish: 'moon',
+    pattern: loop('EVT unit 23', { key: 9, scale: 'mixolydian', bpm: 90, swing: 0.18, space: 0.45 }, [
+      { steps: 16, engine: 'dust', notes: 'k..hs.h.k.khs.hz', volume: 0.65 },
+      { steps: 12, engine: 'sub', notes: '0.....4..3..', volume: 0.75 },
+      { steps: 8, engine: 'tape', notes: '0...5...', volume: 0.45 },
+      { steps: 9, engine: 'pluck', notes: '4.6.5.7.4', volume: 0.55 },
+    ]),
+  },
+  {
+    year: '2026',
+    title: 'Into production',
+    text: 'Anodised in four colours, played for a year by forty beta testers in eleven cities, and retuned more times than we can count. Its loop is Morning Orbit, the one we open every demo with.',
+    finish: 'noon',
+    shipping: true,
+    pattern: morningOrbit(),
+  },
+].map((p) => ({
+  ...p,
+  code: encodePattern(p.pattern),
+  meta: `${p.pattern.name} · ${p.pattern.bpm} bpm · ${scaleById(p.pattern.scale).name}`,
+}));
+
+const snowDay = presetById('snow-day');
+const kettle = loop('Kettle', { key: 3, scale: 'minorPentatonic', bpm: 84, swing: 0.2, space: 0.45 }, [
+  { steps: 15, engine: 'dust', notes: 'k..h.k..s..h.k.', volume: 0.7 },
+  { steps: 12, engine: 'sub', notes: '0.....3..2..', volume: 0.75 },
+  { steps: 16, engine: 'tape', notes: '0.......4.......', volume: 0.45 },
+  { steps: 11, engine: 'glass', notes: '7.9.8..6.5.', volume: 0.5 },
+]);
+
+const makers = [
+  {
+    name: 'Ines',
+    role: 'Industrial designer',
+    bio: 'Ines spent ten years designing things that were thrown away after two. She draws every part at full size on paper before it goes near a computer, and she chose each radius on Rondo by carrying it in her pocket for a week.',
+    finish: 'moon',
+    finishName: 'Moon',
+    finishWhy: 'for the tool marks',
+    pattern: snowDay ? clonePattern(snowDay.pattern) : morningOrbit(),
+    href: url('/play/#preset=snow-day'),
+  },
+  {
+    name: 'Theo',
+    role: 'Sound engineer',
+    bio: 'Theo writes the software that turns numbers into sound. He built all five of Rondo’s voices from scratch, and the clock that keeps four rings in time to the millisecond. He has tested every firmware build with the same loop, which has been playing on his desk since 2023.',
+    finish: 'eclipse',
+    finishName: 'Eclipse',
+    finishWhy: 'because he works late',
+    pattern: kettle,
+    href: url(`/play/#l=${encodePattern(kettle)}`),
+  },
+].map((m) => ({ ...m, code: encodePattern(m.pattern), loopName: m.pattern.name }));
+
+/* ── Bill of materials (grams). Sums to the published weight. ── */
+const parts = [
+  { name: 'Aluminium body and four rings', note: 'At least 70% recycled', g: 152 },
+  { name: 'Battery, 2,400 mAh', note: 'On a connector, not glue', g: 42 },
+  { name: 'Circuit board, chips and 384 LEDs', g: 17 },
+  { name: 'Speaker and passive radiator', g: 12 },
+  { name: 'Steel bearings, magnets and screws', g: 7 },
+  { name: 'Frosted glass light rings', g: 6 },
+  { name: 'Sapphire sun', g: 2 },
+];
+const totalGrams = parts.reduce((n, p) => n + p.g, 0);
+
+/* ── The ten-year dial: 2026 at the top, one year every 36°, longest promise outermost
+   (like the rings on the instrument: the outer ring is the longest loop). ── */
+const TAU = Math.PI * 2;
+const polar = (r: number, turn: number) => {
+  const a = turn * TAU - Math.PI / 2;
+  return [+(Math.cos(a) * r).toFixed(2), +(Math.sin(a) * r).toFixed(2)] as const;
+};
+const arcPath = (r: number, from: number, to: number) => {
+  const [x0, y0] = polar(r, from);
+  const [x1, y1] = polar(r, to);
+  const large = to - from > 0.5 ? 1 : 0;
+  return `M ${x0} ${y0} A ${r} ${r} 0 ${large} 1 ${x1} ${y1}`;
+};
+/** Full circle drawn clockwise from 12 o'clock. */
+const circlePath = (r: number) => `M 0 ${-r} A ${r} ${r} 0 1 1 0 ${r} A ${r} ${r} 0 1 1 0 ${-r}`;
+/** Full circle drawn clockwise from 6 o'clock, so 50% of its length is 12 o'clock (for centred labels). */
+const labelPath = (r: number) => `M 0 ${r} A ${r} ${r} 0 1 1 0 ${-r} A ${r} ${r} 0 1 1 0 ${r}`;
+const delivery = 0.125; // spring 2027: 1.25 of the 10 years
+const trialTurns = PRODUCT.trialNights / 365.25 / PRODUCT.updateYears;
+const warrantyTurns = PRODUCT.warrantyYears / PRODUCT.updateYears;
+const dial = {
+  ticks: Array.from({ length: 40 }, (_, i) => {
+    const major = i % 4 === 0;
+    const [x1, y1] = polar(major ? 181 : 186, i / 40);
+    const [x2, y2] = polar(195, i / 40);
+    return { x1, y1, x2, y2, major };
+  }),
+  years: Array.from({ length: 9 }, (_, i) => {
+    const [x, y] = polar(170, (i + 1) / 10);
+    return { x, y, label: String(2027 + i) };
+  }),
+  rings: [
+    { id: 'firmware', r: 142, d: circlePath(142), label: 'Open firmware · no end date', forever: true },
+    { id: 'updates', r: 110, d: arcPath(110, 0.004, 0.996), label: 'Updates and parts · until 2036' },
+    { id: 'warranty', r: 78, d: arcPath(78, delivery, delivery + warrantyTurns), label: `${PRODUCT.warrantyYears}-year warranty` },
+    { id: 'trial', r: 46, d: arcPath(46, delivery, delivery + trialTurns), label: `${PRODUCT.trialNights}-night trial` },
+  ],
+};
+---
+
+<Base
+  title="Our story and the ten-year promise"
+  description="Rondo started with a broken music box. How two people spent four years turning it into an instrument built to last until 2036, and exactly how we keep each promise."
+  og="story"
+  surface="sky"
+  bodyClass="page-story"
+>
+  <article class="story">
+    <!-- Morning: the music box ──────────────────────────────────── -->
+    <header class="hero" data-header-theme="day">
+      <div class="hero__clouds" aria-hidden="true">
+        <img class="cloud cloud--a" src={url('/textures/cloud-1.webp')} alt="" width="768" height="384" />
+        <img class="cloud cloud--b" src={url('/textures/cloud-4.webp')} alt="" width="768" height="384" />
+        <img class="cloud cloud--c" src={url('/textures/cloud-2.webp')} alt="" width="768" height="384" />
+      </div>
+      <div class="wrap hero__inner">
+        <div class="hero__copy">
+          <h1 class="hero__title">Rondo started with a broken music box.</h1>
+          <p class="lead hero__lead">
+            Ines found it at a flea market in Lisbon: a tin box the size of a matchbox that played one waltz, with three
+            notes missing. Theo offered to fix it and got slightly carried away.
+          </p>
+        </div>
+        <figure class="musicbox">
+          <div class="musicbox__stage">
+            <canvas
+              class="musicbox__face"
+              data-musicbox
+              data-loop={encodePattern(musicBox)}
+              data-missing="2,7,11"
+              data-fix="4,2,1"
+              tabindex="0"
+              role="application"
+              aria-roledescription="instrument"
+              aria-label="The music box tune on a Rondo. Three notes are missing from the outer ring. Tap a marked gap to put a note back, tap the sun to play. Keyboard: arrows move, Enter adds a note, Space plays."
+            ></canvas>
+            <svg class="musicbox__gaps" viewBox="-1 -1 2 2" data-gaps aria-hidden="true"></svg>
+          </div>
+          <figcaption class="musicbox__caption">
+            <span class="musicbox__what">Its tune, on a Rondo.</span>
+            <span class="musicbox__status" data-fix-status aria-live="polite"
+              >Three notes are missing. Tap the marked gaps to put them back.</span
+            >
+            <button class="btn btn--ghost musicbox__play" type="button" data-musicbox-play>
+              <span class="play-icon" data-icon set:html={ICONS.play} />
+              <span data-label>Hear it</span>
+            </button>
+          </figcaption>
+        </figure>
+      </div>
+    </header>
+
+    <!-- The idea ─────────────────────────────────────────────────── -->
+    <section class="why" data-header-theme="day" aria-labelledby="why-title">
+      <div class="wrap why__inner">
+        <h2 id="why-title" class="display-m why__title">A music box plays one loop, forever.</h2>
+        <div class="prose why__prose">
+          <p>
+            Inside the tin was a brass cylinder studded with pins, turning under a steel comb. Each pin plucks one tooth,
+            and one turn of the cylinder is the whole song, played the same way every time since about 1950. That is the
+            charm of a music box. It is also its limit.
+          </p>
+          <p>
+            So we asked a slightly silly question on the back of a receipt. What if there were four cylinders instead of
+            one, each a different length, so they drifted apart and fell back together like planets? And what if you
+            could move the pins yourself?
+          </p>
+        </div>
+        <p class="why__pull">Four loops that never quite agree, and pins you place with a fingertip. That was the whole idea.</p>
+        <div class="prose why__prose why__prose--2">
+          <p>
+            There was a second reason, harder to say out loud. Almost everything we owned came with an app, an account
+            and a quiet countdown to its own retirement. We wanted to make one object that would still be on the shelf in
+            2036: still working, still worth picking up, needing nobody’s permission.
+          </p>
+          <p>
+            We called it Rondo, after the musical form in which the main tune keeps coming back, a little different each
+            time.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- The prototypes ───────────────────────────────────────────── -->
+    <section class="protos-section" data-header-theme="day" aria-labelledby="protos-title">
+      <div class="wrap">
+        <div class="protos__head">
+          <h2 id="protos-title" class="display-l">From cereal box to sapphire.</h2>
+          <p class="lead soft">
+            Four years and a lot of prototypes, most of them built on one kitchen table. Tap any of them to hear what it
+            could play.
+          </p>
+        </div>
+        <ol class="protos" role="list">
+          {
+            protos.map((p, i) => (
+              <li class="proto" style={`--face: var(--face-${i})`}>
+                <div class="proto__object">
+                  <button
+                    class="face-btn"
+                    type="button"
+                    data-player
+                    data-loop={p.code}
+                    data-finish={p.finish}
+                    aria-pressed="false"
+                    aria-label={`Play the ${p.year} prototype: ${p.pattern.name}`}
+                  >
+                    <canvas class:list={['face-btn__face', p.cardboard && 'is-cardboard']} aria-hidden="true" />
+                    <span class="face-btn__glyph" data-icon set:html={ICONS.play} />
+                  </button>
+                </div>
+                <div class="proto__text">
+                  <h3 class="proto__heading">
+                    <span class="proto__year">{p.year}</span>
+                    <span class="proto__title">{p.title}</span>
+                  </h3>
+                  <p>{p.text}</p>
+                  {p.shipping && (
+                    <p class="proto__ship">
+                      <span data-phase-shipping>{PHASES[DEFAULT_PHASE].shipping}</span>.
+                    </p>
+                  )}
+                  <p class="proto__meta engrave">{p.meta}</p>
+                </div>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+    </section>
+
+    <!-- Golden hour: materials ───────────────────────────────────── -->
+    <section class="materials" data-header-theme="day" aria-labelledby="materials-title">
+      <div class="materials__clouds" aria-hidden="true">
+        <img class="cloud cloud--d" src={url('/textures/cloud-5.webp')} alt="" width="768" height="384" loading="lazy" />
+      </div>
+      <div class="wrap materials__inner">
+        <h2 id="materials-title" class="display-l materials__title">Two hundred and thirty‑eight grams.</h2>
+        <p class="lead soft materials__lead">
+          That’s all of it. Here is where every gram goes, and what making it costs, as plainly as we can put it.
+        </p>
+        <table class="bom">
+          <caption class="visually-hidden">What one Rondo is made of, by weight</caption>
+          <thead class="visually-hidden">
+            <tr><th scope="col">Part</th><th scope="col">Share of the weight</th><th scope="col">Weight</th></tr>
+          </thead>
+          <tbody>
+            {
+              parts.map((p) => (
+                <tr>
+                  <th scope="row">
+                    <span class="bom__name">{p.name}</span>
+                    {p.note && <span class="bom__note">{p.note}</span>}
+                  </th>
+                  <td class="bom__bar" aria-hidden="true">
+                    <span style={`--share: ${((p.g / totalGrams) * 100).toFixed(2)}%`} />
+                  </td>
+                  <td class="bom__g num">{p.g} g</td>
+                </tr>
+              ))
+            }
+          </tbody>
+          <tfoot>
+            <tr>
+              <th scope="row">Rondo, in total</th>
+              <td aria-hidden="true"></td>
+              <td class="bom__g num">{totalGrams} g</td>
+            </tr>
+          </tfoot>
+        </table>
+        <ul class="facts" role="list">
+          <li>
+            <h3>Mostly recycled aluminium.</h3>
+            <p>
+              At least 70% of the aluminium has been used before, and every offcut from turning the body goes straight
+              back to be melted down. We want 100% for the second batch. If we miss, we’ll say so here.
+            </p>
+          </li>
+          <li>
+            <h3>Paper, not plastic.</h3>
+            <p>
+              Rondo travels in a moulded paper-pulp tray and a card sleeve printed in one ink. No plastic bags, no foam,
+              no twist ties. Even the cable is held with a paper band.
+            </p>
+          </li>
+          <li>
+            <h3>Boats, not planes.</h3>
+            <p>Stock crosses oceans by sea and finishes the trip by road. It’s slower, so we simply plan further ahead.</p>
+          </li>
+          <li>
+            <h3>About 9 kg of CO<sub>2</sub>e each.</h3>
+            <p>
+              Our estimate for one Rondo, from the mine to your door. Nobody independent has checked it yet. When they
+              have, the full report goes on this page, even if the number goes up.
+            </p>
+          </li>
+          <li>
+            <h3>A way home.</h3>
+            <p>
+              When you’re finished with it, send it back at our cost. We’ll reuse what we can and recover the aluminium
+              and the battery. Better still, give it to someone.
+            </p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <div class="sunset" aria-hidden="true">
+      <img class="cloud cloud--e" src={url('/textures/cloud-0.webp')} alt="" width="768" height="384" loading="lazy" />
+      <img class="cloud cloud--f" src={url('/textures/cloud-3.webp')} alt="" width="768" height="384" loading="lazy" />
+    </div>
+
+    <!-- Evening: the promise ─────────────────────────────────────── -->
+    <section class="promise on-dark" id="promise" data-header-theme="night" aria-labelledby="promise-title">
+      <div class="wrap promise__inner">
+        <div class="promise__head">
+          <h2 id="promise-title" class="display-l">The ten‑year promise.</h2>
+          <p class="lead soft">
+            Six promises, and exactly how we keep each one. They’re printed on your receipt as well, signed by both of us.
+          </p>
+        </div>
+        <div class="promise__aside">
+          <figure class="dial">
+            <svg
+              viewBox="-202 -202 404 404"
+              role="img"
+              aria-labelledby="dial-desc"
+              class="dial__svg"
+            >
+              <desc id="dial-desc">
+                A dial from 2026 to 2036. Open firmware has no end date. Updates and spare parts at cost run until 2036. The
+                {PRODUCT.warrantyYears}-year warranty and the {PRODUCT.trialNights}-night trial start on delivery in spring 2027.
+              </desc>
+              <defs>
+                {dial.rings.map((r) => <path id={`dial-label-${r.id}`} d={labelPath(r.r + 9)} />)}
+              </defs>
+              <g class="dial__ticks">
+                {dial.ticks.map((t) => <line x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} class:list={[t.major && 'is-major']} />)}
+              </g>
+              <g class="dial__years">
+                {dial.years.map((y) => <text x={y.x} y={y.y}>{y.label}</text>)}
+                <text x="-5" y="-170" class="is-end">2036</text>
+                <text x="5" y="-170" class="is-start">2026</text>
+              </g>
+              <g class="dial__tracks">
+                {dial.rings.map((r) => <circle r={r.r} />)}
+              </g>
+              <g class="dial__arcs">
+                {
+                  dial.rings.map((r) => (
+                    <path d={r.d} pathLength="1" data-arc={r.id} class:list={[r.forever && 'is-forever']} />
+                  ))
+                }
+              </g>
+              <g class="dial__labels">
+                {
+                  dial.rings.map((r) => (
+                    <text data-arc={r.id}>
+                      <textPath href={`#dial-label-${r.id}`} startOffset="50%">
+                        {r.label}
+                      </textPath>
+                    </text>
+                  ))
+                }
+              </g>
+              <circle class="dial__sun" r="17" />
+            </svg>
+            <figcaption class="dial__caption">
+              Every promise on one dial, 2026 at the top. The warranty and trial start when Rondo reaches you.
+            </figcaption>
+          </figure>
+        </div>
+        <div class="promise__main">
+          <dl class="ledger">
+            <div class="ledger__row">
+              <dt>No subscription. Ever.</dt>
+              <dd>
+                <p>
+                  You pay once. Every sound, every feature and every update is in that price. There’s no server behind
+                  Rondo, so there’s nothing to renew and no bill to pass on to you.
+                </p>
+                <ul class="tags" role="list"><li>Paid once</li></ul>
+              </dd>
+            </div>
+            <div class="ledger__row">
+              <dt>No account, no app, no cloud.</dt>
+              <dd>
+                <p>
+                  Rondo does all its thinking on the device. A loop travels as a link with the whole song written into it,
+                  so sharing needs no server and will still work in 2036. It connects through standard ports that will
+                  outlive all of us: USB-C, 3.5 mm TRS MIDI in and out, and Bluetooth MIDI.
+                </p>
+                <ul class="tags" role="list"><li>USB-C</li><li>TRS MIDI</li><li>Bluetooth MIDI</li></ul>
+              </dd>
+            </div>
+            <div class="ledger__row" data-arc="firmware">
+              <dt>Open firmware.</dt>
+              <dd>
+                <p>
+                  Rondo OS is published under the MIT licence on the day we ship. Its complete source, build tools and
+                  signing keys are also held in escrow by an independent solicitor, to be released to everyone if we ever
+                  stop trading.
+                </p>
+                <ul class="tags" role="list"><li>MIT licence</li><li>Source in escrow</li></ul>
+              </dd>
+            </div>
+            <div class="ledger__row" data-arc="updates">
+              <dt>Made to be opened.</dt>
+              <dd>
+                <p>
+                  Four T5 screws hold the base on. Behind it sits a 2,400 mAh battery on a connector, not glue, that you
+                  can swap in five minutes. We stock every part until 2036, sell them at cost, and publish a free repair
+                  guide for each one.
+                </p>
+                <ul class="tags" role="list"><li>T5 × 4</li><li>2,400 mAh</li><li>Parts at cost</li></ul>
+              </dd>
+            </div>
+            <div class="ledger__row" data-arc="updates">
+              <dt>Updates until 2036.</dt>
+              <dd>
+                <p>
+                  Written on your receipt. An update is a plain file you install over USB-C, with no account involved, and
+                  none of them will ever take away a feature you already have.
+                </p>
+                <ul class="tags" role="list"><li>Until 2036</li></ul>
+              </dd>
+            </div>
+            <div class="ledger__row" data-arc="warranty">
+              <dt>Five years of cover.</dt>
+              <dd>
+                <p>
+                  If anything stops working as it should in the first {PRODUCT.warrantyYears} years, a tired battery
+                  included, we repair or replace it for free. And you get {PRODUCT.trialNights} nights to decide whether
+                  it stays.
+                </p>
+                <ul class="tags" role="list">
+                  <li>{PRODUCT.warrantyYears}-year warranty</li><li>{PRODUCT.trialNights}-night trial</li>
+                </ul>
+              </dd>
+            </div>
+          </dl>
+          <p class="promise__sign">Ines &amp; Theo</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Night: the makers ────────────────────────────────────────── -->
+    <section class="makers on-dark" data-header-theme="night" aria-labelledby="makers-title">
+      <div class="wrap">
+        <h2 id="makers-title" class="display-m makers__title">Two people and a kitchen table.</h2>
+        <div class="makers__grid">
+          {
+            makers.map((m) => (
+              <article class="maker" aria-labelledby={`maker-${m.name}`}>
+                <h3 class="maker__name" id={`maker-${m.name}`}>
+                  {m.name}
+                </h3>
+                <p class="maker__role">{m.role}</p>
+                <p class="maker__bio">{m.bio}</p>
+                <div class="maker__fav">
+                  <button
+                    class="face-btn face-btn--small"
+                    type="button"
+                    data-player
+                    data-loop={m.code}
+                    data-finish={m.finish}
+                    aria-pressed="false"
+                    aria-label={`Play ${m.name}’s favourite loop, ${m.loopName}`}
+                  >
+                    <canvas class="face-btn__face" aria-hidden="true" />
+                    <span class="face-btn__glyph" data-icon set:html={ICONS.play} />
+                  </button>
+                  <dl class="maker__facts">
+                    <div>
+                      <dt>Favourite loop</dt>
+                      <dd>
+                        {m.loopName} · <a href={m.href}>open it in Rondo Web</a>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Favourite finish</dt>
+                      <dd>
+                        <span class="finish-dot" style={`--sw: var(--finish-${m.finish})`} aria-hidden="true" />
+                        {m.finishName}, {m.finishWhy}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              </article>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- Close ─────────────────────────────────────────────────────── -->
+    <section class="close on-dark" data-header-theme="night" aria-labelledby="close-title">
+      <div class="wrap close__inner">
+        <h2 id="close-title" class="close__title">
+          <span>See you</span>
+          <span>in 2036.</span>
+        </h2>
+        <p class="lead close__lead">
+          That’s the plan: one small instrument, a long time, no strings attached. Try it in your browser first. It’s the
+          same instrument, minus the aluminium.
+        </p>
+        <div class="close__actions">
+          <Cta size="lg" showPrice />
+          <a class="btn btn--ghost btn--lg" href={url('/play/')}>
+            Play it in your browser <Icon name="arrowRight" />
+          </a>
+        </div>
+        <ul class="trust close__trust" role="list">
+          <li><Icon name="check" />{PRODUCT.trialNights}-night trial</li>
+          <li><Icon name="check" />{PRODUCT.warrantyYears}-year warranty</li>
+          <li><Icon name="check" />No subscription, ever</li>
+        </ul>
+        <p class="close__ps">P.S. Ines still has the music box. It still skips.</p>
+      </div>
+    </section>
+  </article>
+  <p class="visually-hidden" aria-live="polite" data-announce></p>
+</Base>
+
+<style>
+  @layer page {
+    :global(body.page-story) {
+      background: oklch(0.72 0.1 240);
+    }
+    .story {
+      /* One day of sky, painted down the page: morning → noon → golden hour → dusk → night. */
+      --sky-0: oklch(0.72 0.1 240);
+      --sky-1: oklch(0.9 0.045 222);
+      --sky-2: oklch(0.86 0.062 234);
+      --sky-3: oklch(0.89 0.045 222);
+      --sky-4: oklch(0.85 0.055 300);
+      --sky-5: oklch(0.87 0.09 72);
+      --sky-6: oklch(0.74 0.13 42);
+      --sky-7: oklch(0.5 0.12 330);
+      --sky-8: oklch(0.36 0.09 300);
+      --sky-9: oklch(0.27 0.07 282);
+      --sky-10: oklch(0.2 0.055 272);
+      --sky-11: oklch(0.17 0.045 266);
+      --sky-12: var(--night-900);
+      --face-0: 8.5rem;
+      --face-1: 11rem;
+      --face-2: 13.5rem;
+      --face-3: 16.5rem;
+      position: relative;
+      overflow-x: clip;
+    }
+    .story > * {
+      position: relative;
+    }
+    .on-dark {
+      --fg: var(--starlight);
+      --fg-soft: var(--star-soft);
+      --border: oklch(0.93 0.025 250 / 0.18);
+      --focus: var(--sun);
+      color: var(--fg);
+    }
+
+    /* Shared: prose for the long read */
+    .prose {
+      display: grid;
+      gap: var(--s-5);
+      font-size: clamp(1.125rem, 1.06rem + 0.3vw, 1.25rem);
+      line-height: 1.62;
+      max-width: 38rem;
+    }
+
+    /* Clouds: real sprites from the home sky, drifting slowly */
+    .cloud {
+      position: absolute;
+      width: var(--w, 34rem);
+      height: auto;
+      max-width: none;
+      pointer-events: none;
+      user-select: none;
+      opacity: var(--o, 0.9);
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .cloud {
+        animation: drift var(--d, 90s) var(--ease-io) infinite alternate;
+      }
+    }
+    @keyframes drift {
+      to {
+        translate: var(--dx, 6vw) 0;
+      }
+    }
+
+    /* ── Hero ─────────────────────────────────────────────── */
+    .hero {
+      min-height: 100svh;
+      display: grid;
+      align-items: center;
+      padding-block: calc(var(--header-h) + var(--s-7)) var(--s-8);
+      background: linear-gradient(to bottom, var(--sky-0), var(--sky-1));
+      background: linear-gradient(in oklab to bottom, var(--sky-0), var(--sky-1));
+    }
+    .hero__clouds {
+      position: absolute;
+      inset: 0;
+      overflow: clip;
+    }
+    .cloud--a {
+      --w: clamp(22rem, 40vw, 44rem);
+      --d: 110s;
+      top: 9%;
+      left: -8%;
+    }
+    .cloud--b {
+      --w: clamp(18rem, 30vw, 34rem);
+      --d: 140s;
+      --dx: -5vw;
+      --o: 0.75;
+      top: 58%;
+      right: -6%;
+    }
+    .cloud--c {
+      --w: clamp(14rem, 22vw, 26rem);
+      --d: 95s;
+      --o: 0.6;
+      bottom: 4%;
+      left: 22%;
+    }
+    .hero__inner {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+      gap: var(--s-7);
+      align-items: center;
+    }
+    .hero__copy {
+      display: grid;
+      gap: var(--s-5);
+      align-content: center;
+    }
+    .hero__title {
+      font-size: clamp(2.5rem, 1.2rem + 4.2vw, 5rem);
+      font-weight: 800;
+      font-stretch: 122%;
+      letter-spacing: -0.025em;
+      line-height: 0.96;
+      max-width: 12.5ch;
+    }
+    .hero__lead {
+      max-width: 33rem;
+      color: var(--ink-sky-soft);
+    }
+    .musicbox {
+      margin: 0;
+      display: grid;
+      justify-items: center;
+      gap: var(--s-4);
+    }
+    .musicbox__stage {
+      position: relative;
+      width: min(100%, 31rem);
+      aspect-ratio: 1;
+    }
+    .musicbox__face,
+    .musicbox__gaps {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .musicbox__face {
+      border-radius: 50%;
+      outline-offset: 8px;
+    }
+    .musicbox__gaps {
+      overflow: visible;
+      pointer-events: none;
+    }
+    .musicbox__gaps :global(.gap) {
+      fill: oklch(0.92 0.15 95 / 0.35);
+      stroke: var(--sun);
+      stroke-width: 0.014;
+      transform-box: fill-box;
+      transform-origin: center;
+      transition:
+        opacity var(--t-panel) var(--ease-out),
+        scale var(--t-panel) var(--ease-out);
+    }
+    .musicbox__gaps :global(.gap-ring) {
+      fill: none;
+      stroke: var(--ink);
+      stroke-width: 0.008;
+      stroke-dasharray: 0.02 0.018;
+      transform-box: fill-box;
+      transform-origin: center;
+      transition:
+        opacity var(--t-panel) var(--ease-out),
+        scale var(--t-panel) var(--ease-out);
+    }
+    .musicbox__gaps :global(:is(.gap, .gap-ring)[data-fixed]) {
+      opacity: 0;
+      scale: 1.8;
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .musicbox__gaps :global(.gap-ring) {
+        animation: gap-spin 6s linear infinite;
+      }
+      .musicbox__gaps :global(.gap:not([data-fixed])) {
+        animation: gap-breathe 2.4s var(--ease-io) infinite alternate;
+      }
+    }
+    @keyframes gap-spin {
+      to {
+        rotate: 1turn;
+      }
+    }
+    @keyframes gap-breathe {
+      to {
+        scale: 1.18;
+      }
+    }
+    .musicbox__caption {
+      display: grid;
+      gap: var(--s-1);
+      justify-items: center;
+      text-align: center;
+      max-width: 26rem;
+    }
+    .musicbox__play {
+      margin-top: var(--s-3);
+    }
+    .musicbox__what {
+      font-weight: 680;
+      font-stretch: 108%;
+    }
+    .musicbox__status {
+      color: var(--ink-sky-soft);
+    }
+    .musicbox__status[data-done] {
+      color: var(--ink);
+      font-weight: 600;
+    }
+    .play-icon :global(svg) {
+      width: 1.1em;
+      height: 1.1em;
+    }
+
+    /* Entrance: the line arrives, the music box rises like the sun */
+    @media (prefers-reduced-motion: no-preference) {
+      .hero__title {
+        animation: arrive var(--t-enter) var(--ease-out) both;
+      }
+      .hero__lead {
+        animation: arrive var(--t-enter) var(--ease-out) 120ms both;
+      }
+      .musicbox {
+        animation: rise 1400ms var(--ease-out) 200ms both;
+      }
+    }
+    @keyframes arrive {
+      from {
+        opacity: 0;
+        translate: 0 14px;
+        filter: blur(6px);
+      }
+    }
+    @keyframes rise {
+      from {
+        opacity: 0;
+        translate: 0 12vh;
+      }
+    }
+
+    /* ── Why ──────────────────────────────────────────────── */
+    .why {
+      padding-block: var(--section-tight) var(--s-8);
+      background: linear-gradient(to bottom, var(--sky-1), var(--sky-2));
+      background: linear-gradient(in oklab to bottom, var(--sky-1), var(--sky-2));
+    }
+    .why__inner {
+      display: grid;
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: var(--s-6) var(--s-8);
+      align-items: start;
+    }
+    .why__title {
+      grid-row: span 3;
+      max-width: 11ch;
+      position: sticky;
+      top: calc(var(--header-h) + var(--s-6));
+    }
+    .why__prose {
+      grid-column: 2;
+    }
+    .why__prose p {
+      color: var(--ink-sky-soft);
+    }
+    .why__pull {
+      grid-column: 2;
+      font-size: clamp(1.6rem, 1.15rem + 1.6vw, 2.5rem);
+      font-weight: 620;
+      font-stretch: 108%;
+      letter-spacing: -0.015em;
+      line-height: 1.12;
+      text-wrap: balance;
+      max-width: 22ch;
+      margin-block: var(--s-4);
+    }
+
+    /* ── Prototypes ───────────────────────────────────────── */
+    .protos-section {
+      padding-block: var(--section-tight) var(--s-8);
+      background: linear-gradient(to bottom, var(--sky-2), var(--sky-3));
+      background: linear-gradient(in oklab to bottom, var(--sky-2), var(--sky-3));
+    }
+    .protos__head {
+      display: grid;
+      gap: var(--s-4);
+      max-width: 44rem;
+      margin-bottom: var(--s-8);
+    }
+    .protos {
+      --col: var(--face-3);
+      --row-gap: var(--s-8);
+      display: grid;
+      gap: var(--row-gap);
+      padding: 0;
+    }
+    .proto {
+      display: grid;
+      grid-template-columns: var(--col) minmax(0, 1fr);
+      gap: var(--s-8);
+      align-items: start;
+    }
+    .proto__object {
+      position: relative;
+      align-self: stretch;
+      display: grid;
+      justify-items: center;
+      align-content: start;
+    }
+    /* The thread the prototypes hang on: face centre to the next face centre */
+    .proto__object::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: calc(-1 * var(--row-gap));
+      width: 1px;
+      background: oklch(0.2 0.03 258 / 0.24);
+    }
+    .proto:first-child .proto__object::before {
+      top: calc(var(--face) / 2);
+    }
+    .proto:last-child .proto__object::before {
+      bottom: auto;
+      height: calc(var(--face) / 2);
+    }
+    .proto__text {
+      display: grid;
+      gap: var(--s-3);
+      max-width: 40rem;
+    }
+    .proto__heading {
+      display: grid;
+      gap: var(--s-2);
+      margin-bottom: var(--s-1);
+    }
+    .proto__year {
+      font-size: var(--text-display-m);
+      font-weight: 800;
+      font-stretch: 125%;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    .proto__title {
+      font-size: var(--text-title);
+      font-weight: 680;
+      font-stretch: 108%;
+      letter-spacing: -0.01em;
+      line-height: 1.1;
+    }
+    .proto__text p {
+      color: var(--ink-sky-soft);
+    }
+    .proto__text .proto__ship {
+      color: var(--ink);
+      font-weight: 620;
+    }
+    .proto__text .proto__meta {
+      color: var(--ink-sky-soft);
+      margin-top: var(--s-1);
+    }
+
+    /* A Rondo face that plays its loop when pressed */
+    .face-btn {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      width: var(--face, 10rem);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      transition: transform var(--t-press) var(--ease-out);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .face-btn:active {
+      transform: scale(0.98);
+    }
+    .face-btn:focus-visible {
+      outline-offset: 6px;
+      border-radius: 50%;
+    }
+    .face-btn__face {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+    }
+    .face-btn__face.is-cardboard {
+      filter: sepia(0.72) saturate(0.85) brightness(0.96) contrast(0.94);
+    }
+    .face-btn__glyph {
+      position: absolute;
+      display: grid;
+      place-items: center;
+      width: 27%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      color: oklch(1 0 0 / 0.92);
+      transition:
+        background-color var(--t-state) var(--ease-out),
+        color var(--t-state) var(--ease-out);
+    }
+    .face-btn__glyph :global(svg) {
+      width: 42%;
+      height: 42%;
+      translate: 6% 0;
+    }
+    .face-btn[aria-pressed='true'] .face-btn__glyph :global(svg) {
+      translate: 0 0;
+    }
+    .face-btn:hover .face-btn__glyph,
+    .face-btn[aria-pressed='true'] .face-btn__glyph {
+      background: oklch(0.92 0.15 95 / 0.2);
+      color: var(--sun);
+    }
+
+    /* ── Materials ────────────────────────────────────────── */
+    .materials {
+      padding-block: var(--section-tight) var(--s-6);
+      background: linear-gradient(to bottom, var(--sky-3), var(--sky-4) 55%, var(--sky-5));
+      background: linear-gradient(in oklab to bottom, var(--sky-3), var(--sky-4) 55%, var(--sky-5));
+    }
+    .materials__clouds {
+      position: absolute;
+      inset: 0;
+    }
+    .cloud--d {
+      --w: clamp(18rem, 30vw, 34rem);
+      --d: 120s;
+      --dx: -7vw;
+      --o: 0.6;
+      top: calc(var(--w) * -0.42);
+      right: -4%;
+    }
+    .materials__inner {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: var(--s-7) var(--s-8);
+      align-items: start;
+    }
+    .materials__title {
+      grid-column: 1 / -1;
+      max-width: 16ch;
+    }
+    .materials__lead {
+      max-width: 30rem;
+      margin-top: var(--s-3);
+    }
+    .bom {
+      margin-top: var(--s-3);
+      font-size: 1rem;
+    }
+    .bom th,
+    .bom td {
+      padding: var(--s-3) 0;
+      border-bottom: 1px solid oklch(0.2 0.03 258 / 0.14);
+      vertical-align: middle;
+      text-align: left;
+    }
+    .bom tbody th {
+      font-weight: 400;
+      padding-right: var(--s-5);
+      width: 44%;
+    }
+    .bom__name {
+      display: block;
+      font-weight: 600;
+    }
+    .bom__note {
+      display: block;
+      color: var(--ink-sky-soft);
+      font-size: var(--text-small);
+    }
+    .bom__bar {
+      width: 100%;
+    }
+    .bom__bar span {
+      display: block;
+      height: 0.5rem;
+      width: max(3px, var(--share));
+      border-radius: 0 4px 4px 0;
+      background: var(--ink);
+      transform-origin: left center;
+    }
+    .bom__g {
+      padding-left: var(--s-5) !important;
+      text-align: right !important;
+      white-space: nowrap;
+      font-weight: 650;
+    }
+    .bom tfoot th,
+    .bom tfoot td {
+      border-bottom: 0;
+      border-top: 1.5px solid var(--ink);
+      font-weight: 700;
+      font-stretch: 108%;
+    }
+    @supports (animation-timeline: view()) {
+      @media (prefers-reduced-motion: no-preference) {
+        .bom__bar span {
+          animation: grow linear both;
+          animation-timeline: view();
+          animation-range: entry 0% cover 25%;
+        }
+      }
+    }
+    @keyframes grow {
+      from {
+        scale: 0 1;
+      }
+    }
+    .facts {
+      grid-column: 1 / -1;
+      columns: 2 22rem;
+      column-gap: var(--s-8);
+      margin-top: var(--s-6);
+      padding: 0;
+    }
+    .facts li {
+      break-inside: avoid;
+      padding-bottom: var(--s-6);
+    }
+    .facts h3 {
+      font-size: clamp(1.25rem, 1.1rem + 0.5vw, 1.5rem);
+      font-weight: 700;
+      font-stretch: 108%;
+      letter-spacing: -0.01em;
+      margin-bottom: var(--s-2);
+    }
+    .facts p {
+      color: var(--ink-sky-soft);
+      max-width: 36rem;
+    }
+    sub {
+      font-size: 0.62em;
+      line-height: 0;
+    }
+
+    /* ── Sunset: a breath between the day and the promise ──── */
+    .sunset {
+      height: clamp(12rem, 34vh, 20rem);
+      overflow: clip;
+      background: linear-gradient(to bottom, var(--sky-5), var(--sky-6) 38%, var(--sky-7) 74%, var(--sky-8));
+      background: linear-gradient(in oklab to bottom, var(--sky-5), var(--sky-6) 38%, var(--sky-7) 74%, var(--sky-8));
+    }
+    .cloud--e,
+    .cloud--f {
+      mix-blend-mode: soft-light;
+    }
+    .cloud--e {
+      --w: clamp(22rem, 38vw, 42rem);
+      --d: 130s;
+      --o: 0.9;
+      top: 18%;
+      left: 6%;
+    }
+    .cloud--f {
+      --w: clamp(16rem, 26vw, 30rem);
+      --d: 100s;
+      --dx: -6vw;
+      --o: 0.7;
+      top: 46%;
+      right: 4%;
+    }
+
+    /* ── Promise ──────────────────────────────────────────── */
+    .promise {
+      padding-block: var(--s-6) var(--s-8);
+      background: linear-gradient(to bottom, var(--sky-8), var(--sky-9) 30%, var(--sky-10));
+      background: linear-gradient(in oklab to bottom, var(--sky-8), var(--sky-9) 30%, var(--sky-10));
+    }
+    .promise__inner {
+      display: grid;
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: var(--s-7) var(--s-8);
+      align-items: start;
+    }
+    .promise__head {
+      grid-column: 1 / -1;
+      display: grid;
+      gap: var(--s-4);
+    }
+    .promise__head .lead {
+      max-width: 36rem;
+    }
+    .promise__aside {
+      display: grid;
+      gap: var(--s-5);
+    }
+    @media (min-width: 961px) and (min-height: 52rem) {
+      .promise__aside {
+        position: sticky;
+        top: calc(var(--header-h) + var(--s-4));
+      }
+    }
+    .dial {
+      margin: 0;
+      display: grid;
+      gap: var(--s-4);
+      width: min(100%, 30rem);
+    }
+    .dial__svg {
+      width: 100%;
+      height: auto;
+      overflow: visible;
+      font-family: var(--font);
+    }
+    .dial__ticks line {
+      stroke: var(--star-soft);
+      stroke-opacity: 0.45;
+      stroke-width: 1;
+    }
+    .dial__ticks line.is-major {
+      stroke-opacity: 0.9;
+      stroke-width: 1.5;
+    }
+    .dial__years text {
+      fill: var(--star-soft);
+      font-size: 11.5px;
+      font-weight: 620;
+      font-stretch: 72%;
+      letter-spacing: 0.04em;
+      font-variant-numeric: tabular-nums;
+      text-anchor: middle;
+      dominant-baseline: central;
+    }
+    .dial__years text:is(.is-start, .is-end) {
+      fill: var(--starlight);
+      text-anchor: start;
+    }
+    .dial__years text.is-end {
+      text-anchor: end;
+    }
+    .dial__tracks circle {
+      fill: none;
+      stroke: oklch(0.93 0.025 250 / 0.12);
+      stroke-width: 8;
+    }
+    .dial__arcs path {
+      fill: none;
+      stroke: var(--starlight);
+      stroke-width: 8;
+      stroke-linecap: round;
+      transition:
+        stroke var(--t-state) var(--ease-out),
+        stroke-width var(--t-state) var(--ease-out);
+    }
+    .dial__arcs path.is-forever {
+      stroke-linecap: butt;
+    }
+    .dial__labels text {
+      fill: var(--star-soft);
+      font-size: 12px;
+      font-weight: 620;
+      font-stretch: 72%;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      text-anchor: middle;
+      transition: fill var(--t-state) var(--ease-out);
+    }
+    .dial__sun {
+      fill: var(--night-700);
+      stroke: oklch(0.93 0.025 250 / 0.25);
+      stroke-width: 1;
+    }
+    /* Reading a promise lights its ring */
+    .promise:has(.ledger__row[data-arc='firmware']:is(:hover, :focus-within)) :is(path, text)[data-arc='firmware'],
+    .promise:has(.ledger__row[data-arc='updates']:is(:hover, :focus-within)) :is(path, text)[data-arc='updates'],
+    .promise:has(.ledger__row[data-arc='warranty']:is(:hover, :focus-within)) :is(path, text)[data-arc='warranty'],
+    .promise:has(.ledger__row[data-arc='warranty']:is(:hover, :focus-within)) :is(path, text)[data-arc='trial'] {
+      stroke: var(--sun);
+      fill: var(--sun);
+    }
+    .promise:has(.ledger__row[data-arc='firmware']:is(:hover, :focus-within)) path[data-arc='firmware'],
+    .promise:has(.ledger__row[data-arc='updates']:is(:hover, :focus-within)) path[data-arc='updates'],
+    .promise:has(.ledger__row[data-arc='warranty']:is(:hover, :focus-within)) path[data-arc='warranty'],
+    .promise:has(.ledger__row[data-arc='warranty']:is(:hover, :focus-within)) path[data-arc='trial'] {
+      fill: none;
+    }
+    @supports (animation-timeline: view()) {
+      @media (prefers-reduced-motion: no-preference) {
+        .dial__arcs path {
+          stroke-dasharray: 1 1;
+          animation: draw linear both;
+          animation-timeline: view();
+          animation-range: entry 5% entry 95%;
+        }
+      }
+    }
+    @keyframes draw {
+      from {
+        stroke-dashoffset: 1;
+      }
+      to {
+        stroke-dashoffset: 0;
+      }
+    }
+    .dial__caption {
+      font-size: var(--text-small);
+      color: var(--star-soft);
+      max-width: 30rem;
+    }
+    .promise__main {
+      container-type: inline-size;
+    }
+    .ledger {
+      margin: 0;
+      border-top: 1px solid var(--border);
+    }
+    .ledger__row {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+      gap: var(--s-3) var(--s-6);
+      padding-block: var(--s-6);
+      border-bottom: 1px solid var(--border);
+    }
+    .ledger dt {
+      font-size: clamp(1.3rem, 1.1rem + 0.7vw, 1.75rem);
+      font-weight: 720;
+      font-stretch: 110%;
+      letter-spacing: -0.015em;
+      line-height: 1.1;
+      text-wrap: balance;
+    }
+    .ledger dd {
+      margin: 0;
+      display: grid;
+      gap: var(--s-4);
+      color: var(--star-soft);
+    }
+    /* Narrow ledger (tablet, small laptop): promise above its mechanism. */
+    @container (max-width: 40rem) {
+      .ledger__row {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s-2);
+      padding: 0;
+    }
+    .tags li {
+      padding: 0.3rem 0.65rem;
+      border-radius: var(--r-pill);
+      box-shadow: inset 0 0 0 1px oklch(0.93 0.025 250 / 0.28);
+      color: var(--starlight);
+      font-size: var(--text-label);
+      font-weight: 620;
+      font-stretch: 80%;
+      letter-spacing: 0.03em;
+      font-variant-numeric: tabular-nums;
+    }
+    .promise__sign {
+      margin-top: var(--s-6);
+      font-size: var(--text-title);
+      font-weight: 700;
+      font-stretch: 112%;
+      letter-spacing: -0.01em;
+    }
+    .promise__sign::before {
+      content: '— ';
+      color: var(--star-soft);
+    }
+
+    /* ── Makers ───────────────────────────────────────────── */
+    .makers {
+      padding-block: var(--section-tight) var(--s-8);
+      background: linear-gradient(to bottom, var(--sky-10), var(--sky-11));
+      background: linear-gradient(in oklab to bottom, var(--sky-10), var(--sky-11));
+    }
+    .makers__title {
+      max-width: 14ch;
+      margin-bottom: var(--s-8);
+    }
+    .makers__grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--s-8);
+    }
+    .maker {
+      display: grid;
+      gap: var(--s-4);
+      align-content: start;
+      max-width: 36rem;
+    }
+    .maker + .maker {
+      margin-top: var(--s-9);
+    }
+    .maker__name {
+      font-size: clamp(3.5rem, 2rem + 6vw, 7.5rem);
+      font-weight: 800;
+      font-stretch: 125%;
+      letter-spacing: -0.03em;
+      line-height: 0.9;
+    }
+    .maker__role {
+      font-size: var(--text-title);
+      font-weight: 560;
+      font-stretch: 100%;
+      color: var(--star-soft);
+      line-height: 1.2;
+    }
+    .maker__bio {
+      color: var(--star-soft);
+      line-height: 1.65;
+    }
+    .maker__fav {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: var(--s-5);
+      align-items: center;
+      margin-top: var(--s-4);
+    }
+    .face-btn--small {
+      --face: 7.5rem;
+    }
+    .maker__facts {
+      display: grid;
+      gap: var(--s-3);
+      margin: 0;
+      font-size: var(--text-small);
+    }
+    .maker__facts dt {
+      color: var(--star-soft);
+    }
+    .maker__facts dd {
+      margin: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0 var(--s-2);
+      color: var(--starlight);
+      font-weight: 560;
+    }
+    .maker__facts a {
+      color: var(--starlight);
+    }
+    .finish-dot {
+      width: 0.85rem;
+      height: 0.85rem;
+      border-radius: 50%;
+      background: var(--sw);
+      box-shadow:
+        inset 0 1px 1px oklch(1 0 0 / 0.45),
+        0 0 0 1px oklch(0.93 0.025 250 / 0.35);
+    }
+
+    /* ── Close ────────────────────────────────────────────── */
+    .close {
+      padding-block: var(--section-tight);
+      background: linear-gradient(to bottom, var(--sky-11), var(--sky-12));
+      background: linear-gradient(in oklab to bottom, var(--sky-11), var(--sky-12));
+    }
+    .close__inner {
+      display: grid;
+      gap: var(--s-5);
+      justify-items: start;
+    }
+    .close__title {
+      font-size: var(--text-display-xl);
+      font-weight: 800;
+      font-stretch: 125%;
+      letter-spacing: -0.025em;
+      line-height: 0.94;
+    }
+    .close__title span {
+      display: block;
+      white-space: nowrap;
+    }
+    @supports (animation-timeline: view()) {
+      @media (prefers-reduced-motion: no-preference) {
+        .close__title span {
+          animation: inhale linear both;
+          animation-timeline: view();
+          animation-range: entry 0% cover 38%;
+        }
+      }
+    }
+    @keyframes inhale {
+      from {
+        font-stretch: 62%;
+        font-weight: 300;
+        opacity: 0.3;
+      }
+    }
+    .close__lead {
+      max-width: 34rem;
+      color: var(--star-soft);
+    }
+    .close__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s-3);
+      margin-top: var(--s-2);
+    }
+    .close__trust {
+      gap: var(--s-2) var(--s-5);
+    }
+    .close__trust :global(svg) {
+      color: var(--success-bright);
+    }
+    .close__ps {
+      margin-top: var(--s-7);
+      color: var(--star-soft);
+      font-size: var(--text-lead);
+    }
+
+    /* ── Responsive ───────────────────────────────────────── */
+    @media (max-width: 960px) {
+      .story {
+        --face-0: 6.5rem;
+        --face-1: 8rem;
+        --face-2: 9.5rem;
+        --face-3: 11rem;
+      }
+      .hero {
+        align-items: start;
+        padding-top: calc(var(--header-h) + var(--s-6));
+      }
+      .hero__inner,
+      .why__inner,
+      .materials__inner,
+      .promise__inner {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .musicbox__stage {
+        width: min(100%, 24rem);
+      }
+      .cloud--a {
+        top: auto;
+        bottom: 12%;
+        left: -24%;
+      }
+      .why__title {
+        position: static;
+        grid-row: auto;
+      }
+      .why__prose,
+      .why__pull {
+        grid-column: 1;
+      }
+      .promise__aside {
+        position: static;
+      }
+      .makers__grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .maker + .maker {
+        margin-top: 0;
+      }
+    }
+    @media (max-width: 640px) {
+      .proto__object::before {
+        display: none;
+      }
+      .proto {
+        grid-template-columns: minmax(0, 1fr);
+        gap: var(--s-4);
+      }
+      .proto__object {
+        justify-items: start;
+      }
+      .protos {
+        --row-gap: var(--s-7);
+      }
+      .bom tbody th {
+        width: 60%;
+        padding-right: var(--s-4);
+      }
+      .bom__g {
+        padding-left: var(--s-3) !important;
+      }
+      .face-btn--small {
+        --face: 6rem;
+      }
+      .maker__fav {
+        gap: var(--s-4);
+      }
+    }
+  }
+</style>
+
+<script>
+  import '@/scripts/pages/story';
+</script>

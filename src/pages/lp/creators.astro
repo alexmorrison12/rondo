@@ -1,0 +1,1441 @@
+---
+/**
+ * Creator & affiliate program. Noon-sky drench: the committed colour carries the page, white panels
+ * hold the tools (estimator, application). Four playable "clips" share one engine with the hero.
+ */
+import Icon from '@/components/Icon.astro';
+import Base from '@/layouts/Base.astro';
+import { COLORWAYS, DEFAULT_PHASE, PHASES, PRODUCT, formatPrice } from '@/data/site';
+import { RING_GLYPH } from '@/lib/icons';
+import { url } from '@/lib/url';
+
+const RATE = 0.12;
+const COOKIE_DAYS = 30;
+const perSale = formatPrice(PRODUCT.price * RATE, { cents: true });
+const standard = COLORWAYS.filter((c) => !c.foundersOnly);
+const cloud = (n: number) => `url(${url(`/textures/cloud-${n}.webp`)})`;
+
+const formats = [
+  {
+    id: 'drop',
+    title: 'The drop',
+    how: 'Start with one ring and bring in another every two bars. Cut to the full loop the moment the drums land.',
+    caption: 'wait for it…',
+    ring: 'var(--ember)',
+    finish: 'eclipse',
+  },
+  {
+    id: 'turn',
+    title: 'Satisfying ring turn',
+    how: 'Macro lens, one ring, one click at a time. Same notes, a new groove with every detent.',
+    caption: 'same notes, one click',
+    ring: 'var(--sunlit)',
+    finish: 'moon',
+  },
+  {
+    id: 'mood',
+    title: 'Mood to loop',
+    how: 'Ask your comments for a moment, type it in, and play whatever comes out. Same words, same song.',
+    caption: '“rain on the night bus”',
+    ring: 'var(--tide)',
+    finish: 'noon',
+  },
+  {
+    id: 'build',
+    title: 'Ten taps',
+    how: 'From silence to a song in ten taps. Film it in one take and speed-ramp the middle.',
+    caption: 'tap 0 of 10',
+    ring: 'var(--lilac)',
+    finish: 'ember',
+  },
+];
+
+const views = [1000, 2000, 3000, 5000, 7500, 10000, 15000, 20000, 25000, 35000, 50000, 75000, 100000, 150000, 250000, 500000, 750000, 1000000, 2000000];
+// Estimator defaults, rendered on the server with the same maths the client runs.
+const nf = new Intl.NumberFormat('en-US');
+const est = { viewsIndex: 8, videos: 6, ctr: 0.4, conv: 1 };
+const estViews = views[est.viewsIndex]!;
+const estMonthViews = estViews * est.videos;
+const estClicks = (estMonthViews * est.ctr) / 100;
+const estSales = (estClicks * est.conv) / 100;
+const estMonth = estSales * PRODUCT.price * RATE;
+const estSalesText = estSales < 10 ? String(Math.round(estSales * 10) / 10) : nf.format(Math.round(estSales));
+const platforms = ['TikTok', 'YouTube', 'Instagram', 'Twitch', 'Somewhere else'];
+const followerRanges = ['Under 1,000', '1,000 – 10,000', '10,000 – 100,000', '100,000 – 1 million', 'Over 1 million'];
+---
+
+<Base
+  title="Creator program"
+  description={`Make videos with Rondo: accepted creators get one free, earn ${RATE * 100}% on every sale they send with a ${COOKIE_DAYS}-day cookie, and keep every sound they make, royalty-free.`}
+  og="creators"
+  surface="sky"
+  headerTheme="day"
+  bodyClass="page-creators"
+  themeColor="oklch(0.63 0.14 249)"
+  minimal
+>
+  <!-- Hero ────────────────────────────────────────────────── -->
+  <section class="c-hero" aria-labelledby="c-title" data-header-theme="day">
+    <div class="c-clouds" aria-hidden="true">
+      <i class="c-cloud" style={`--img:${cloud(0)};--x:-7%;--y:84%;--w:30rem;--d:150s`}></i>
+      <i class="c-cloud" style={`--img:${cloud(3)};--x:30%;--y:9%;--w:22rem;--d:180s;--o:.85`}></i>
+      <i class="c-cloud c-cloud--front" style={`--img:${cloud(5)};--x:62%;--y:76%;--w:26rem;--d:120s`}></i>
+    </div>
+
+    <div class="wrap c-hero__inner">
+      <div class="c-hero__copy">
+        <h1 id="c-title" class="c-hero__title">
+          <span>Your next</span>
+          <span>sound is</span>
+          <span>a circle.</span>
+        </h1>
+        <p class="lead c-hero__lead">
+          Rondo is a palm-sized instrument with four turning rings, made to be filmed from above. Make videos with it and
+          we’ll send you one free, pay {RATE * 100}% on every sale you send our way, and never claim a sound you make.
+        </p>
+        <div class="c-hero__actions">
+          <a class="btn btn--sun btn--lg" href="#apply"><Fragment set:html={RING_GLYPH} /> Apply in two minutes</a>
+          <a class="btn btn--ghost btn--lg" href={url('/play/')}><Icon name="play" /> Try Rondo in your browser</a>
+        </div>
+        <ul class="trust c-facts" role="list">
+          <li>No follower minimum</li>
+          <li>Replies within ten working days</li>
+          <li>Royalty-free sounds</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="c-hero__stage">
+      <canvas class="c-hero__face" data-hero-face aria-hidden="true"></canvas>
+      <button class="sun-btn" type="button" data-hero-play aria-pressed="false" aria-label="Play a loop on the Rondo">
+        <span class="sun-btn__icon" data-hero-icon><Icon name="play" /></span>
+      </button>
+    </div>
+  </section>
+
+  <!-- The deal ────────────────────────────────────────────── -->
+  <section class="deal" aria-labelledby="deal-title" data-header-theme="day">
+    <div class="wrap">
+      <header class="deal__head">
+        <h2 id="deal-title" class="display-l">The deal.</h2>
+        <p class="lead deal__lead">Five things, written the way we’d want them written to us.</p>
+      </header>
+
+      <ul class="perks" role="list">
+        <li class="perk perk--rondo">
+          <h3 class="perk__title">A Rondo, on&nbsp;us.</h3>
+          <div class="perk__body">
+            <p>
+              Accepted creators get one free, in the finish they like best, with no posting quota attached. It’s yours to
+              keep. <span data-phase-shipping>{PHASES[DEFAULT_PHASE].shipping}</span>.
+            </p>
+            <div class="pick">
+              <canvas class="pick__face" data-pick-face aria-hidden="true"></canvas>
+              <div class="pick__controls">
+                <p class="field__label" id="pick-label">Which one would you film?</p>
+                <div class="swatches" role="radiogroup" aria-labelledby="pick-label">
+                  {
+                    standard.map((c) => (
+                      <button
+                        class="swatch"
+                        type="button"
+                        role="radio"
+                        aria-checked={c.id === 'moon' ? 'true' : 'false'}
+                        aria-label={`${c.name}: ${c.note}`}
+                        data-pick={c.id}
+                        style={`--sw: ${c.swatch}`}
+                      />
+                    ))
+                  }
+                </div>
+                <p class="engrave pick__name" data-pick-name>Moon · Raw bead-blasted silver</p>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <li class="perk">
+          <h3 class="perk__title">{RATE * 100}% of every&nbsp;sale.</h3>
+          <div class="perk__body">
+            <p>
+              Your link carries a {COOKIE_DAYS}-day cookie: if someone taps it on Monday and orders three weeks later, it
+              counts. That’s <strong class="num">{perSale}</strong> per Rondo, paid monthly.
+            </p>
+            <a class="perk__link" href="#earn">Estimate your month <Icon name="arrowRight" /></a>
+          </div>
+        </li>
+
+        <li class="perk">
+          <h3 class="perk__title">Every sound is&nbsp;yours.</h3>
+          <div class="perk__body">
+            <p>
+              Anything you make on Rondo or in Rondo Web is royalty-free, forever: in videos, tracks, streams and paid work
+              for other brands. We will never claim your audio.
+            </p>
+            <a class="perk__link" href={url('/play/')}>Make one now <Icon name="arrowUpRight" /></a>
+          </div>
+        </li>
+
+        <li class="perk">
+          <h3 class="perk__title">#playincircles, every&nbsp;month.</h3>
+          <div class="perk__body">
+            <p>A new prompt on the first Monday of each month. Play along, remix each other, or ignore it and do your thing.</p>
+            <ul class="prompts" role="list" aria-label="Example prompts">
+              <li>Seven steps, no drums</li>
+              <li>Only the Spark ring</li>
+              <li>Your commute, as a loop</li>
+            </ul>
+          </div>
+        </li>
+
+        <li class="perk">
+          <h3 class="perk__title">Firmware&nbsp;first.</h3>
+          <div class="perk__body">
+            <p>
+              New engines, scales and fixes reach you a month before everyone else, on the beta channel. Break things, tell
+              us, get credited in the release notes.
+            </p>
+            <p class="engrave perk__tag">Beta channel · one month early</p>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Formats ─────────────────────────────────────────────── -->
+  <section class="formats" aria-labelledby="formats-title" data-header-theme="day">
+    <div class="wrap formats__head">
+      <h2 id="formats-title" class="display-l">Four formats that work.</h2>
+      <p class="lead formats__lead">
+        Rondo looks best from above, where every note is a light. These are easy to shoot and hard to scroll past. Tap
+        one to hear it.
+      </p>
+    </div>
+    <ul class="clips" role="list">
+      {
+        formats.map((f) => (
+          <li class="format" style={`--ring:${f.ring}`}>
+            <button
+              class="clip"
+              type="button"
+              data-demo={f.id}
+              data-finish={f.finish}
+              aria-pressed="false"
+              aria-describedby={`how-${f.id}`}
+            >
+              <span class="visually-hidden">Play: {f.title}</span>
+              <span class="clip__top" aria-hidden="true">
+                <span class="clip__time num" data-time>
+                  0:00
+                </span>
+                <span class="clip__status" data-status />
+              </span>
+              <canvas class="clip__face" data-clip-face aria-hidden="true" />
+              <span class="clip__play" aria-hidden="true" data-clip-icon>
+                <Icon name="play" />
+              </span>
+              <span class="clip__caption" aria-hidden="true" data-caption>
+                {f.caption}
+              </span>
+            </button>
+            <h3 class="format__title">{f.title}</h3>
+            <p class="format__how" id={`how-${f.id}`}>
+              {f.how}
+            </p>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <!-- Estimator ───────────────────────────────────────────── -->
+  <section class="earn" id="earn" aria-labelledby="earn-title" data-header-theme="day">
+    <div class="wrap earn__grid">
+      <div class="earn__intro">
+        <h2 id="earn-title" class="display-l">Run the numbers.</h2>
+        <p class="lead">Slide these to match your channel. It’s an illustrative estimate, not a promise.</p>
+      </div>
+
+      <div class="calc surface-haze" data-calc>
+        <div class="calc__inputs">
+          <div class="range">
+            <div class="range__head">
+              <label for="r-views">Average views per video</label>
+              <output class="num" for="r-views" data-out="views" aria-hidden="true">{nf.format(estViews)}</output>
+            </div>
+            <input
+              id="r-views"
+              type="range"
+              min="0"
+              max={views.length - 1}
+              step="1"
+              value={est.viewsIndex}
+              data-range="views"
+              data-stops={JSON.stringify(views)}
+              aria-valuetext={`${nf.format(estViews)} views`}
+            />
+            <div class="range__scale" aria-hidden="true"><span>1K</span><span>2M</span></div>
+          </div>
+          <div class="range">
+            <div class="range__head">
+              <label for="r-videos">Videos per month</label>
+              <output class="num" for="r-videos" data-out="videos" aria-hidden="true">{est.videos}</output>
+            </div>
+            <input id="r-videos" type="range" min="1" max="30" step="1" value={est.videos} data-range="videos" aria-valuetext={`${est.videos} videos`} />
+            <div class="range__scale" aria-hidden="true"><span>1</span><span>30</span></div>
+          </div>
+          <div class="range">
+            <div class="range__head">
+              <label for="r-ctr">Viewers who tap your link</label>
+              <output class="num" for="r-ctr" data-out="ctr" aria-hidden="true">{est.ctr.toFixed(1)}%</output>
+            </div>
+            <input id="r-ctr" type="range" min="0.1" max="3" step="0.1" value={est.ctr} data-range="ctr" aria-valuetext={`${est.ctr.toFixed(1)} percent`} />
+            <div class="range__scale" aria-hidden="true"><span>0.1%</span><span>3%</span></div>
+          </div>
+          <div class="range">
+            <div class="range__head">
+              <label for="r-conv">Of those, buy within {COOKIE_DAYS} days</label>
+              <output class="num" for="r-conv" data-out="conv" aria-hidden="true">{est.conv.toFixed(1)}%</output>
+            </div>
+            <input id="r-conv" type="range" min="0.2" max="5" step="0.1" value={est.conv} data-range="conv" aria-valuetext={`${est.conv.toFixed(1)} percent`} />
+            <div class="range__scale" aria-hidden="true"><span>0.2%</span><span>5%</span></div>
+          </div>
+        </div>
+
+        <div class="calc__result">
+          <p class="calc__label">Estimated commission</p>
+          <p class="calc__big num"><span data-month>{formatPrice(Math.round(estMonth))}</span><span class="calc__per">a month</span></p>
+          <p class="calc__year">About <strong class="num" data-year>{formatPrice(Math.round(estMonth * 12))}</strong> a year</p>
+          <ol class="funnel" role="list">
+            <li><strong class="num" data-f="views">{nf.format(estMonthViews)}</strong> views</li>
+            <li><strong class="num" data-f="clicks">{nf.format(Math.round(estClicks))}</strong> taps on your link</li>
+            <li><strong class="num" data-f="sales">{estSalesText}</strong> <span data-f="rondos">{estSalesText === '1' ? 'Rondo' : 'Rondos'}</span> × <span class="num">{perSale}</span></li>
+          </ol>
+          <p class="calc__fine">
+            Illustrative only, not a forecast. Assumes {RATE * 100}% of {formatPrice(PRODUCT.price)} for each Rondo bought
+            within {COOKIE_DAYS} days of a tap on your link. Real numbers depend on your audience, the season and returns
+            during the {PRODUCT.trialNights}-night trial.
+          </p>
+        </div>
+        <p class="visually-hidden" aria-live="polite" data-calc-live></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Apply ───────────────────────────────────────────────── -->
+  <section class="apply" id="apply" aria-labelledby="apply-title" data-header-theme="day">
+    <div class="wrap apply__grid">
+      <div class="apply__intro">
+        <h2 id="apply-title" class="display-l">Apply in two minutes.</h2>
+        <p class="lead">Tell us where you post and show us one thing you’ve made. A person reads every application.</p>
+        <ol class="next" role="list">
+          <li><span><strong>We reply within ten working days,</strong> yes or no, never silence.</span></li>
+          <li><span><strong>If it’s a yes, your Rondo ships</strong> with your link and a discount code for your audience.</span></li>
+          <li><span><strong>You post when you love something.</strong> No quotas, no scripts, no approval queue.</span></li>
+        </ol>
+      </div>
+
+      <div class="apply__panel surface-haze">
+        <form class="apply-form" data-apply novalidate aria-describedby="apply-note">
+          <div class="field">
+            <label for="a-name">Your name</label>
+            <input class="input" id="a-name" name="name" type="text" autocomplete="name" required aria-describedby="e-name" />
+            <p class="field__error" id="e-name" hidden></p>
+          </div>
+          <div class="field">
+            <label for="a-email">Email</label>
+            <input
+              class="input"
+              id="a-email"
+              name="email"
+              type="email"
+              inputmode="email"
+              autocomplete="email"
+              spellcheck="false"
+              required
+              aria-describedby="e-email"
+            />
+            <p class="field__error" id="e-email" hidden></p>
+          </div>
+          <div class="field">
+            <label for="a-platform">Where you post most</label>
+            <select class="select" id="a-platform" name="platform" required aria-describedby="e-platform">
+              <option value="" selected disabled>Choose one</option>
+              {platforms.map((p) => <option value={p}>{p}</option>)}
+            </select>
+            <p class="field__error" id="e-platform" hidden></p>
+          </div>
+          <div class="field">
+            <label for="a-handle">Handle</label>
+            <div class="handle">
+              <span class="handle__at" aria-hidden="true">@</span>
+              <input
+                class="input"
+                id="a-handle"
+                name="handle"
+                type="text"
+                autocomplete="off"
+                autocapitalize="none"
+                spellcheck="false"
+                required
+                aria-describedby="e-handle"
+              />
+            </div>
+            <p class="field__error" id="e-handle" hidden></p>
+          </div>
+          <div class="field">
+            <label for="a-followers">Followers</label>
+            <select class="select" id="a-followers" name="followers" required aria-describedby="e-followers">
+              <option value="" selected disabled>Roughly how many?</option>
+              {followerRanges.map((r) => <option value={r}>{r}</option>)}
+            </select>
+            <p class="field__error" id="e-followers" hidden></p>
+          </div>
+          <div class="field">
+            <label for="a-link">A link to something you’ve made</label>
+            <input
+              class="input"
+              id="a-link"
+              name="link"
+              type="url"
+              inputmode="url"
+              autocomplete="url"
+              spellcheck="false"
+              placeholder="https://"
+              required
+              aria-describedby="h-link e-link"
+            />
+            <p class="field__hint" id="h-link">A video, a track, a post. Anything you’re proud of.</p>
+            <p class="field__error" id="e-link" hidden></p>
+          </div>
+          <div class="field apply-form__wide">
+            <label class="consent">
+              <input type="checkbox" name="consent" required aria-describedby="e-consent" />
+              <span>
+                I’ll label partner posts clearly where I post (like <strong>#ad</strong>), and I’m happy for Rondo to email
+                me about this application.
+              </span>
+            </label>
+            <p class="field__error" id="e-consent" hidden></p>
+          </div>
+          <div class="apply-form__wide apply-form__submit">
+            <button class="btn btn--ink btn--lg btn--block" type="submit"><Icon name="arrowRight" /> Send application</button>
+            <p class="apply-form__note" id="apply-note">
+              Concept site: the form checks your answers, but nothing is sent or stored.
+            </p>
+          </div>
+          <p class="visually-hidden" role="status" data-form-status></p>
+        </form>
+
+        <div class="apply-done" data-done hidden>
+          <span class="apply-done__mark" aria-hidden="true"><Fragment set:html={RING_GLYPH} /></span>
+          <h3 class="display-m" tabindex="-1" data-done-title>Got it.</h3>
+          <p class="lead">
+            We read every application ourselves and reply within ten working days. While you wait, make something worth
+            posting.
+          </p>
+          <div class="apply-done__actions">
+            <a class="btn btn--ink" href={url('/play/')}><Icon name="play" /> Try Rondo in your browser</a>
+            <button class="btn btn--quiet" type="button" data-reset>Edit my answers</button>
+          </div>
+          <p class="apply-form__note">This is a concept site, so nothing left your browser.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ ─────────────────────────────────────────────────── -->
+  <section class="c-faq" aria-labelledby="cfaq-title" data-header-theme="day">
+    <div class="wrap c-faq__inner">
+      <h2 id="cfaq-title" class="display-m">Before you apply.</h2>
+      <div class="faq">
+        <details>
+          <summary>Who qualifies?</summary>
+          <div>
+            <p>
+              Anyone making things people watch: musicians, producers, makers, desk-setup people, satisfying-video people.
+              There’s no follower minimum. We look at whether your videos make people want to play, not at how many people
+              saw them.
+            </p>
+          </div>
+        </details>
+        <details>
+          <summary>Do I need to be a musician?</summary>
+          <div>
+            <p>
+              No. Every ring is locked to a scale, so there are no wrong notes, and the rings do half the arranging for you.
+              If you can film your hands, you’re qualified.
+            </p>
+          </div>
+        </details>
+        <details>
+          <summary>How and when do I get paid?</summary>
+          <div>
+            <p>
+              Monthly, by bank transfer, with no minimum. You earn {RATE * 100}% of the price before tax and shipping
+              ({perSale} per Rondo) on orders placed within {COOKIE_DAYS} days of someone tapping your link. Commission is paid once an
+              order ships; if a Rondo comes back during its {PRODUCT.trialNights}-night trial, that amount comes off a
+              later payout.
+            </p>
+          </div>
+        </details>
+        <details>
+          <summary>What are the disclosure rules?</summary>
+          <div>
+            <p>
+              Say you’re a partner, every time, in the way the rules where you live require. In most places that means a
+              clear label such as #ad or “paid partnership” at the start of the caption, plus the platform’s own
+              branded-content tag. If your Rondo was free, say that too. We’ll never ask you to hide it.
+            </p>
+          </div>
+        </details>
+        <details>
+          <summary>Can I use Rondo sounds in sponsored work for other brands?</summary>
+          <div>
+            <p>Yes. Everything you make on Rondo is royalty-free, including in paid work that has nothing to do with us.</p>
+          </div>
+        </details>
+      </div>
+    </div>
+    <div class="wrap c-close">
+      <p class="c-close__line"><span>Your next sound</span> <span>is a circle.</span></p>
+      <div class="c-close__actions">
+        <a class="btn btn--sun btn--lg" href="#apply"><Fragment set:html={RING_GLYPH} /> Apply in two minutes</a>
+        <a class="btn btn--ghost btn--lg" href={url('/play/')}><Icon name="play" /> Try it in your browser</a>
+      </div>
+    </div>
+  </section>
+
+  <p class="visually-hidden" aria-live="polite" data-announce></p>
+</Base>
+
+<style>
+  @layer page {
+    :global(body.page-creators) {
+      /* Noon, committed: the sky carries the page (hues from the noon sky in src/scripts/lib/skies.ts). */
+      --n-zenith: oklch(0.63 0.14 249);
+      --n-sky: oklch(0.72 0.12 242);
+      --n-low: oklch(0.79 0.09 236);
+      background: var(--n-sky);
+    }
+
+    /* ── Hero ─────────────────────────────────────────────── */
+    .c-hero {
+      position: relative;
+      isolation: isolate;
+      overflow: clip;
+      min-height: 100svh;
+      display: grid;
+      align-items: center;
+      padding-block: calc(var(--header-h) + var(--s-6)) var(--s-8);
+      background: linear-gradient(to bottom, var(--n-zenith), var(--n-sky) 62%, var(--n-sky));
+    }
+    /* The copy sits above the disc, but only the copy itself should take pointer events. */
+    .c-hero__inner {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .c-hero__copy {
+      pointer-events: auto;
+    }
+    .c-hero__copy {
+      display: grid;
+      gap: var(--s-5);
+      justify-items: start;
+      width: fit-content;
+      max-width: min(40rem, 50vw);
+    }
+    .c-hero__title {
+      font-size: var(--text-display-xl);
+      font-weight: 800;
+      font-stretch: 125%;
+      letter-spacing: -0.025em;
+      line-height: 0.9;
+      animation: inhale 1100ms var(--ease-out) both;
+    }
+    .c-hero__title span {
+      display: block;
+      white-space: nowrap;
+    }
+    @keyframes inhale {
+      from {
+        font-stretch: 62%;
+        font-weight: 300;
+      }
+    }
+    .c-hero__lead {
+      max-width: 33rem;
+      color: var(--ink-sky-soft);
+    }
+    .c-hero__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s-3);
+    }
+    /* The shared trust row, with ring markers in place of icons. */
+    .c-facts {
+      color: var(--ink-sky-soft);
+    }
+    .c-facts li::before {
+      content: '';
+      flex: none;
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 50%;
+      box-shadow: inset 0 0 0 1.5px currentColor;
+    }
+
+    /* A big Ember Rondo, bleeding off the edge like the top of a very large record. */
+    .c-hero__stage {
+      position: absolute;
+      z-index: 1;
+      top: 50%;
+      right: calc(clamp(6rem, 12vw, 15rem) * -1);
+      width: min(62rem, 58vw);
+      aspect-ratio: 1;
+      translate: 0 -46%;
+    }
+    .c-hero__face {
+      width: 100%;
+      height: 100%;
+    }
+    .c-clouds {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .c-cloud {
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      width: min(var(--w), 80vw);
+      aspect-ratio: 2;
+      /* Noon light from above: bright tops, a cool shade underneath. */
+      background:
+        var(--img) center / contain no-repeat,
+        linear-gradient(to bottom, oklch(0.9 0.02 240), oklch(0.72 0.05 245) 85%);
+      background-blend-mode: screen;
+      -webkit-mask: var(--img) center / contain no-repeat;
+      mask: var(--img) center / contain no-repeat;
+      opacity: var(--o, 0.95);
+      animation: drift var(--d, 120s) linear infinite alternate;
+    }
+    .c-cloud--front {
+      z-index: 3;
+    }
+    @keyframes drift {
+      to {
+        translate: 5vw 0;
+      }
+    }
+
+    .sun-btn {
+      position: absolute;
+      left: 36.25%;
+      top: 36.25%;
+      width: 27.5%;
+      height: 27.5%;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: var(--starlight);
+      transition: transform var(--t-press) var(--ease-out);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .sun-btn::after {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      box-shadow: 0 0 0 2px oklch(0.93 0.025 250 / 0);
+      transition: box-shadow var(--t-state) var(--ease-out);
+    }
+    .sun-btn:hover::after {
+      box-shadow: 0 0 0 2px oklch(0.93 0.025 250 / 0.7);
+    }
+    .sun-btn:active {
+      transform: scale(0.97);
+    }
+    .sun-btn:focus-visible {
+      outline: 3px solid var(--sun);
+      outline-offset: 6px;
+    }
+    .sun-btn__icon {
+      display: grid;
+      width: 28%;
+      aspect-ratio: 1;
+    }
+    .sun-btn__icon :global(svg) {
+      width: 100%;
+      height: 100%;
+      fill: currentColor;
+    }
+    .sun-btn[aria-pressed='false'] .sun-btn__icon {
+      translate: 6% 0;
+    }
+
+    /* Narrow: the disc drops below the copy and bleeds off the right edge instead. */
+    @media (max-width: 1100px) {
+      .c-hero {
+        min-height: auto;
+        align-items: start;
+        padding-bottom: var(--s-6);
+      }
+      .c-hero__copy {
+        max-width: 40rem;
+      }
+      .c-hero__stage {
+        position: relative;
+        top: auto;
+        right: auto;
+        translate: none;
+        justify-self: end;
+        width: min(88vw, 36rem);
+        margin: var(--s-6) calc(var(--gutter) * -1 - 8vw) 0 0;
+      }
+    }
+
+    /* ── The deal ─────────────────────────────────────────── */
+    .deal {
+      position: relative;
+      padding-block: var(--section-tight) var(--s-8);
+    }
+    .deal__head {
+      display: grid;
+      gap: var(--s-3);
+      margin-bottom: var(--s-7);
+    }
+    .deal__lead {
+      color: var(--ink-sky-soft);
+    }
+    .perks {
+      display: grid;
+      padding: 0;
+      list-style: none;
+      border-top: 1.5px solid var(--ink);
+    }
+    .perk {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      gap: var(--s-4) var(--s-7);
+      padding-block: var(--s-6);
+      border-bottom: 1px solid oklch(0.2 0.03 258 / 0.25);
+      align-items: start;
+    }
+    .perk__title {
+      font-size: var(--text-display-m);
+      font-stretch: 118%;
+      font-weight: 780;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    .perk--rondo .perk__title {
+      font-size: var(--text-display-l);
+      font-stretch: 122%;
+    }
+    .perk__body {
+      display: grid;
+      gap: var(--s-4);
+      justify-items: start;
+      max-width: 34rem;
+      font-size: var(--text-lead);
+      line-height: 1.45;
+      color: var(--ink-sky-soft);
+    }
+    .perk__body strong {
+      color: var(--ink);
+    }
+    .perk__link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: var(--text-body);
+      font-weight: 650;
+      color: var(--ink);
+      text-underline-offset: 0.25em;
+    }
+    .perk__link :global(svg) {
+      width: 1.05rem;
+      height: 1.05rem;
+    }
+    .perk__tag {
+      padding: 0.45rem 0.8rem;
+      border-radius: var(--r-pill);
+      box-shadow: inset 0 0 0 1.5px var(--ink);
+      color: var(--ink);
+    }
+    .prompts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s-2);
+      padding: 0;
+      list-style: none;
+      font-size: var(--text-small);
+    }
+    .prompts li {
+      padding: 0.5rem 0.9rem;
+      border-radius: var(--r-pill);
+      background: var(--ink);
+      color: var(--starlight);
+      font-weight: 600;
+    }
+    .pick {
+      display: flex;
+      align-items: center;
+      gap: var(--s-5);
+      margin-top: var(--s-2);
+    }
+    .pick__face {
+      flex: none;
+      width: clamp(8rem, 5rem + 8vw, 12rem);
+      aspect-ratio: 1;
+    }
+    .pick__controls {
+      display: grid;
+      gap: var(--s-3);
+    }
+    .pick__controls .field__label {
+      color: var(--ink);
+    }
+    .pick__name {
+      color: var(--ink-sky-soft);
+    }
+    @media (max-width: 860px) {
+      .perk {
+        grid-template-columns: 1fr;
+        padding-block: var(--s-5);
+      }
+      .perk__body {
+        font-size: var(--text-body);
+      }
+    }
+
+    /* ── Formats ──────────────────────────────────────────── */
+    .formats {
+      padding-block: var(--section-tight) var(--section);
+    }
+    .formats__head {
+      display: grid;
+      gap: var(--s-4);
+      max-width: var(--max);
+      margin-bottom: var(--s-7);
+    }
+    .formats__head h2 {
+      max-width: 12ch;
+    }
+    .formats__lead {
+      max-width: 38rem;
+      color: var(--ink-sky-soft);
+    }
+    .clips {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--s-6) clamp(1rem, 0.4rem + 1.6vw, 2.25rem);
+      width: min(100% - 2 * var(--gutter), var(--max));
+      margin-inline: auto;
+      padding: 0;
+      list-style: none;
+    }
+    .format {
+      display: grid;
+      gap: var(--s-3);
+      align-content: start;
+    }
+    .format:nth-child(even) {
+      margin-top: var(--s-8);
+    }
+    .clip {
+      position: relative;
+      display: grid;
+      place-items: center;
+      aspect-ratio: 9 / 16;
+      width: 100%;
+      border-radius: var(--r-panel-l);
+      overflow: hidden;
+      color: var(--starlight);
+      background: radial-gradient(120% 80% at 50% 45%, var(--night-700), var(--night-900) 70%);
+      box-shadow: 0 30px 60px -30px oklch(0.2 0.08 255 / 0.65);
+      transition:
+        transform var(--t-state) var(--ease-out),
+        box-shadow var(--t-state) var(--ease-out);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .clip:hover {
+      transform: translateY(-4px);
+    }
+    .clip:active {
+      transform: translateY(-1px) scale(0.995);
+    }
+    .clip[aria-pressed='true'] {
+      box-shadow:
+        0 0 0 3px var(--ring),
+        0 30px 60px -30px oklch(0.2 0.08 255 / 0.65);
+    }
+    .clip:focus-visible {
+      outline: 3px solid var(--ink);
+      outline-offset: 4px;
+    }
+    .clip__top {
+      position: absolute;
+      inset: var(--s-3) var(--s-3) auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: var(--text-label);
+      font-stretch: 72%;
+      font-weight: 620;
+      letter-spacing: 0.04em;
+      color: var(--star-soft);
+    }
+    .clip__time::before {
+      content: '';
+      display: inline-block;
+      width: 0.45rem;
+      height: 0.45rem;
+      margin-right: 0.4rem;
+      border-radius: 50%;
+      background: var(--night-600);
+      vertical-align: 0.05em;
+      transition: background-color var(--t-state) var(--ease-out);
+    }
+    .clip[aria-pressed='true'] .clip__time::before {
+      background: var(--ring);
+      box-shadow: 0 0 8px var(--ring);
+    }
+    .clip__status {
+      display: inline-flex;
+      gap: 0.3rem;
+      align-items: center;
+    }
+    .clip__status :global(i) {
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 50%;
+      box-shadow: inset 0 0 0 1.5px var(--c);
+      transition: background-color var(--t-state) var(--ease-out);
+    }
+    .clip__status :global(i[data-on]) {
+      background: var(--c);
+      box-shadow: 0 0 6px var(--c);
+    }
+    .clip__face {
+      width: 88%;
+      aspect-ratio: 1;
+    }
+    .clip__play {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 3.25rem;
+      height: 3.25rem;
+      translate: -50% -50%;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--sun);
+      color: var(--ink);
+      box-shadow: 0 6px 18px -6px oklch(0.1 0.03 262 / 0.6);
+      transition:
+        opacity var(--t-state) var(--ease-out),
+        scale var(--t-state) var(--ease-out);
+    }
+    .clip__play :global(svg) {
+      width: 1.2rem;
+      height: 1.2rem;
+      fill: currentColor;
+      translate: 1.5px 0;
+    }
+    .clip[aria-pressed='true'] .clip__play {
+      opacity: 0;
+      scale: 0.85;
+    }
+    .clip:hover .clip__play,
+    .clip:focus-visible .clip__play {
+      opacity: 1;
+      scale: 1;
+    }
+    .clip__caption {
+      position: absolute;
+      left: 50%;
+      bottom: var(--s-4);
+      translate: -50% 0;
+      max-width: calc(100% - 2 * var(--s-3));
+      padding: 0.4rem 0.75rem;
+      border-radius: var(--r-input);
+      background: oklch(0.15 0.035 262 / 0.72);
+      font-size: var(--text-small);
+      font-weight: 650;
+      line-height: 1.25;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .clip__caption[data-typing]::after {
+      content: '';
+      display: inline-block;
+      width: 2px;
+      height: 1em;
+      margin-left: 2px;
+      vertical-align: -0.15em;
+      background: currentColor;
+      animation: caret 0.9s steps(1) infinite;
+    }
+    @keyframes caret {
+      50% {
+        opacity: 0;
+      }
+    }
+    .format__title {
+      margin-top: var(--s-2);
+      font-size: var(--text-title);
+      font-stretch: 108%;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      line-height: 1.1;
+    }
+    .format__how {
+      color: var(--ink-sky-soft);
+      font-size: var(--text-small);
+      line-height: 1.5;
+    }
+    @media (max-width: 1100px) {
+      .clips {
+        grid-template-columns: repeat(4, minmax(15rem, 1fr));
+        width: 100%;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        padding: var(--s-2) var(--gutter) var(--s-5);
+        scroll-padding-inline: var(--gutter);
+        scrollbar-width: thin;
+      }
+      .format {
+        scroll-snap-align: start;
+      }
+      .format:nth-child(even) {
+        margin-top: 0;
+      }
+    }
+    @media (max-width: 560px) {
+      .clips {
+        grid-template-columns: repeat(4, 72vw);
+      }
+    }
+
+    /* ── Estimator ────────────────────────────────────────── */
+    .earn {
+      padding-block: var(--section-tight);
+    }
+    .earn__grid {
+      display: grid;
+      gap: var(--s-6);
+    }
+    .earn__intro {
+      display: grid;
+      gap: var(--s-3);
+      max-width: 40rem;
+    }
+    .earn__intro .lead {
+      color: var(--ink-sky-soft);
+    }
+    .calc {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      gap: var(--s-7);
+      padding: clamp(1.5rem, 0.8rem + 3vw, 3.5rem);
+      border-radius: var(--r-panel-l);
+      background: var(--white);
+      color: var(--ink);
+      box-shadow: 0 2px 6px oklch(0.2 0.06 255 / 0.12);
+    }
+    .calc__inputs {
+      display: grid;
+      gap: var(--s-6);
+    }
+    .range {
+      display: grid;
+      gap: var(--s-2);
+    }
+    .range__head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: var(--s-3);
+    }
+    .range__head label {
+      font-weight: 600;
+    }
+    .range__head output {
+      font-size: 1.25rem;
+      font-weight: 720;
+      font-stretch: 110%;
+    }
+    .range__scale {
+      display: flex;
+      justify-content: space-between;
+      font-size: var(--text-label);
+      color: var(--ink-mute);
+      font-variant-numeric: tabular-nums;
+    }
+    .range input[type='range'] {
+      --fill: 50%;
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 1.75rem;
+      background: transparent;
+      cursor: pointer;
+    }
+    .range input[type='range']::-webkit-slider-runnable-track {
+      height: 6px;
+      border-radius: var(--r-pill);
+      background: linear-gradient(to right, var(--ink) var(--fill), var(--haze-3) var(--fill));
+    }
+    .range input[type='range']::-moz-range-track {
+      height: 6px;
+      border-radius: var(--r-pill);
+      background: linear-gradient(to right, var(--ink) var(--fill), var(--haze-3) var(--fill));
+    }
+    .range input[type='range']::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 1.5rem;
+      height: 1.5rem;
+      margin-top: calc(3px - 0.75rem);
+      border-radius: 50%;
+      background: var(--sun);
+      box-shadow:
+        inset 0 0 0 2px var(--ink),
+        0 2px 4px oklch(0.2 0.03 258 / 0.25);
+      transition: transform var(--t-press) var(--ease-out);
+    }
+    .range input[type='range']::-moz-range-thumb {
+      width: 1.5rem;
+      height: 1.5rem;
+      border: 0;
+      border-radius: 50%;
+      background: var(--sun);
+      box-shadow:
+        inset 0 0 0 2px var(--ink),
+        0 2px 4px oklch(0.2 0.03 258 / 0.25);
+    }
+    .range input[type='range']:active::-webkit-slider-thumb {
+      transform: scale(1.12);
+    }
+    .range input[type='range']:focus-visible {
+      outline: 2px solid var(--focus);
+      outline-offset: 4px;
+      border-radius: var(--r-pill);
+    }
+    .calc__result {
+      display: grid;
+      gap: var(--s-3);
+      align-content: start;
+      padding-left: var(--s-7);
+      border-left: 1px solid var(--line);
+    }
+    .calc__label {
+      font-weight: 600;
+      color: var(--ink-soft);
+    }
+    .calc__big {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0 var(--s-3);
+      font-size: var(--text-display-l);
+      font-stretch: 118%;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      line-height: 1;
+    }
+    .calc__per {
+      font-size: var(--text-lead);
+      font-stretch: 100%;
+      font-weight: 500;
+      letter-spacing: 0;
+      color: var(--ink-soft);
+    }
+    .calc__year {
+      color: var(--ink-soft);
+    }
+    .calc__year strong {
+      color: var(--ink);
+    }
+    .funnel {
+      display: grid;
+      gap: var(--s-2);
+      margin-block: var(--s-3);
+      padding: var(--s-4) 0;
+      border-block: 1px solid var(--line);
+      list-style: none;
+      font-size: var(--text-small);
+      color: var(--ink-soft);
+    }
+    .funnel li {
+      display: flex;
+      gap: 0.4rem;
+      align-items: baseline;
+    }
+    .funnel li + li::before {
+      content: '→';
+      color: var(--ink-mute);
+      margin-right: 0.15rem;
+    }
+    .funnel strong {
+      color: var(--ink);
+      font-weight: 700;
+    }
+    .calc__fine {
+      font-size: var(--text-label);
+      line-height: 1.5;
+      color: var(--ink-mute);
+    }
+    @media (max-width: 900px) {
+      .calc {
+        grid-template-columns: 1fr;
+      }
+      .calc__result {
+        padding-left: 0;
+        border-left: 0;
+        padding-top: var(--s-6);
+        border-top: 1px solid var(--line);
+      }
+    }
+
+    /* ── Apply ────────────────────────────────────────────── */
+    .apply {
+      padding-block: var(--section-tight) var(--s-8);
+    }
+    .apply__grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+      gap: var(--s-7) clamp(2rem, 1rem + 4vw, 6rem);
+      align-items: start;
+    }
+    .apply__intro {
+      display: grid;
+      gap: var(--s-5);
+      position: sticky;
+      top: calc(var(--header-h) + var(--s-5));
+    }
+    .apply__intro .lead {
+      color: var(--ink-sky-soft);
+    }
+    .next {
+      display: grid;
+      gap: var(--s-4);
+      padding: 0;
+      list-style: none;
+      counter-reset: n;
+    }
+    .next li {
+      counter-increment: n;
+      display: grid;
+      grid-template-columns: 2.25rem 1fr;
+      gap: var(--s-3);
+      align-items: baseline;
+      color: var(--ink-sky-soft);
+    }
+    .next li::before {
+      content: counter(n);
+      display: grid;
+      place-items: center;
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      box-shadow: inset 0 0 0 1.5px var(--ink);
+      color: var(--ink);
+      font-weight: 700;
+      font-size: 0.9rem;
+      font-variant-numeric: tabular-nums;
+      translate: 0 0.35rem;
+    }
+    .next strong {
+      color: var(--ink);
+    }
+    .apply__panel {
+      padding: clamp(1.5rem, 0.8rem + 3vw, 3rem);
+      border-radius: var(--r-panel-l);
+      background: var(--white);
+      color: var(--ink);
+      box-shadow: 0 2px 6px oklch(0.2 0.06 255 / 0.12);
+    }
+    .apply-form {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--s-5) var(--s-4);
+      align-items: start;
+    }
+    .apply-form .field {
+      align-content: start;
+    }
+    .apply-form__wide {
+      grid-column: 1 / -1;
+    }
+    .apply-form .input[aria-invalid='true'],
+    .apply-form .select[aria-invalid='true'] {
+      border-color: var(--danger);
+    }
+    .handle {
+      position: relative;
+    }
+    .handle__at {
+      position: absolute;
+      left: 0.9rem;
+      top: 50%;
+      translate: 0 -52%;
+      color: var(--ink-soft);
+      font-weight: 600;
+      pointer-events: none;
+    }
+    .handle .input {
+      padding-left: 2rem;
+    }
+    .consent {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: var(--s-3);
+      align-items: start;
+      font-size: var(--text-small);
+      font-weight: 450;
+      line-height: 1.5;
+      color: var(--ink-soft);
+      cursor: pointer;
+    }
+    .consent input {
+      width: 1.25rem;
+      height: 1.25rem;
+      margin-top: 0.1rem;
+      accent-color: var(--ink);
+    }
+    .consent strong {
+      color: var(--ink);
+    }
+    .apply-form__submit {
+      display: grid;
+      gap: var(--s-3);
+      margin-top: var(--s-2);
+    }
+    .apply-form__note {
+      font-size: var(--text-label);
+      color: var(--ink-mute);
+      text-align: center;
+    }
+    .apply-done {
+      display: grid;
+      gap: var(--s-4);
+      justify-items: start;
+      animation: done-in var(--t-panel) var(--ease-out) both;
+    }
+    .apply-done h3:focus-visible {
+      outline-offset: 6px;
+    }
+    .apply-done .lead {
+      color: var(--ink-soft);
+    }
+    .apply-done__mark {
+      display: grid;
+      place-items: center;
+      width: 3.5rem;
+      height: 3.5rem;
+      border-radius: 50%;
+      background: var(--ink);
+      color: var(--sun);
+    }
+    .apply-done__mark :global(svg) {
+      width: 1.6rem;
+      height: 1.6rem;
+    }
+    .apply-done__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s-2);
+      margin-top: var(--s-2);
+    }
+    @keyframes done-in {
+      from {
+        opacity: 0;
+        translate: 0 10px;
+      }
+    }
+    @media (max-width: 900px) {
+      .apply__grid {
+        grid-template-columns: 1fr;
+      }
+      .apply__intro {
+        position: static;
+      }
+    }
+    @media (max-width: 560px) {
+      .apply-form {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ── FAQ & close ──────────────────────────────────────── */
+    .c-faq {
+      padding-block: var(--section-tight);
+      --border: oklch(0.2 0.03 258 / 0.25);
+    }
+    .c-faq .faq details > div {
+      color: var(--ink-sky-soft);
+    }
+    .c-faq__inner {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+      gap: var(--s-7);
+      align-items: start;
+    }
+    .c-faq__inner h2 {
+      max-width: 10ch;
+    }
+    .c-close {
+      margin-top: var(--section-tight);
+      display: grid;
+      justify-items: center;
+      text-align: center;
+      gap: var(--s-5);
+    }
+    .c-close__line {
+      font-size: var(--text-display-l);
+      font-stretch: 122%;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      line-height: 0.95;
+      text-wrap: balance;
+    }
+    .c-close__line span {
+      display: inline-block;
+    }
+    .c-close__actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: var(--s-3);
+    }
+    @media (max-width: 860px) {
+      .c-faq__inner {
+        grid-template-columns: 1fr;
+        gap: var(--s-5);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .c-hero__title,
+      .c-cloud,
+      .clip__caption[data-typing]::after {
+        animation: none;
+      }
+      .clip:hover {
+        transform: none;
+      }
+    }
+  }
+</style>
+
+<script>
+  import '@/scripts/pages/creators';
+</script>

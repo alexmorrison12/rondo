@@ -1,0 +1,159 @@
+---
+import Base from '@/layouts/Base.astro';
+import { ICONS } from '@/lib/icons';
+import { url } from '@/lib/url';
+---
+
+<Base
+  title="You're in orbit"
+  description="Order confirmation."
+  og="default"
+  surface="night"
+  bodyClass="page-order"
+  noindex
+>
+  <section class="confirm wrap" data-confirm aria-labelledby="confirm-title">
+    <svg class="confirm__orbit" viewBox="-120 -120 240 240" aria-hidden="true">
+      <circle r="104" fill="none" stroke="currentColor" stroke-opacity="0.18" stroke-width="1.5"></circle>
+      <circle r="74" fill="none" stroke="currentColor" stroke-opacity="0.18" stroke-width="1.5"></circle>
+      <circle r="44" fill="none" stroke="currentColor" stroke-opacity="0.18" stroke-width="1.5"></circle>
+      <circle r="18" fill="var(--sun)"></circle>
+      <g class="confirm__planet p1"><circle cx="104" cy="0" r="7" fill="var(--ember)"></circle></g>
+      <g class="confirm__planet p2"><circle cx="74" cy="0" r="6" fill="var(--tide)"></circle></g>
+      <g class="confirm__planet p3"><circle cx="44" cy="0" r="5" fill="var(--lilac)"></circle></g>
+    </svg>
+    <h1 id="confirm-title" class="display-l" data-title>You're in orbit.</h1>
+    <p class="lead soft" data-lead>Your pre-order is confirmed. A receipt is on its way to your inbox.</p>
+    <p class="confirm__number engrave" data-number></p>
+
+    <div class="confirm__grid">
+      <section aria-labelledby="next-title">
+        <h2 id="next-title" class="title">What happens next</h2>
+        <ol class="timeline" role="list">
+          <li><span class="num">Today</span><p>You get a confirmation email. Nothing is charged yet.</p></li>
+          <li><span class="num">Feb 2027</span><p>We send a photo from the line and one last chance to change your finish or engraving.</p></li>
+          <li><span class="num" data-ship-when>Spring 2027</span><p>Your Rondo ships, in order of pre-order. Payment is taken on the day it leaves.</p></li>
+        </ol>
+        <button class="btn btn--ghost" type="button" data-ics><Fragment set:html={ICONS.calendar} /> Add ship date to calendar</button>
+      </section>
+      <section class="confirm__side" aria-labelledby="refer-title">
+        <h2 id="refer-title" class="title">Give $25, get $25.</h2>
+        <p class="soft">Friends get $25 off their Rondo with your link. You get $25 back for each one, up to the full price.</p>
+        <div class="refer">
+          <label class="visually-hidden" for="refer-link">Your referral link</label>
+          <input class="input" id="refer-link" readonly data-refer />
+          <button class="btn btn--sun" type="button" data-share-refer><Fragment set:html={ICONS.share} /> Share</button>
+        </div>
+        <h2 class="title" style="margin-top: var(--s-6)">While you wait</h2>
+        <p class="soft">Everything you make in Rondo Web will play on your Rondo when it arrives.</p>
+        <a class="btn btn--ghost" href={url('/play/')}>Make your first loop <Fragment set:html={ICONS.arrowRight} /></a>
+      </section>
+    </div>
+  </section>
+
+  <section class="empty wrap" data-empty hidden>
+    <h1 class="display-m">No order here yet.</h1>
+    <p class="lead soft">This page shows your confirmation after checkout.</p>
+    <div class="empty__actions">
+      <a class="btn btn--sun" href={url('/shop/')}>Choose your Rondo</a>
+      <a class="btn btn--ghost" href={url('/play/')}>Play in browser</a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  @layer page {
+    .confirm,
+    .empty {
+      padding-top: calc(var(--header-h) + var(--s-8));
+      padding-bottom: var(--section-tight);
+      display: grid;
+      gap: var(--s-5);
+      justify-items: start;
+    }
+    .confirm__orbit {
+      width: 9rem;
+      height: 9rem;
+      color: var(--starlight);
+      margin-bottom: var(--s-3);
+    }
+    .confirm__planet {
+      transform-box: view-box;
+      transform-origin: 0 0;
+      animation: orbit 6s linear infinite;
+    }
+    .confirm__planet.p2 {
+      animation-duration: 4.5s;
+    }
+    .confirm__planet.p3 {
+      animation-duration: 2.6s;
+    }
+    @keyframes orbit {
+      to {
+        rotate: 360deg;
+      }
+    }
+    .confirm__number {
+      color: var(--star-soft);
+    }
+    .confirm__grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: var(--s-8);
+      width: 100%;
+      margin-top: var(--s-6);
+      padding-top: var(--s-6);
+      border-top: 1px solid var(--border);
+    }
+    .confirm__grid section {
+      display: grid;
+      gap: var(--s-4);
+      align-content: start;
+      justify-items: start;
+    }
+    .timeline {
+      display: grid;
+      gap: var(--s-4);
+      width: 100%;
+    }
+    .timeline li {
+      display: grid;
+      grid-template-columns: 7rem 1fr;
+      gap: var(--s-4);
+      padding-bottom: var(--s-4);
+      border-bottom: 1px solid var(--border);
+    }
+    .timeline span {
+      font-weight: 700;
+      color: var(--sun);
+    }
+    .timeline p {
+      color: var(--star-soft);
+    }
+    .refer {
+      display: flex;
+      gap: var(--s-2);
+      width: 100%;
+    }
+    .refer .input {
+      flex: 1;
+      background: var(--night-800);
+      color: var(--starlight);
+      border-color: var(--border);
+    }
+    .empty__actions {
+      display: flex;
+      gap: var(--s-3);
+      flex-wrap: wrap;
+    }
+    @media (max-width: 860px) {
+      .confirm__grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+</style>
+
+<script>
+  import '@/scripts/pages/order';
+</script>

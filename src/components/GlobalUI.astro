@@ -1,0 +1,79 @@
+---
+import { NAV } from '@/data/site';
+import { STARS } from '@/data/stars';
+import { ICONS } from '@/lib/icons';
+import { url } from '@/lib/url';
+import Cta from './Cta.astro';
+import Logo from './Logo.astro';
+---
+
+<!-- Bag -->
+<dialog class="drawer" data-bag aria-labelledby="bag-title">
+  <div class="drawer__head">
+    <h2 id="bag-title" class="title">Your bag</h2>
+    <button class="icon-btn" type="button" data-bag-close aria-label="Close bag">
+      <Fragment set:html={ICONS.x} />
+    </button>
+  </div>
+  <div class="drawer__body" data-bag-body></div>
+  <div class="drawer__foot" data-bag-foot hidden></div>
+</dialog>
+
+<!-- Command palette -->
+<dialog class="modal palette" data-palette aria-label="Command palette">
+  <input
+    class="palette__input"
+    type="text"
+    placeholder="Search pages and actions…"
+    aria-label="Search pages and actions"
+    role="combobox"
+    aria-expanded="true"
+    aria-controls="palette-list"
+    autocomplete="off"
+    spellcheck="false"
+  />
+  <ul class="palette__list" id="palette-list" role="listbox"></ul>
+  <div class="palette__foot" aria-hidden="true">
+    <span><kbd>↑</kbd> <kbd>↓</kbd> move</span><span><kbd>↵</kbd> open</span><span><kbd>esc</kbd> close</span>
+  </div>
+</dialog>
+
+<!-- Orbit log (achievements) -->
+<div id="orbit-log" class="orbit-log" popover aria-labelledby="orbit-title">
+  <p id="orbit-title" class="title" style="font-size: 1.25rem">Orbit log</p>
+  <svg class="orbit-log__map" viewBox="0 0 236 140" data-orbit-map aria-hidden="true"></svg>
+  <ol>
+    {
+      STARS.map((s) => (
+        <li data-star={s.id} data-earned="false">
+          <span>
+            <strong>{s.title}</strong> · <span class="orbit-log__hint">{s.hint}</span>
+          </span>
+        </li>
+      ))
+    }
+  </ol>
+  <p class="orbit-log__reward" data-orbit-reward></p>
+</div>
+
+<!-- Mobile menu -->
+<dialog class="menu-sheet surface-night" data-menu aria-label="Menu">
+  <div class="menu-sheet__top">
+    <a class="brand" href={url('/')} aria-label="Rondo — home"><Logo /></a>
+    <button class="icon-btn" type="button" data-menu-close aria-label="Close menu">
+      <Fragment set:html={ICONS.x} />
+    </button>
+  </div>
+  <nav aria-label="Mobile">
+    <a href={url('/')}>Home</a>
+    {NAV.map((item) => <a href={url(item.href)}>{item.label}</a>)}
+    <a href={url('/shop/')}>Shop</a>
+    <a href={url('/support/')}>Support</a>
+  </nav>
+  <Cta size="lg" block />
+  <p class="soft" style="margin-top: var(--s-5); font-size: var(--text-small)">
+    <span data-phase-status>Pre-orders open</span> · <span data-phase-shipping>Ships spring 2027</span>
+  </p>
+</dialog>
+
+<div class="toasts" data-toasts role="status" aria-live="polite"></div>

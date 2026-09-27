@@ -1,0 +1,461 @@
+---
+import Cta from '@/components/Cta.astro';
+import Base from '@/layouts/Base.astro';
+import { PRODUCT, formatPrice } from '@/data/site';
+import { ICONS } from '@/lib/icons';
+import { url } from '@/lib/url';
+import { ENGINES, RINGS } from '@/scripts/seq/model';
+
+const hotspots = [
+  { id: 'sun', label: 'Sapphire sun', text: 'A sapphire crystal dome over a warm light. Press to play or stop; turn it to change tempo, 50 to 180 bpm.' },
+  { id: 'rings', label: 'Four turned rings', text: 'Each ring is CNC-turned from one piece of aluminium and rides on stainless bearings with magnetic detents you can feel.' },
+  { id: 'track', label: 'Light track', text: '96 micro-LEDs per ring under frosted glass. Because the light is continuous, any loop length from 1 to 16 fits evenly.' },
+  { id: 'ports', label: 'Ports', text: 'USB-C for power, audio and MIDI; 3.5 mm TRS MIDI in and out; a headphone and line output. Standard, so it talks to anything.' },
+  { id: 'base', label: 'Base', text: 'Four T5 screws. Inside, a 2,400 mAh battery you can replace in five minutes, and a 28 mm driver with a passive radiator.' },
+];
+
+const specs: [string, string][] = [
+  ['Size', '108 mm across, 22 mm deep'],
+  ['Weight', '238 g'],
+  ['Body', 'Unibody 6061 aluminium, bead-blasted, anodised'],
+  ['Rings', 'Four, CNC-turned, stainless bearings, magnetic detents'],
+  ['Sun', 'Sapphire crystal dome, press and turn'],
+  ['Light', '384 micro-LEDs under frosted glass'],
+  ['Sensors', '6-axis motion sensor (tilt and shake)'],
+  ['Sound', '5 synthesised voices, 8-voice polyphony, 12 scales, reverb, tape echo, tilt filter'],
+  ['Speaker', '28 mm full-range driver with passive radiator'],
+  ['Outputs', '3.5 mm headphone / line out'],
+  ['MIDI', 'USB-C class-compliant, 3.5 mm TRS-A in and out, Bluetooth LE MIDI, clock in and out'],
+  ['Memory', '64 loops'],
+  ['Battery', '2,400 mAh, about 14 hours, user-replaceable'],
+  ['Charging', 'USB-C, 0 to 80% in 45 minutes'],
+  ['Software', 'Rondo OS, open source (MIT). Updates until 2036.'],
+  ['Warranty', `${PRODUCT.warrantyYears} years, plus a ${PRODUCT.trialNights}-night trial`],
+];
+---
+
+<Base
+  title="The instrument"
+  description="Every detail of Rondo: four turned aluminium rings, a sapphire sun, five synthesised voices, MIDI everywhere and a battery you can replace yourself."
+  og="instrument"
+  surface="haze"
+  bodyClass="page-instrument"
+>
+  <section class="turntable" aria-labelledby="inst-title">
+    <canvas class="turntable__canvas" data-turntable aria-hidden="true"></canvas>
+    <div class="turntable__hotspots" data-hotspots>
+      {
+        hotspots.map((h) => (
+          <button class="hotspot" type="button" data-hotspot={h.id} aria-pressed="false" aria-controls="hotspot-detail">
+            <span class="hotspot__dot" aria-hidden="true" />
+            <span class="hotspot__label">{h.label}</span>
+          </button>
+        ))
+      }
+    </div>
+    <div class="wrap turntable__copy">
+      <h1 id="inst-title" class="display-l">Every detail,<br />on purpose.</h1>
+      <p class="lead turntable__lead">Drag to turn it. Tap a point to look closer.</p>
+    </div>
+    <div class="detail" id="hotspot-detail" aria-live="polite" data-detail>
+      {
+        hotspots.map((h, i) => (
+          <div data-detail-for={h.id} hidden={i !== 0}>
+            <p class="detail__label engrave">{h.label}</p>
+            <p>{h.text}</p>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="section wrap rings-spec" aria-labelledby="rings-title">
+    <h2 id="rings-title" class="display-m">Four rings, four jobs.</h2>
+    <ol class="ring-rows" role="list">
+      {
+        RINGS.map((r, i) => (
+          <li style={`--ring: var(${r.colorVar})`}>
+            <span class="ring-rows__swatch" aria-hidden="true" style={`--inset: ${i * 14}%`} />
+            <span class="ring-rows__name">{r.name}</span>
+            <span class="ring-rows__role">{r.role}</span>
+            <span class="ring-rows__len engrave">{[16, 12, 8, 7][i]} steps by default · 1–16</span>
+          </li>
+        ))
+      }
+    </ol>
+    <p class="soft measure">
+      Turn any ring to move its notes in time. Press and hold a ring to change its length. Every ring can use any voice, so
+      you can have two melodies, or four drum kits, if that's your thing.
+    </p>
+  </section>
+
+  <section class="section wrap sound-spec" aria-labelledby="sound-title">
+    <div>
+      <h2 id="sound-title" class="display-m">Sound, made on the spot.</h2>
+      <p class="lead soft">
+        Five voices, each synthesised as you play: no samples, nothing to download, nothing that sounds the same twice.
+      </p>
+      <a class="btn btn--ghost" href={url('/play/')}>Hear them in your browser <Fragment set:html={ICONS.arrowRight} /></a>
+    </div>
+    <dl class="voices-dl">
+      {
+        ENGINES.map((e) => (
+          <div>
+            <dt>{e.name}</dt>
+            <dd>{e.blurb}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </section>
+
+  <section class="section connect surface-night" data-header-theme="night" aria-labelledby="connect-title">
+    <div class="wrap connect__inner">
+      <h2 id="connect-title" class="display-m">Plays well with others.</h2>
+      <ul class="connect__list" role="list">
+        <li><strong>Your computer.</strong> Plug in USB-C and Rondo appears as an audio interface and a MIDI device. No drivers.</li>
+        <li><strong>Your synths.</strong> 3.5 mm TRS MIDI in and out, with clock, so it can lead or follow anything with a tempo.</li>
+        <li><strong>Your phone or iPad.</strong> Bluetooth MIDI, low latency, no app required.</li>
+        <li><strong>Other Rondos.</strong> Two or more sync tempo wirelessly when they're within a few metres. Instant band.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section wrap specs-section" aria-labelledby="specs-title">
+    <h2 id="specs-title" class="display-m">Specifications</h2>
+    <dl class="spec-table">
+      {
+        specs.map(([k, v]) => (
+          <div>
+            <dt>{k}</dt>
+            <dd>{v}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </section>
+
+  <section class="section wrap compare-section" aria-labelledby="compare-title">
+    <h2 id="compare-title" class="display-m">Why not just an app?</h2>
+    <p class="lead soft measure">Fair question. Here's an honest comparison.</p>
+    <div class="table-scroll">
+      <table class="honest">
+        <thead>
+          <tr>
+            <th scope="col"><span class="visually-hidden">Question</span></th>
+            <th scope="col">Rondo</th>
+            <th scope="col">A music app</th>
+            <th scope="col">A groovebox</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">Make something in 10 seconds</th><td>Yes</td><td>Sometimes</td><td>Rarely</td></tr>
+          <tr><th scope="row">No screen, no notifications</th><td>Yes</td><td>No</td><td>Mostly</td></tr>
+          <tr><th scope="row">Fits in a pocket</th><td>Yes</td><td>Yes</td><td>No</td></tr>
+          <tr><th scope="row">Real MIDI and audio out</th><td>Yes</td><td>With adapters</td><td>Yes</td></tr>
+          <tr><th scope="row">Deep sound design</th><td>Some</td><td>Lots</td><td>Lots</td></tr>
+          <tr><th scope="row">Cost over ten years</th><td class="num">{formatPrice(PRODUCT.price)}, once</td><td>Subscriptions add up</td><td>$500–$1,500</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="soft measure">
+      If you want to design sounds from scratch for hours, a groovebox is a better tool. If you want to make music every day
+      without thinking about tools, that's what Rondo is for.
+    </p>
+  </section>
+
+  <section class="section wrap end-cta" aria-labelledby="end-title">
+    <h2 id="end-title" class="display-m">Ready when you are.</h2>
+    <div class="end-cta__actions">
+      <Cta size="lg" variant="ink" showPrice />
+      <a class="btn btn--ghost btn--lg" href={url('/play/')}>Try it first</a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  @layer page {
+    .turntable {
+      position: relative;
+      height: 100svh;
+      min-height: 38rem;
+      overflow: hidden;
+      background: linear-gradient(to bottom, var(--sky-500), var(--sky-100));
+    }
+    .turntable__canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+      touch-action: pan-y;
+    }
+    .turntable__copy {
+      position: relative;
+      padding-top: calc(var(--header-h) + var(--s-7));
+      pointer-events: none;
+    }
+    .turntable__lead {
+      margin-top: var(--s-4);
+      color: var(--ink-sky-soft);
+    }
+    .turntable__hotspots {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .hotspot {
+      position: absolute;
+      left: 0;
+      top: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      pointer-events: auto;
+      translate: -0.9rem -0.9rem;
+      transition: opacity var(--t-state) var(--ease-out);
+      will-change: transform;
+    }
+    .hotspot[data-hidden='true'] {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .hotspot__dot {
+      width: 1.8rem;
+      height: 1.8rem;
+      border-radius: 50%;
+      background: var(--sun);
+      box-shadow:
+        0 0 0 6px oklch(0.92 0.15 95 / 0.35),
+        0 2px 6px oklch(0.2 0.03 258 / 0.3);
+      display: grid;
+      place-items: center;
+    }
+    .hotspot__dot::after {
+      content: '';
+      width: 0.45rem;
+      height: 0.45rem;
+      border-radius: 50%;
+      background: var(--ink);
+    }
+    .hotspot[aria-pressed='true'] .hotspot__dot {
+      background: var(--ink);
+    }
+    .hotspot[aria-pressed='true'] .hotspot__dot::after {
+      background: var(--sun);
+    }
+    .hotspot__label {
+      padding: 0.3rem 0.65rem;
+      border-radius: var(--r-pill);
+      background: var(--night-800);
+      color: var(--starlight);
+      font-size: var(--text-label);
+      font-weight: 620;
+      white-space: nowrap;
+      opacity: 0;
+      translate: -4px 0;
+      transition:
+        opacity var(--t-state) var(--ease-out),
+        translate var(--t-state) var(--ease-out);
+    }
+    .hotspot:hover .hotspot__label,
+    .hotspot:focus-visible .hotspot__label,
+    .hotspot[aria-pressed='true'] .hotspot__label {
+      opacity: 1;
+      translate: 0 0;
+    }
+    .detail {
+      position: absolute;
+      left: var(--gutter);
+      bottom: var(--s-7);
+      width: min(24rem, calc(100% - 2 * var(--gutter)));
+      padding: var(--s-5);
+      border-radius: var(--r-panel-l);
+      background: var(--night-800);
+      color: var(--starlight);
+    }
+    .detail__label {
+      color: var(--sun);
+      margin-bottom: var(--s-2);
+    }
+    .section {
+      padding-block: var(--section-tight);
+    }
+    .rings-spec {
+      display: grid;
+      gap: var(--s-6);
+    }
+    .ring-rows {
+      display: grid;
+      border-top: 1px solid var(--line);
+    }
+    .ring-rows li {
+      display: grid;
+      grid-template-columns: 3.5rem minmax(7rem, 14rem) 1fr auto;
+      gap: var(--s-5);
+      align-items: center;
+      padding-block: var(--s-4);
+      border-bottom: 1px solid var(--line);
+    }
+    .ring-rows__swatch {
+      width: 3.5rem;
+      height: 3.5rem;
+      border-radius: 50%;
+      background: radial-gradient(circle, transparent calc(38% - var(--inset) * 0.3), var(--ring) calc(40% - var(--inset) * 0.3), var(--ring) calc(50% - var(--inset) * 0.2), transparent calc(52% - var(--inset) * 0.2));
+      box-shadow: inset 0 0 0 1.5px var(--line-strong);
+    }
+    .ring-rows__name {
+      font-size: var(--text-title);
+      font-weight: 760;
+      font-stretch: 118%;
+    }
+    .ring-rows__role {
+      color: var(--ink-soft);
+    }
+    .sound-spec {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: var(--s-8);
+      align-items: start;
+    }
+    .sound-spec > div {
+      display: grid;
+      gap: var(--s-5);
+      justify-items: start;
+      position: sticky;
+      top: calc(var(--header-h) + var(--s-5));
+    }
+    .voices-dl {
+      display: grid;
+      gap: 0;
+      border-top: 1px solid var(--line);
+    }
+    .voices-dl div {
+      display: grid;
+      grid-template-columns: 8rem 1fr;
+      gap: var(--s-4);
+      padding-block: var(--s-5);
+      border-bottom: 1px solid var(--line);
+    }
+    .voices-dl dt {
+      font-size: var(--text-title);
+      font-weight: 780;
+      font-stretch: 120%;
+    }
+    .voices-dl dd {
+      margin: 0;
+      color: var(--ink-soft);
+      align-self: center;
+    }
+    .connect {
+      background: var(--night-900);
+      color: var(--starlight);
+      padding-block: var(--section);
+    }
+    .connect__inner {
+      display: grid;
+      grid-template-columns: 1fr 1.3fr;
+      gap: var(--s-8);
+    }
+    .connect__list {
+      display: grid;
+      gap: var(--s-5);
+      font-size: var(--text-lead);
+      color: var(--star-soft);
+    }
+    .connect__list strong {
+      color: var(--starlight);
+    }
+    .specs-section {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: var(--s-7);
+    }
+    .spec-table {
+      display: grid;
+      border-top: 1px solid var(--line);
+    }
+    .spec-table div {
+      display: grid;
+      grid-template-columns: 10rem 1fr;
+      gap: var(--s-4);
+      padding-block: var(--s-3);
+      border-bottom: 1px solid var(--line);
+    }
+    .spec-table dt {
+      font-weight: 650;
+    }
+    .spec-table dd {
+      margin: 0;
+      color: var(--ink-soft);
+    }
+    .compare-section {
+      display: grid;
+      gap: var(--s-5);
+    }
+    .table-scroll {
+      overflow-x: auto;
+    }
+    .honest {
+      min-width: 36rem;
+    }
+    .honest th,
+    .honest td {
+      text-align: left;
+      padding: 0.9rem 0.75rem;
+      border-bottom: 1px solid var(--line);
+    }
+    .honest thead th {
+      font-weight: 720;
+      font-stretch: 108%;
+    }
+    .honest thead th:nth-child(2),
+    .honest tbody td:nth-child(2) {
+      background: oklch(0.92 0.15 95 / 0.22);
+      font-weight: 650;
+    }
+    .honest tbody th {
+      font-weight: 560;
+    }
+    .end-cta {
+      display: grid;
+      gap: var(--s-5);
+      justify-items: start;
+      padding-bottom: var(--section);
+    }
+    .end-cta__actions {
+      display: flex;
+      gap: var(--s-3);
+      flex-wrap: wrap;
+    }
+    @media (max-width: 900px) {
+      .sound-spec,
+      .connect__inner,
+      .specs-section {
+        grid-template-columns: 1fr;
+      }
+      .sound-spec > div {
+        position: static;
+      }
+      .ring-rows li {
+        grid-template-columns: 3rem 1fr;
+        row-gap: var(--s-1);
+      }
+      .ring-rows__role,
+      .ring-rows__len {
+        grid-column: 2;
+      }
+      .spec-table div {
+        grid-template-columns: 1fr;
+        gap: var(--s-1);
+      }
+      .detail {
+        bottom: var(--s-4);
+      }
+    }
+  }
+</style>
+
+<script>
+  import '@/scripts/pages/instrument';
+</script>

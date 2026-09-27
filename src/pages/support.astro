@@ -1,0 +1,995 @@
+---
+import Icon from '@/components/Icon.astro';
+import Base from '@/layouts/Base.astro';
+import { ADDONS, DEFAULT_PHASE, PHASES, PRODUCT, formatPrice } from '@/data/site';
+import { url } from '@/lib/url';
+
+const TOPICS = [
+  { id: 'orders', name: 'Orders & shipping' },
+  { id: 'returns', name: 'Returns & warranty' },
+  { id: 'using', name: 'Using Rondo' },
+  { id: 'connecting', name: 'Connecting & MIDI' },
+  { id: 'repair', name: 'Repair & battery' },
+] as const;
+type TopicId = (typeof TOPICS)[number]['id'];
+
+interface Faq {
+  id: string;
+  topic: TopicId;
+  q: string;
+  /** Answer HTML (trusted, authored here). */
+  a: string;
+  /** Extra words people search with. */
+  keys: string;
+}
+
+const shipping = PHASES[DEFAULT_PHASE].shipping;
+const midiPair = ADDONS.find((a) => a.id === 'midi');
+const nights = PRODUCT.trialNights;
+const years = PRODUCT.warrantyYears;
+const promise = url('/story/#promise');
+
+const FAQS: Faq[] = [
+  {
+    id: 'when-ship',
+    topic: 'orders',
+    q: 'When will my Rondo ship?',
+    a: `<p>Right now: <strong data-phase-shipping>${shipping}</strong>. Orders ship in the order they were placed, and we email you a tracking link the day yours leaves us.</p>`,
+    keys: 'delivery dispatch date arrive arrival eta preorder pre-order tracking wait',
+  },
+  {
+    id: 'shipping-cost',
+    topic: 'orders',
+    q: 'How much is shipping, and where do you ship?',
+    a: `<p>Shipping is free. We ship to the US, Canada, the UK, the EU, Norway, Switzerland, Australia, New Zealand and Japan, with more countries after launch. Prices include import duties; sales tax or VAT is added at checkout where it applies.</p>`,
+    keys: 'postage delivery cost price countries international customs duties tax vat',
+  },
+  {
+    id: 'change-order',
+    topic: 'orders',
+    q: 'Can I change or cancel my pre-order?',
+    a: `<p>Yes, any time before it ships. Switch the finish, change the engraving or cancel for a full refund. <a href="#contact">Write to us</a> with your order number and it’s done within a working day.</p>`,
+    keys: 'cancel cancellation refund modify change colour color finish engraving',
+  },
+  {
+    id: 'pay-in-four',
+    topic: 'orders',
+    q: 'Can I pay in instalments?',
+    a: `<p>Yes. Choose pay in 4 at checkout and split ${formatPrice(PRODUCT.price)} into four interest-free payments of ${formatPrice(PRODUCT.price / 4, { cents: true })}.</p>`,
+    keys: 'payment payments split installments instalments finance monthly credit card',
+  },
+  {
+    id: 'trial',
+    topic: 'returns',
+    q: `How does the ${nights}-night trial work?`,
+    a: `<p>Play it for ${nights} nights. If it isn’t for you, send it back in any box and we refund you in full, shipping included. We email a prepaid label; you drop the parcel off. <a href="#return">Start a return</a>.</p>`,
+    keys: 'return returns money back refund try trial nights unhappy',
+  },
+  {
+    id: 'warranty',
+    topic: 'returns',
+    q: `What does the ${years}-year warranty cover?`,
+    a: `<p>Anything that stops working as it should in the first ${years} years, including a battery that holds less than 80% of its charge. We repair it or send a replacement, free, and pay the postage both ways. Accidents aren’t covered, but we’ll repair those at cost.</p>`,
+    keys: 'guarantee broken faulty defect fault battery cover repair replace',
+  },
+  {
+    id: 'refund-time',
+    topic: 'returns',
+    q: 'When will I get my refund?',
+    a: `<p>Within five working days of your return reaching us, to the card or account you paid with. Pre-order cancellations are refunded the same day.</p>`,
+    keys: 'money back refund how long timing days',
+  },
+  {
+    id: 'not-musical',
+    topic: 'using',
+    q: 'I’m not musical. Will I actually use it?',
+    a: `<p>That’s who we designed it for. Every ring is locked to a scale, so there are no wrong notes, and the four loops rearrange themselves as they drift. Most testers made something they liked within a minute. <a href="${url('/play/')}">Try it in your browser</a> before you spend anything.</p>`,
+    keys: 'beginner easy learn music theory start kids children',
+  },
+  {
+    id: 'battery-life',
+    topic: 'using',
+    q: 'How long does the battery last?',
+    a: `<p>About 14 hours of playing with the lights at normal brightness. USB-C charges it to 80% in about 45 minutes and fully in about two hours, and it keeps playing while it charges.</p>`,
+    keys: 'battery charge charging hours usb power life',
+  },
+  {
+    id: 'share-loop',
+    topic: 'using',
+    q: 'How do I save or share a loop?',
+    a: `<p>Rondo keeps your loops on the device. In Rondo Web, press Share loop and send the link: the whole loop is written into the link itself, so anyone can play it, no account needed, and it will still work in 2036. You can also download four bars as a WAV file.</p>`,
+    keys: 'save share link export wav download song audio recording',
+  },
+  {
+    id: 'music-software',
+    topic: 'connecting',
+    q: 'Does it work with my music software?',
+    a: `<p>Yes. Rondo is a class-compliant USB audio and MIDI device, so it works with music software on Mac, Windows, Linux, iPad and Android without drivers. It sends and receives MIDI clock, so it can lead or follow.</p>`,
+    keys: 'daw computer mac windows linux ipad android usb sync clock drivers',
+  },
+  {
+    id: 'midi-ports',
+    topic: 'connecting',
+    q: 'What kind of MIDI ports does it have?',
+    a: `<p>Two 3.5 mm TRS MIDI sockets, in and out (Type A), plus USB MIDI and Bluetooth MIDI. For gear with 5-pin DIN sockets, a standard TRS-to-DIN adapter does the job.${midiPair ? ` Our ${midiPair.name} of cables is ${formatPrice(midiPair.price)}.` : ''}</p>`,
+    keys: 'midi trs din cable type a adapter synth drum machine bluetooth',
+  },
+  {
+    id: 'no-app',
+    topic: 'connecting',
+    q: 'Do I need an app, an account or Wi‑Fi?',
+    a: `<p>No, no and no. Rondo works on its own, out of the box. Updates are a plain file you install over USB-C, whenever you like. There’s no cloud, which is also why this page has so little to report.</p>`,
+    keys: 'account login sign in internet wifi wi-fi cloud subscription app phone online',
+  },
+  {
+    id: 'battery-swap',
+    topic: 'repair',
+    q: 'How do I replace the battery?',
+    a: `<p>Undo the four T5 screws on the base, lift it off, unclip the 2,400 mAh battery and clip in the new one. It takes about five minutes, and the repair guide has a photo of every step. Batteries are sold at cost, and free under warranty.</p>`,
+    keys: 'battery replace replacement swap screws screwdriver t5 open',
+  },
+  {
+    id: 'spare-parts',
+    topic: 'repair',
+    q: 'Can I get spare parts after the warranty?',
+    a: `<p>Yes. We stock every part until 2036 and sell them at cost, each with a free, published repair guide: rings, sun, speaker, base and battery. <a href="${promise}">Read the ten-year promise</a>.</p>`,
+    keys: 'spare parts repair fix broken ring sun speaker guide',
+  },
+  {
+    id: 'if-we-disappear',
+    topic: 'repair',
+    q: 'What happens to my Rondo if you disappear?',
+    a: `<p>It keeps working, because it never depended on us. The firmware is open source under the MIT licence, and its source and signing keys are held in escrow, to be released to everyone if we stop trading. <a href="${promise}">How we keep that promise</a>.</p>`,
+    keys: 'company bankrupt shut down closed open source firmware escrow updates future',
+  },
+];
+
+const byTopic = TOPICS.map((t) => ({ ...t, items: FAQS.filter((f) => f.topic === t.id) }));
+---
+
+<Base
+  title="Support"
+  description="Straight answers about orders, shipping, returns, MIDI and repairs, plus order tracking, returns and a way to write to the people who made Rondo."
+  og="support"
+  surface="haze"
+  bodyClass="page-support"
+>
+  <section class="help" aria-labelledby="help-title">
+    <div class="wrap">
+      <div class="help__head">
+        <div class="help__intro">
+          <h1 id="help-title" class="display-l">Ask away.</h1>
+          <p class="lead soft">
+            Straight answers from the people who made Rondo. Search them, browse by topic, or <a href="#contact">write to us</a>.
+          </p>
+        </div>
+        <p class="status">
+          <span class="status__dot" aria-hidden="true"></span>
+          <span>All systems normal</span>
+          <span class="status__sep" aria-hidden="true">·</span>
+          <span class="num">Firmware 1.4.2</span>
+        </p>
+      </div>
+
+      <form class="search" role="search" data-search>
+        <label class="visually-hidden" for="help-q">Search the answers</label>
+        <Icon name="search" class="search__icon" />
+        <input
+          class="input search__input"
+          id="help-q"
+          type="search"
+          name="q"
+          placeholder="Search: battery, returns, MIDI…"
+          autocomplete="off"
+          spellcheck="false"
+          enterkeyhint="search"
+          aria-describedby="help-count"
+          data-q
+        />
+        <button class="search__clear" type="button" data-clear aria-label="Clear search" hidden>
+          <Icon name="x" />
+        </button>
+        <kbd class="search__kbd" aria-hidden="true" data-kbd>/</kbd>
+      </form>
+
+      <div class="topics" role="group" aria-label="Filter by topic" data-topics>
+        <button class="chip" type="button" aria-pressed="true" data-topic-chip="all">
+          All <span class="chip__n num" data-n>{FAQS.length}</span>
+        </button>
+        {
+          TOPICS.map((t) => (
+            <button class="chip" type="button" aria-pressed="false" data-topic-chip={t.id}>
+              {t.name} <span class="chip__n num" data-n>{FAQS.filter((f) => f.topic === t.id).length}</span>
+            </button>
+          ))
+        }
+      </div>
+
+      <p class="count soft" id="help-count" aria-live="polite" data-help-count>{FAQS.length} answers</p>
+
+      <div class="answers" data-answers>
+        {
+          byTopic.map((t) => (
+            <section class="topic" data-topic={t.id} aria-labelledby={`topic-${t.id}`}>
+              <div class="topic__head">
+                <h2 class="topic__title" id={`topic-${t.id}`}>
+                  {t.name}
+                </h2>
+              </div>
+              <div class="faq topic__list">
+                {t.items.map((f) => (
+                  <details id={f.id} data-faq data-keys={f.keys}>
+                    <summary>
+                      <span data-question>{f.q}</span>
+                    </summary>
+                    <div class="answer">
+                      <div data-answer set:html={f.a} />
+                      <button class="answer__link" type="button" data-copy-link>
+                        <Icon name="link" /> Copy a link to this answer
+                      </button>
+                    </div>
+                  </details>
+                ))}
+              </div>
+            </section>
+          ))
+        }
+
+        <div class="empty" data-empty hidden>
+          <p class="empty__title title" data-empty-title>No answers for that yet.</p>
+          <p class="soft" data-suggest hidden>
+            Did you mean <button class="empty__word" type="button" data-suggest-word></button>?
+          </p>
+          <div class="empty__try">
+            <span class="soft">Try</span>
+            {
+              ['battery', 'returns', 'MIDI', 'shipping'].map((w) => (
+                <button class="chip chip--sm" type="button" data-try={w}>
+                  {w}
+                </button>
+              ))
+            }
+          </div>
+          <p>
+            Or <a href="#contact" data-ask>ask us directly</a>. A person will answer it properly, and it will probably end up on
+            this page.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="desk" aria-labelledby="desk-title">
+    <div class="wrap">
+      <h2 id="desk-title" class="display-m desk__title">Track it, return it, or ask us.</h2>
+      <div class="desk__panel">
+        <div class="tabs" role="tablist" aria-label="What do you need?">
+          <button class="tab" type="button" role="tab" id="tab-track" aria-controls="panel-track" aria-selected="true" data-tab="track">
+            <Icon name="truck" /><span class="tab__full">Track an order</span><span class="tab__short" aria-hidden="true">Track</span>
+          </button>
+          <button class="tab" type="button" role="tab" id="tab-return" aria-controls="panel-return" aria-selected="false" tabindex="-1" data-tab="return">
+            <Icon name="undo" /><span class="tab__full">Start a return</span><span class="tab__short" aria-hidden="true">Return</span>
+          </button>
+          <button class="tab" type="button" role="tab" id="tab-contact" aria-controls="panel-contact" aria-selected="false" tabindex="-1" data-tab="contact">
+            <Icon name="mail" /><span class="tab__full">Write to us</span><span class="tab__short" aria-hidden="true">Write to us</span>
+          </button>
+        </div>
+
+        <!-- Track -->
+        <div class="pane" id="panel-track" role="tabpanel" aria-labelledby="tab-track" tabindex="0">
+          <div class="pane__intro">
+            <h3 class="title">Where’s my Rondo?</h3>
+            <p class="soft">
+              Your order number starts with RO and sits at the top of your confirmation email. Pre-orders ship in the order
+              they were placed.
+            </p>
+          </div>
+          <div class="pane__body">
+            <form class="form" data-form="track" novalidate>
+              <div class="form__row">
+                <div class="field">
+                  <label for="track-order">Order number</label>
+                  <input class="input" id="track-order" name="order" placeholder="e.g. RO-10427" autocomplete="off" autocapitalize="characters" spellcheck="false" required aria-describedby="track-order-err" data-validate="order" />
+                  <p class="field__error" id="track-order-err" hidden></p>
+                </div>
+                <div class="field">
+                  <label for="track-email">Email</label>
+                  <input class="input" id="track-email" name="email" type="email" autocomplete="email" required aria-describedby="track-email-err" data-validate="email" />
+                  <p class="field__error" id="track-email-err" hidden></p>
+                </div>
+              </div>
+              <div class="form__actions">
+                <button class="btn btn--ink" type="submit" data-submit><span data-submit-label>Find my order</span></button>
+              </div>
+            </form>
+            <div class="result" data-result="track" hidden tabindex="-1"></div>
+          </div>
+        </div>
+
+        <!-- Return -->
+        <div class="pane" id="panel-return" role="tabpanel" aria-labelledby="tab-return" tabindex="0" hidden>
+          <div class="pane__intro">
+            <h3 class="title">{nights} nights to decide.</h3>
+            <p class="soft">
+              If Rondo isn’t for you, send it back in any box within {nights} nights of delivery. We refund everything,
+              shipping included.
+            </p>
+            <p class="soft">Pre-ordered and changed your mind? Cancel any time before it ships for a full refund.</p>
+          </div>
+          <div class="pane__body">
+            <form class="form" data-form="return" novalidate>
+              <div class="form__row">
+                <div class="field">
+                  <label for="return-order">Order number</label>
+                  <input class="input" id="return-order" name="order" placeholder="e.g. RO-10427" autocomplete="off" autocapitalize="characters" spellcheck="false" required aria-describedby="return-order-err" data-validate="order" />
+                  <p class="field__error" id="return-order-err" hidden></p>
+                </div>
+                <div class="field">
+                  <label for="return-email">Email</label>
+                  <input class="input" id="return-email" name="email" type="email" autocomplete="email" required aria-describedby="return-email-err" data-validate="email" />
+                  <p class="field__error" id="return-email-err" hidden></p>
+                </div>
+              </div>
+              <div class="form__row">
+                <div class="field">
+                  <label for="return-date">When did it arrive? <span class="optional">Optional</span></label>
+                  <input class="input" id="return-date" name="arrived" type="date" aria-describedby="return-nights return-date-err" data-validate="date" />
+                  <p class="field__hint" id="return-nights" aria-live="polite" data-nights>We’ll work out how many nights you have left.</p>
+                  <p class="field__error" id="return-date-err" hidden></p>
+                </div>
+                <div class="field">
+                  <label for="return-reason">Reason <span class="optional">Optional</span></label>
+                  <select class="select" id="return-reason" name="reason">
+                    <option value="">Choose one</option>
+                    <option value="not-for-me">It isn’t for me</option>
+                    <option value="damaged">It arrived damaged</option>
+                    <option value="faulty">Something stopped working</option>
+                    <option value="other">Something else</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form__actions">
+                <button class="btn btn--ink" type="submit" data-submit><span data-submit-label>Start my return</span></button>
+              </div>
+            </form>
+            <div class="result" data-result="return" hidden tabindex="-1"></div>
+          </div>
+        </div>
+
+        <!-- Contact -->
+        <div class="pane" id="panel-contact" role="tabpanel" aria-labelledby="tab-contact" tabindex="0" hidden>
+          <div class="pane__intro">
+            <h3 class="title">Write to a person.</h3>
+            <p class="soft">
+              We read every message and reply within one working day, usually sooner. For anything about an order, the
+              order number helps.
+            </p>
+          </div>
+          <div class="pane__body">
+            <form class="form" data-form="contact" novalidate>
+              <div class="form__row">
+                <div class="field">
+                  <label for="contact-name">Name</label>
+                  <input class="input" id="contact-name" name="name" autocomplete="name" required aria-describedby="contact-name-err" data-validate="name" />
+                  <p class="field__error" id="contact-name-err" hidden></p>
+                </div>
+                <div class="field">
+                  <label for="contact-email">Email</label>
+                  <input class="input" id="contact-email" name="email" type="email" autocomplete="email" required aria-describedby="contact-email-err" data-validate="email" />
+                  <p class="field__error" id="contact-email-err" hidden></p>
+                </div>
+              </div>
+              <div class="form__row">
+                <div class="field">
+                  <label for="contact-topic">Topic</label>
+                  <select class="select" id="contact-topic" name="topic" required aria-describedby="contact-topic-err" data-validate="topic">
+                    <option value="">Choose a topic</option>
+                    {TOPICS.map((t) => <option value={t.id}>{t.name}</option>)}
+                    <option value="other">Something else</option>
+                  </select>
+                  <p class="field__error" id="contact-topic-err" hidden></p>
+                </div>
+                <div class="field">
+                  <label for="contact-order">Order number <span class="optional">Optional</span></label>
+                  <input class="input" id="contact-order" name="order" placeholder="e.g. RO-10427" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="contact-order-err" data-validate="order-optional" />
+                  <p class="field__error" id="contact-order-err" hidden></p>
+                </div>
+              </div>
+              <div class="field">
+                <label for="contact-message">Message</label>
+                <textarea class="textarea" id="contact-message" name="message" rows="5" maxlength="2000" required aria-describedby="contact-message-count contact-message-err" data-validate="message"></textarea>
+                <p class="field__hint" id="contact-message-count" data-chars>At least 10 characters.</p>
+                <p class="field__error" id="contact-message-err" hidden></p>
+              </div>
+              <div class="form__actions">
+                <button class="btn btn--ink" type="submit" data-submit><span data-submit-label>Send message</span></button>
+                <p class="demo-note">A demo: nothing leaves this page.</p>
+              </div>
+            </form>
+            <div class="result" data-result="contact" hidden tabindex="-1"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="elsewhere" aria-label="Before you go">
+    <div class="wrap elsewhere__inner">
+      <a class="elsewhere__link" href={promise}>
+        <span class="soft">Repairs are part of the ten-year promise.</span>
+        <span class="elsewhere__title">How we keep it until 2036 <Icon name="arrowRight" /></span>
+      </a>
+      <a class="elsewhere__link" href={url('/play/')}>
+        <span class="soft">Not sure yet? Try before you buy.</span>
+        <span class="elsewhere__title">Play Rondo in your browser <Icon name="arrowRight" /></span>
+      </a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  @layer page {
+    :global(body.page-support) {
+      background:
+        linear-gradient(to bottom, var(--sky-100), var(--haze) min(28rem, 60vh)) no-repeat,
+        var(--haze);
+    }
+
+    /* ── Search-first header ─────────────────────────────── */
+    .help {
+      padding-block: calc(var(--header-h) + var(--s-8)) var(--s-8);
+    }
+    .help__head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: end;
+      justify-content: space-between;
+      gap: var(--s-4) var(--s-7);
+      margin-bottom: var(--s-6);
+    }
+    .help__intro {
+      display: grid;
+      gap: var(--s-4);
+      max-width: 40rem;
+    }
+    .help__intro .lead a {
+      color: var(--ink);
+    }
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--s-2);
+      padding: 0.5rem 0.9rem;
+      border-radius: var(--r-pill);
+      background: var(--white);
+      box-shadow: inset 0 0 0 1px var(--line);
+      font-size: var(--text-small);
+      font-weight: 560;
+      white-space: nowrap;
+    }
+    .status__dot {
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 0 3px oklch(0.52 0.13 155 / 0.18);
+    }
+    .status__sep {
+      color: var(--ink-mute);
+    }
+
+    .search {
+      position: relative;
+      max-width: 52rem;
+    }
+    .search__input {
+      min-height: 4rem;
+      padding: 0 3.5rem 0 3.4rem;
+      border-radius: var(--r-pill);
+      font-size: clamp(1.0625rem, 1rem + 0.35vw, 1.25rem);
+      background: var(--white);
+      box-shadow: var(--shadow-1);
+    }
+    .search__input::-webkit-search-cancel-button,
+    .search__input::-webkit-search-decoration {
+      appearance: none;
+    }
+    .search :global(.search__icon) {
+      position: absolute;
+      left: 1.25rem;
+      top: 50%;
+      translate: 0 -50%;
+      width: 1.25rem;
+      height: 1.25rem;
+      color: var(--ink-soft);
+      pointer-events: none;
+    }
+    .search__clear,
+    .search__kbd {
+      position: absolute;
+      right: 0.7rem;
+      top: 50%;
+      translate: 0 -50%;
+    }
+    .search__clear {
+      display: grid;
+      place-items: center;
+      width: 2.75rem;
+      height: 2.75rem;
+      border-radius: 50%;
+      color: var(--ink-soft);
+      transition: background-color var(--t-state) var(--ease-out);
+    }
+    .search__clear:hover {
+      background: var(--haze-2);
+    }
+    .search__clear :global(svg) {
+      width: 1.1rem;
+      height: 1.1rem;
+    }
+    .search__kbd {
+      right: 1.25rem;
+      color: var(--ink-mute);
+      pointer-events: none;
+    }
+    @media (hover: none) {
+      .search__kbd {
+        display: none;
+      }
+    }
+
+    .topics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s-2);
+      margin-top: var(--s-5);
+    }
+    .chip__n {
+      font-size: var(--text-label);
+      font-weight: 600;
+      color: var(--ink-mute);
+      transition: color var(--t-state) var(--ease-out);
+    }
+    .chip[aria-pressed='true'] .chip__n {
+      color: oklch(from var(--haze) l c h / 0.72);
+    }
+    .chip[data-none] {
+      opacity: 0.5;
+    }
+    .count {
+      margin-top: var(--s-6);
+      font-size: var(--text-small);
+    }
+
+    /* ── Answers, grouped by topic ───────────────────────── */
+    .answers {
+      margin-top: var(--s-3);
+      border-top: 1px solid var(--line);
+    }
+    .topic {
+      display: grid;
+      grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+      gap: var(--s-6);
+      padding-block: var(--s-6) var(--s-4);
+      border-bottom: 1px solid var(--line);
+    }
+    .topic__head {
+      align-self: start;
+      position: sticky;
+      top: calc(var(--header-h) + var(--s-4));
+      padding-top: var(--s-4);
+    }
+    .topic__title {
+      font-size: var(--text-title);
+      font-weight: 700;
+      font-stretch: 110%;
+      letter-spacing: -0.015em;
+      line-height: 1.08;
+    }
+    .topic__list {
+      border-top: 0;
+    }
+    .topic__list details:last-child {
+      border-bottom: 0;
+    }
+    .answer {
+      display: grid;
+      gap: var(--s-3);
+      justify-items: start;
+    }
+    .answer :global(a) {
+      color: var(--ink);
+      font-weight: 560;
+    }
+    .answer :global(strong) {
+      color: var(--ink);
+    }
+    .answer__link {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--s-2);
+      min-height: 2.25rem;
+      padding: 0 0.7rem 0 0.55rem;
+      margin-left: -0.55rem;
+      border-radius: var(--r-pill);
+      font-size: var(--text-small);
+      color: var(--ink-soft);
+      transition:
+        background-color var(--t-state) var(--ease-out),
+        color var(--t-state) var(--ease-out);
+    }
+    .answer__link:hover {
+      background: var(--haze-2);
+      color: var(--ink);
+    }
+    .answer__link :global(svg) {
+      width: 1rem;
+      height: 1rem;
+    }
+    .answers :global(mark) {
+      background: oklch(0.92 0.15 95 / 0.55);
+      color: inherit;
+      border-radius: 3px;
+      padding-inline: 1px;
+      box-decoration-break: clone;
+      -webkit-box-decoration-break: clone;
+    }
+    details:target summary,
+    details[data-flash] summary {
+      animation: flash 1.6s var(--ease-out);
+    }
+    @keyframes flash {
+      from {
+        background: oklch(0.92 0.15 95 / 0.45);
+      }
+    }
+
+    .empty {
+      display: grid;
+      gap: var(--s-4);
+      justify-items: start;
+      padding-block: var(--s-7);
+      max-width: 40rem;
+    }
+    .empty__title {
+      text-wrap: balance;
+    }
+    .empty__word {
+      font-weight: 650;
+      text-decoration: underline;
+      text-underline-offset: 0.2em;
+    }
+    .empty__try {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--s-2);
+    }
+    .empty__try .soft {
+      margin-right: var(--s-1);
+    }
+    .chip--sm {
+      min-height: 2.25rem;
+      padding: 0.45em 0.9em;
+    }
+    .empty a {
+      font-weight: 600;
+    }
+
+    /* ── The desk: track, return, write ──────────────────── */
+    .desk {
+      padding-block: var(--s-8) var(--section-tight);
+    }
+    .desk__title {
+      margin-bottom: var(--s-6);
+    }
+    .desk__panel {
+      border-radius: var(--r-panel-l);
+      background: var(--white);
+      box-shadow: var(--shadow-1);
+      padding: var(--s-3);
+    }
+    .tabs {
+      display: flex;
+      width: fit-content;
+      max-width: 100%;
+      gap: var(--s-1);
+      padding: 0.3rem;
+      border-radius: var(--r-pill);
+      background: var(--haze-2);
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .tab {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--s-2);
+      min-height: 2.9rem;
+      padding: 0 1.2rem;
+      border-radius: var(--r-pill);
+      font-weight: 620;
+      font-size: 1rem;
+      color: var(--ink-soft);
+      white-space: nowrap;
+      transition:
+        background-color var(--t-state) var(--ease-out),
+        color var(--t-state) var(--ease-out),
+        box-shadow var(--t-state) var(--ease-out);
+    }
+    .tab :global(svg) {
+      width: 1.1rem;
+      height: 1.1rem;
+    }
+    .tab__short {
+      display: none;
+    }
+    .tab:hover {
+      color: var(--ink);
+    }
+    .tab[aria-selected='true'] {
+      background: var(--white);
+      color: var(--ink);
+      box-shadow: var(--shadow-1);
+    }
+    .pane {
+      display: grid;
+      grid-template-columns: minmax(0, 4fr) minmax(0, 7fr);
+      gap: var(--s-6) var(--s-8);
+      padding: var(--s-7) var(--s-5) var(--s-6);
+    }
+    .pane:focus-visible {
+      outline-offset: -3px;
+      border-radius: var(--r-panel);
+    }
+    .pane__intro {
+      display: grid;
+      gap: var(--s-3);
+      align-content: start;
+    }
+    .pane__intro .title {
+      margin-bottom: var(--s-1);
+    }
+    .form {
+      display: grid;
+      gap: var(--s-5);
+    }
+    .form__row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--s-5) var(--s-4);
+      align-items: start;
+    }
+    .form .field {
+      align-content: start;
+    }
+    .form__actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--s-3) var(--s-5);
+    }
+    .optional {
+      font-weight: 450;
+      color: var(--ink-mute);
+      margin-left: var(--s-1);
+    }
+    .select[aria-invalid='true'],
+    .textarea[aria-invalid='true'] {
+      border-color: var(--danger);
+    }
+    .textarea {
+      resize: vertical;
+      min-height: 8.5rem;
+      line-height: 1.5;
+    }
+    .demo-note,
+    .result :global(.demo-note) {
+      font-size: var(--text-small);
+      color: var(--ink-mute);
+    }
+    .btn[aria-busy='true'] {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    /* Results (injected by the page script) */
+    .result {
+      display: grid;
+      gap: var(--s-4);
+      align-content: start;
+      animation: result-in var(--t-panel) var(--ease-out);
+    }
+    .result:focus {
+      outline: none;
+    }
+    .result :global(.result__title) {
+      font-size: var(--text-title);
+      font-weight: 700;
+      font-stretch: 108%;
+      letter-spacing: -0.01em;
+      line-height: 1.1;
+    }
+    .result :global(.result__meta) {
+      color: var(--ink-soft);
+    }
+    .result :global(.journey) {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--s-2);
+      padding: 0;
+      margin-block: var(--s-2);
+      list-style: none;
+      counter-reset: step;
+    }
+    .result :global(.journey li) {
+      display: grid;
+      gap: var(--s-2);
+      font-size: var(--text-small);
+      font-weight: 600;
+      color: var(--ink-soft);
+    }
+    .result :global(.journey li::before) {
+      content: '';
+      height: 4px;
+      border-radius: 2px;
+      background: var(--haze-3);
+    }
+    .result :global(.journey li[data-state='done']::before),
+    .result :global(.journey li[data-state='current']::before) {
+      background: var(--ink);
+    }
+    .result :global(.journey li[data-state='current']) {
+      color: var(--ink);
+    }
+    .result :global(.journey small) {
+      display: block;
+      font-weight: 450;
+      color: var(--ink-mute);
+      font-size: var(--text-label);
+    }
+    .result :global(.result__note) {
+      padding: var(--s-4);
+      border-radius: var(--r-panel);
+      background: var(--haze);
+    }
+    .result :global(.result__actions) {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--s-3) var(--s-5);
+    }
+    .result :global(.result__check) {
+      display: grid;
+      place-items: center;
+      width: 2.75rem;
+      height: 2.75rem;
+      border-radius: 50%;
+      background: oklch(0.52 0.13 155 / 0.12);
+      color: var(--success);
+    }
+    .result :global(.result__check svg) {
+      width: 1.3rem;
+      height: 1.3rem;
+    }
+    @keyframes result-in {
+      from {
+        opacity: 0;
+        translate: 0 8px;
+      }
+    }
+
+    /* ── Elsewhere ───────────────────────────────────────── */
+    .elsewhere {
+      padding-block: 0 var(--section-tight);
+    }
+    .elsewhere__inner {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      border-top: 1px solid var(--line);
+    }
+    .elsewhere__link {
+      display: grid;
+      gap: var(--s-2);
+      padding: var(--s-6) var(--s-5) var(--s-5) 0;
+      text-decoration: none;
+    }
+    .elsewhere__link + .elsewhere__link {
+      padding-left: var(--s-6);
+      border-left: 1px solid var(--line);
+    }
+    .elsewhere__title {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--s-3);
+      font-size: var(--text-title);
+      font-weight: 700;
+      font-stretch: 108%;
+      letter-spacing: -0.01em;
+      line-height: 1.15;
+    }
+    .elsewhere__title :global(svg) {
+      width: 1.4rem;
+      height: 1.4rem;
+      transition: translate var(--t-state) var(--ease-out);
+    }
+    .elsewhere__link:hover .elsewhere__title :global(svg) {
+      translate: 4px 0;
+    }
+    .elsewhere__link:hover .elsewhere__title {
+      text-decoration: underline;
+      text-decoration-thickness: 2px;
+      text-underline-offset: 0.18em;
+    }
+
+    @media (max-width: 900px) {
+      .topic {
+        grid-template-columns: minmax(0, 1fr);
+        gap: var(--s-2);
+      }
+      .topic__head {
+        position: static;
+      }
+      .pane {
+        grid-template-columns: minmax(0, 1fr);
+        padding: var(--s-6) var(--s-3) var(--s-4);
+      }
+    }
+    @media (max-width: 640px) {
+      .help {
+        padding-top: calc(var(--header-h) + var(--s-6));
+      }
+      .form__row {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .tabs {
+        width: 100%;
+      }
+      .tab {
+        flex: 1 1 0;
+        padding: 0 0.6rem;
+      }
+      /* Short labels on phones; the full label stays for assistive tech. */
+      .tab__full {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+      }
+      .tab__short {
+        display: inline;
+      }
+      .tab :global(svg) {
+        display: none;
+      }
+      .result :global(.journey) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        row-gap: var(--s-4);
+      }
+      .elsewhere__inner {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .elsewhere__link + .elsewhere__link {
+        padding-left: 0;
+        border-left: 0;
+        border-top: 1px solid var(--line);
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .result {
+        animation: none;
+      }
+      details:target summary,
+      details[data-flash] summary {
+        animation: none;
+      }
+    }
+  }
+</style>
+
+<script>
+  import '@/scripts/pages/support';
+</script>

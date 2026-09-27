@@ -1,0 +1,155 @@
+/* Design tokens — see DESIGN.md for the reasoning behind each value. OKLCH throughout. */
+@layer tokens {
+  :root {
+    /* ── Colour: primitives ─────────────────────────────── */
+    --white: oklch(1 0 0);
+    --haze: oklch(0.975 0.008 235);
+    --haze-2: oklch(0.945 0.012 235);
+    --haze-3: oklch(0.91 0.016 238);
+    --line: oklch(0.88 0.016 240);
+    --line-strong: oklch(0.78 0.02 245);
+
+    --ink: oklch(0.2 0.03 258);
+    --ink-soft: oklch(0.4 0.035 255); /* only on white / haze */
+    --ink-mute: oklch(0.5 0.03 252); /* captions on haze, ≥5.5:1 */
+    --ink-sky-soft: oklch(0.3 0.04 255); /* secondary text on sky */
+
+    --sky-100: oklch(0.95 0.025 228);
+    --sky-300: oklch(0.86 0.06 230);
+    --sky-500: oklch(0.74 0.11 232);
+    --sky-700: oklch(0.5 0.14 250);
+
+    --night-900: oklch(0.15 0.035 262);
+    --night-800: oklch(0.21 0.045 262);
+    --night-700: oklch(0.29 0.05 262);
+    --night-600: oklch(0.38 0.05 262);
+    --starlight: oklch(0.93 0.025 250);
+    --star-soft: oklch(0.78 0.04 250);
+
+    --sun: oklch(0.92 0.15 95);
+    --sun-press: oklch(0.87 0.16 90);
+    --sun-glow: oklch(0.95 0.1 95 / 0.55);
+
+    /* Ring colours (functional: one per ring / track) */
+    --ember: oklch(0.68 0.19 35); /* Pulse — drums */
+    --sunlit: oklch(0.86 0.15 88); /* Root — bass */
+    --tide: oklch(0.8 0.12 180); /* Glow — chords */
+    --lilac: oklch(0.78 0.11 300); /* Spark — melody */
+    --ember-deep: oklch(0.55 0.19 32);
+
+    --danger: oklch(0.56 0.2 25);
+    --success: oklch(0.52 0.13 155);
+    --success-bright: oklch(0.78 0.16 155);
+
+    /* Anodised finishes (used in swatches; the 3D model has its own PBR values) */
+    --finish-noon: oklch(0.7 0.1 238);
+    --finish-ember: oklch(0.66 0.15 32);
+    --finish-moon: oklch(0.86 0.008 250);
+    --finish-eclipse: oklch(0.24 0.012 260);
+
+    /* ── Colour: semantic (overridden per surface) ─────── */
+    --bg: var(--haze);
+    --fg: var(--ink);
+    --fg-soft: var(--ink-soft);
+    --surface: var(--white);
+    --surface-2: var(--haze-2);
+    --border: var(--line);
+    --focus: var(--sky-700);
+    --accent-fill: var(--ink);
+    --accent-on: var(--white);
+
+    /* ── Typography ────────────────────────────────────── */
+    --font: 'Archivo', 'Archivo Fallback', ui-sans-serif, system-ui, sans-serif;
+    --text-display-xl: clamp(3.25rem, 1.6rem + 6.4vw, 6rem);
+    --text-display-l: clamp(2.4rem, 1.4rem + 3.6vw, 4.25rem);
+    --text-display-m: clamp(1.9rem, 1.3rem + 2.2vw, 3rem);
+    --text-title: clamp(1.5rem, 1.15rem + 1.2vw, 2.1rem);
+    --text-lead: clamp(1.125rem, 1.05rem + 0.35vw, 1.3rem);
+    --text-body: 1.0625rem;
+    --text-small: 0.9375rem;
+    --text-label: 0.8125rem;
+    --text-micro: 0.75rem;
+
+    /* ── Space (4pt base, fluid where it breathes) ──────── */
+    --s-1: 0.25rem;
+    --s-2: 0.5rem;
+    --s-3: 0.75rem;
+    --s-4: 1rem;
+    --s-5: 1.5rem;
+    --s-6: 2rem;
+    --s-7: 3rem;
+    --s-8: 4rem;
+    --s-9: 6rem;
+    --gutter: clamp(1rem, 0.6rem + 2vw, 2.5rem);
+    --section: clamp(6rem, 3rem + 12vw, 13rem);
+    --section-tight: clamp(4rem, 2.5rem + 6vw, 7.5rem);
+    --max: 1320px;
+    --measure: 62ch;
+
+    /* ── Shape ─────────────────────────────────────────── */
+    --r-input: 6px;
+    --r-panel: 12px;
+    --r-panel-l: 16px;
+    --r-pill: 999px;
+
+    /* ── Elevation (light surfaces only) ───────────────── */
+    --shadow-1: 0 1px 2px oklch(0.2 0.03 258 / 0.08), 0 2px 6px oklch(0.2 0.03 258 / 0.06);
+    --shadow-2: 0 2px 4px oklch(0.2 0.03 258 / 0.08), 0 8px 8px oklch(0.2 0.03 258 / 0.06);
+    --shadow-drawer: -24px 0 48px oklch(0.15 0.035 262 / 0.18);
+
+    /* ── Motion ────────────────────────────────────────── */
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+    --ease-io: cubic-bezier(0.65, 0, 0.35, 1);
+    --t-press: 120ms;
+    --t-state: 220ms;
+    --t-panel: 420ms;
+    --t-enter: 720ms;
+
+    /* ── Layers ────────────────────────────────────────── */
+    --z-stage: 0;
+    --z-content: 1;
+    --z-sticky: 20;
+    --z-header: 30;
+    --z-drawer: 40;
+    --z-modal: 50;
+    --z-toast: 60;
+
+    --header-h: 4.25rem;
+  }
+
+  /* Surface themes: set on <body> or on sections */
+  .surface-sky {
+    --bg: var(--sky-300);
+    --fg: var(--ink);
+    --fg-soft: var(--ink-sky-soft);
+    --surface: oklch(0.97 0.02 228);
+    --border: oklch(0.2 0.03 258 / 0.18);
+    --focus: var(--ink);
+    --accent-fill: var(--sun);
+    --accent-on: var(--ink);
+  }
+  .surface-night {
+    --bg: var(--night-900);
+    --fg: var(--starlight);
+    --fg-soft: var(--star-soft);
+    --surface: var(--night-800);
+    --surface-2: var(--night-700);
+    --border: oklch(0.93 0.025 250 / 0.16);
+    --focus: var(--sun);
+    --accent-fill: var(--sun);
+    --accent-on: var(--ink);
+    color-scheme: dark;
+  }
+  .surface-haze {
+    --bg: var(--haze);
+    --fg: var(--ink);
+    --fg-soft: var(--ink-soft);
+    --surface: var(--white);
+    --surface-2: var(--haze-2);
+    --border: var(--line);
+    --focus: var(--sky-700);
+    --accent-fill: var(--ink);
+    --accent-on: var(--white);
+  }
+}

@@ -1,0 +1,890 @@
+---
+import Base from '@/layouts/Base.astro';
+import { PHASES, formatPrice } from '@/data/site';
+import {
+  ASSETS,
+  BUDGET,
+  CHANNELS,
+  EVENTS,
+  EXPERIMENTS,
+  FUNNEL,
+  LOOPS,
+  OPERATIONS,
+  PHASE_PLANS,
+  PLAN_SUMMARY,
+  RISKS,
+  TARGETS,
+} from '@/data/plan';
+import { ICONS } from '@/lib/icons';
+import { url } from '@/lib/url';
+
+const nf = new Intl.NumberFormat('en-US');
+const maxFunnel = FUNNEL[0]!.value;
+const budgetTotal = BUDGET.reduce((n, b) => n + b.amount, 0);
+const maxBudget = Math.max(...BUDGET.map((b) => b.amount));
+// Timeline: 1 Oct 2026 → 31 Mar 2027
+const T0 = Date.UTC(2026, 9, 1);
+const T1 = Date.UTC(2027, 3, 1);
+const pct = (d: number) => ((d - T0) / (T1 - T0)) * 100;
+const bands = [
+  { id: 'signal', from: Date.UTC(2026, 9, 6), to: Date.UTC(2026, 10, 3) },
+  { id: 'founders', from: Date.UTC(2026, 10, 3), to: Date.UTC(2026, 10, 17) },
+  { id: 'launch', from: Date.UTC(2026, 10, 17), to: Date.UTC(2027, 2, 1) },
+  { id: 'orbit', from: Date.UTC(2027, 2, 1), to: T1 },
+];
+const milestones = [
+  { at: Date.UTC(2026, 9, 6), label: 'Teaser live' },
+  { at: Date.UTC(2026, 10, 3), label: 'Founders open' },
+  { at: Date.UTC(2026, 10, 17), label: 'Launch day' },
+  { at: Date.UTC(2026, 11, 18), label: 'Gift cut-off' },
+  { at: Date.UTC(2027, 2, 15), label: 'First units ship' },
+];
+const months = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
+---
+
+<Base
+  title="Launch plan"
+  description="Mission Control: how Rondo launches, phase by phase, and how the core site operates afterwards."
+  og="launch-plan"
+  surface="night"
+  bodyClass="page-plan"
+  noindex
+>
+  <header class="plan-hero wrap">
+    <p class="engrave plan-hero__tag">Mission Control · internal · autumn 2026</p>
+    <h1 class="display-l">From first signal<br />to steady orbit.</h1>
+    <p class="lead plan-hero__goal">{PLAN_SUMMARY.goal}</p>
+    <div class="plan-hero__cols">
+      <div>
+        <h2 class="plan-h3">Strategy</h2>
+        <p class="soft">{PLAN_SUMMARY.strategy}</p>
+      </div>
+      <div>
+        <h2 class="plan-h3">Positioning</h2>
+        <p class="soft">{PLAN_SUMMARY.positioning}</p>
+      </div>
+    </div>
+    <table class="targets">
+      <caption class="plan-h3">Flight plan</caption>
+      <thead><tr><th scope="col">Target</th><th scope="col">Value</th><th scope="col">By</th></tr></thead>
+      <tbody>
+        {TARGETS.map((t) => <tr><th scope="row">{t.metric}</th><td class="num">{t.target}</td><td>{t.by}</td></tr>)}
+      </tbody>
+    </table>
+  </header>
+
+  <section class="control wrap" aria-labelledby="control-title">
+    <div class="control__head">
+      <h2 id="control-title" class="display-m">Preview the site in any phase.</h2>
+      <p class="soft">
+        One switch changes every call to action, status line, delivery promise and buying path across the site. Pick a
+        phase, then open any page.
+      </p>
+    </div>
+    <div class="control__switch" role="radiogroup" aria-label="Launch phase" data-phase-switch>
+      {
+        PHASE_PLANS.map((p) => (
+          <button type="button" role="radio" aria-checked="false" class="phase-btn" data-phase={p.id}>
+            <span class="phase-btn__name">{p.title}</span>
+            <span class="phase-btn__dates">{p.dates}</span>
+          </button>
+        ))
+      }
+    </div>
+    <div class="control__panel" data-phase-panel>
+      {
+        PHASE_PLANS.map((p) => (
+          <div data-phase-detail={p.id} hidden>
+            <p class="control__cta">
+              Primary action in this phase: <strong>{PHASES[p.id].cta.label}</strong> → <code>{PHASES[p.id].cta.href}</code>
+            </p>
+            <ul class="ticks" role="list">
+              {p.siteChanges.map((c) => (
+                <li>
+                  <Fragment set:html={ICONS.check} /> {c}
+                </li>
+              ))}
+            </ul>
+            <div class="control__links">
+              <a class="btn btn--sun btn--sm" href={url('/')}>
+                Open home
+              </a>
+              <a class="btn btn--ghost btn--sm" href={url('/shop/')}>
+                Open shop
+              </a>
+              {p.landing.map((l) => (
+                <a class="btn btn--ghost btn--sm" href={url(l.href)}>
+                  {l.name.split(/[:+(]/)[0]!.trim()}
+                </a>
+              ))}
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="timeline-section wrap" aria-labelledby="timeline-title">
+    <h2 id="timeline-title" class="display-m">Timeline</h2>
+    <div class="tl" role="img" aria-label="Signal from 6 October, Founders from 3 November, Launch on 17 November, Orbit from 1 March, first units ship 15 March.">
+      <div class="tl__months" aria-hidden="true">{months.map((m) => <span>{m}</span>)}</div>
+      <div class="tl__track">
+        {
+          bands.map((b) => (
+            <span class={`tl__band tl__band--${b.id}`} style={`left:${pct(b.from)}%;width:${pct(b.to) - pct(b.from)}%`}>
+              {PHASES[b.id as keyof typeof PHASES].name}
+            </span>
+          ))
+        }
+      </div>
+      <div class="tl__marks">
+        {
+          milestones.map((m, i) => (
+            <span class="tl__mark" style={`left:${pct(m.at)}%; --row:${i % 2}`}>
+              {m.label}
+            </span>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="phases wrap" aria-labelledby="phases-title">
+    <h2 id="phases-title" class="display-m">Phase by phase</h2>
+    {
+      PHASE_PLANS.map((p) => (
+        <article class="phase" id={`phase-${p.id}`}>
+          <header class="phase__head">
+            <h3 class="phase__title">{p.title}</h3>
+            <p class="engrave phase__dates">{p.dates}</p>
+            <p class="phase__goal">{p.goal}</p>
+            <ul class="phase__landing" role="list">
+              {p.landing.map((l) => (
+                <li>
+                  <a href={url(l.href)}>
+                    {l.name} <Fragment set:html={ICONS.arrowUpRight} />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </header>
+          <div class="phase__body">
+            <div>
+              <h4 class="plan-h3">Tactics</h4>
+              <ul class="bullets" role="list">
+                {p.tactics.map((t) => (
+                  <li>{t}</li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h4 class="plan-h3">KPIs</h4>
+              <dl class="kpis">
+                {p.kpis.map(([k, v]) => (
+                  <div>
+                    <dt>{k}</dt>
+                    <dd class="num">{v}</dd>
+                  </div>
+                ))}
+              </dl>
+              <h4 class="plan-h3">Exit criteria</h4>
+              <p class="soft">{p.exit}</p>
+            </div>
+          </div>
+        </article>
+      ))
+    }
+  </section>
+
+  <section class="funnel-section wrap" aria-labelledby="funnel-title">
+    <div class="split">
+      <div>
+        <h2 id="funnel-title" class="display-m">The funnel</h2>
+        <p class="soft">
+          Launch-period targets. The step that matters most is the second one: people who play convert far better, so
+          every page is built to get a sound out of a visitor first.
+        </p>
+      </div>
+      <ol class="funnel" role="list">
+        {
+          FUNNEL.map((f) => (
+            <li>
+              <div class="funnel__bar" style={`--w:${Math.max(2.5, (f.value / maxFunnel) * 100)}%`} />
+              <div class="funnel__text">
+                <span class="funnel__step">{f.step}</span>
+                <span class="funnel__value num">{nf.format(f.value)}</span>
+                <span class="funnel__note">{f.note}</span>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <section class="loops-section wrap" aria-labelledby="loops-title">
+    <h2 id="loops-title" class="display-m">Viral loops, designed in</h2>
+    <ol class="vloops" role="list">
+      {
+        LOOPS.map((l) => (
+          <li>
+            <h3 class="plan-h3 vloops__name">{l.name}</h3>
+            <p>{l.mechanic}</p>
+            <p class="soft">{l.why}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+
+  <section class="channels-section wrap" aria-labelledby="channels-title">
+    <h2 id="channels-title" class="display-m">Channels and budget</h2>
+    <div class="table-scroll">
+      <table class="plan-table">
+        <thead>
+          <tr><th scope="col">Channel</th><th scope="col">Phase</th><th scope="col">Tactic</th><th scope="col">Budget</th><th scope="col">KPI</th></tr>
+        </thead>
+        <tbody>
+          {
+            CHANNELS.map((c) => (
+              <tr>
+                <th scope="row">{c.channel}</th>
+                <td>{c.phase}</td>
+                <td>{c.tactic}</td>
+                <td class="num">{c.budget ? formatPrice(c.budget) : 'In-house'}</td>
+                <td>{c.kpi}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+    <div class="budget">
+      <h3 class="plan-h3">Budget · {formatPrice(budgetTotal)} total</h3>
+      <ul role="list">
+        {
+          BUDGET.map((b) => (
+            <li>
+              <span class="budget__label">{b.item}</span>
+              <span class="budget__bar" style={`--w:${(b.amount / maxBudget) * 100}%`} />
+              <span class="budget__value num">{formatPrice(b.amount)}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="exp-section wrap" aria-labelledby="exp-title">
+    <div class="split">
+      <div>
+        <h2 id="exp-title" class="display-m">Experiments</h2>
+        <p class="soft">Run one at a time on the Launch page, read out on Thursdays.</p>
+        <h3 class="plan-h3" style="margin-top: var(--s-6)">Measured events</h3>
+        <p class="events">{EVENTS.map((e) => <code>{e}</code>)}</p>
+        <p class="soft" style="font-size: var(--text-small)">Cookieless analytics by default; marketing pixels only with consent.</p>
+      </div>
+      <div class="table-scroll">
+        <table class="plan-table">
+          <thead><tr><th scope="col">Test</th><th scope="col">Hypothesis</th><th scope="col">Metric</th></tr></thead>
+          <tbody>
+            {EXPERIMENTS.map((x) => <tr><th scope="row">{x.test}</th><td>{x.hypothesis}</td><td>{x.metric}</td></tr>)}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="risks-section wrap" aria-labelledby="risks-title">
+    <h2 id="risks-title" class="display-m">Risks</h2>
+    <dl class="risks">
+      {
+        RISKS.map((r) => (
+          <div>
+            <dt>{r.risk}</dt>
+            <dd>{r.mitigation}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </section>
+
+  <section class="ops-section wrap" aria-labelledby="ops-title">
+    <h2 id="ops-title" class="display-m">After launch: operating the core site</h2>
+    <div class="split">
+      <div>
+        <h3 class="plan-h3">Weekly cadence</h3>
+        <dl class="cadence">
+          {
+            OPERATIONS.cadence.map(([d, t]) => (
+              <div>
+                <dt>{d}</dt>
+                <dd>{t}</dd>
+              </div>
+            ))
+          }
+        </dl>
+        <h3 class="plan-h3" style="margin-top: var(--s-6)">Launch assets</h3>
+        <ul class="bullets" role="list">{ASSETS.map((a) => <li>{a}</li>)}</ul>
+        <figure class="teaser">
+          <video
+            controls
+            playsinline
+            preload="none"
+            poster={url('/film/rondo-teaser-poster.jpg')}
+            src={url('/film/rondo-teaser.webm')}
+            aria-label="Twelve-second vertical teaser: night to morning, the rings light up one by one, then the name."
+          ></video>
+          <figcaption class="soft">
+            Teaser, 12 s, 1080×1920 with its own synthesised soundtrack. Rendered from the live scene by
+            <code>tools/record-film.mjs</code>. <a href={url('/film/rondo-teaser.webm')} download>Download</a>
+          </figcaption>
+        </figure>
+      </div>
+      <div>
+        <h3 class="plan-h3">Deliberately deferred, and when</h3>
+        <p class="soft" style="margin-bottom: var(--s-4)">
+          This first build prioritises the experience. These enhancements follow, in this order:
+        </p>
+        <ol class="deferred" role="list">
+          {
+            OPERATIONS.deferred.map((d) => (
+              <li>
+                <p class="deferred__title">
+                  <strong>{d.title}</strong> <span class="engrave">{d.when}</span>
+                </p>
+                <p class="soft">{d.detail}</p>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+    </div>
+    <p class="doc-link">
+      Also available as a document: <a href="https://github.com/alexmorrison12/rondo/blob/main/docs/LAUNCH_PLAN.md">docs/LAUNCH_PLAN.md</a>
+    </p>
+  </section>
+</Base>
+
+<style>
+  @layer page {
+    :global(body.page-plan) {
+      background: var(--night-900);
+    }
+    .plan-hero {
+      padding-top: calc(var(--header-h) + var(--s-8));
+      padding-bottom: var(--section-tight);
+      display: grid;
+      gap: var(--s-6);
+    }
+    .plan-hero__tag {
+      color: var(--sun);
+    }
+    .plan-hero__goal {
+      max-width: 52rem;
+      color: var(--starlight);
+    }
+    .plan-hero__cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--s-7);
+      max-width: 64rem;
+    }
+    .plan-h3 {
+      font-size: var(--text-label);
+      font-stretch: 72%;
+      font-weight: 650;
+      letter-spacing: 0.04em;
+      color: var(--sun);
+      margin-bottom: var(--s-3);
+      text-align: left;
+    }
+    .targets {
+      max-width: 44rem;
+    }
+    .targets th,
+    .targets td,
+    .plan-table th,
+    .plan-table td {
+      text-align: left;
+      padding: 0.75rem 0.75rem 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      font-size: var(--text-small);
+    }
+    .targets thead th,
+    .plan-table thead th {
+      color: var(--star-soft);
+      font-weight: 600;
+    }
+    .targets tbody th,
+    .plan-table tbody th {
+      font-weight: 650;
+    }
+    .targets td.num {
+      font-weight: 720;
+      font-stretch: 110%;
+      font-size: 1.0625rem;
+      color: var(--starlight);
+    }
+
+    .control {
+      padding-block: var(--section-tight);
+      border-top: 1px solid var(--border);
+      display: grid;
+      gap: var(--s-6);
+    }
+    .control__head {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--s-7);
+      align-items: end;
+    }
+    .control__switch {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--s-2);
+      padding: var(--s-2);
+      border-radius: var(--r-panel-l);
+      background: var(--night-800);
+    }
+    .phase-btn {
+      display: grid;
+      gap: 0.2rem;
+      text-align: left;
+      padding: var(--s-4);
+      border-radius: var(--r-panel);
+      transition: background-color var(--t-state) var(--ease-out);
+    }
+    .phase-btn:hover {
+      background: var(--night-700);
+    }
+    .phase-btn[aria-checked='true'] {
+      background: var(--sun);
+      color: var(--ink);
+    }
+    .phase-btn__name {
+      font-size: 1.25rem;
+      font-weight: 760;
+      font-stretch: 116%;
+    }
+    .phase-btn__dates {
+      font-size: var(--text-label);
+      opacity: 0.8;
+    }
+    .control__panel {
+      padding: var(--s-6);
+      border-radius: var(--r-panel-l);
+      box-shadow: inset 0 0 0 1px var(--border);
+    }
+    .control__panel > div {
+      display: grid;
+      gap: var(--s-4);
+    }
+    .control__cta code,
+    .events code {
+      font-size: 0.875em;
+      padding: 0.1em 0.4em;
+      border-radius: 4px;
+      background: var(--night-700);
+    }
+    .ticks {
+      display: grid;
+      gap: var(--s-2);
+    }
+    .ticks li {
+      display: flex;
+      gap: var(--s-3);
+      align-items: flex-start;
+      color: var(--star-soft);
+    }
+    .ticks :global(svg) {
+      width: 1.1rem;
+      height: 1.1rem;
+      color: var(--success-bright);
+      margin-top: 0.2rem;
+      flex: none;
+    }
+    .control__links {
+      display: flex;
+      gap: var(--s-2);
+      flex-wrap: wrap;
+    }
+
+    .timeline-section {
+      padding-block: var(--section-tight);
+      display: grid;
+      gap: var(--s-6);
+    }
+    .tl {
+      display: grid;
+      gap: var(--s-2);
+    }
+    .tl__months {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      font-size: var(--text-label);
+      color: var(--star-soft);
+    }
+    .tl__track {
+      position: relative;
+      height: 3.25rem;
+      border-radius: var(--r-panel);
+      background: var(--night-800);
+    }
+    .tl__band {
+      position: absolute;
+      top: 0.35rem;
+      bottom: 0.35rem;
+      display: flex;
+      align-items: center;
+      padding-inline: 0.7rem;
+      border-radius: 8px;
+      font-size: var(--text-small);
+      font-weight: 700;
+      color: var(--ink);
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .tl__band--signal {
+      background: var(--lilac);
+    }
+    .tl__band--founders {
+      background: var(--sunlit);
+    }
+    .tl__band--launch {
+      background: var(--ember);
+    }
+    .tl__band--orbit {
+      background: var(--tide);
+    }
+    .tl__marks {
+      position: relative;
+      height: 3.5rem;
+    }
+    .tl__mark {
+      position: absolute;
+      top: calc(var(--row) * 1.6rem);
+      translate: -0.5px 0;
+      padding-left: 0.5rem;
+      border-left: 1px solid var(--starlight);
+      font-size: var(--text-label);
+      white-space: nowrap;
+      color: var(--starlight);
+    }
+
+    .phases {
+      padding-block: var(--section-tight);
+      display: grid;
+      gap: var(--s-7);
+    }
+    .phase {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 2fr);
+      gap: var(--s-7);
+      padding-top: var(--s-6);
+      border-top: 1px solid var(--border);
+    }
+    .phase__head {
+      display: grid;
+      gap: var(--s-3);
+      align-content: start;
+    }
+    .phase__title {
+      font-size: var(--text-display-m);
+      font-stretch: 120%;
+    }
+    .phase__dates {
+      color: var(--sun);
+    }
+    .phase__goal {
+      color: var(--starlight);
+    }
+    .phase__landing a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: var(--text-small);
+    }
+    .phase__landing :global(svg) {
+      width: 0.9rem;
+      height: 0.9rem;
+    }
+    .phase__body {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: var(--s-6);
+    }
+    .bullets {
+      display: grid;
+      gap: var(--s-3);
+      color: var(--star-soft);
+    }
+    .bullets li {
+      padding-left: 1.1rem;
+      position: relative;
+    }
+    .bullets li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0.65em;
+      width: 0.4rem;
+      height: 0.4rem;
+      border-radius: 50%;
+      box-shadow: inset 0 0 0 1.5px var(--sun);
+    }
+    .kpis {
+      display: grid;
+      margin-bottom: var(--s-5);
+    }
+    .kpis div {
+      display: flex;
+      justify-content: space-between;
+      gap: var(--s-4);
+      padding-block: 0.55rem;
+      border-bottom: 1px solid var(--border);
+      font-size: var(--text-small);
+    }
+    .kpis dt {
+      color: var(--star-soft);
+    }
+    .kpis dd {
+      margin: 0;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .funnel-section,
+    .loops-section,
+    .channels-section,
+    .exp-section,
+    .risks-section,
+    .ops-section {
+      padding-block: var(--section-tight);
+      border-top: 1px solid var(--border);
+    }
+    .split {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.8fr);
+      gap: var(--s-7);
+    }
+    .split > div:first-child {
+      display: grid;
+      gap: var(--s-4);
+      align-content: start;
+    }
+    .funnel {
+      display: grid;
+      gap: var(--s-4);
+    }
+    .funnel li {
+      display: grid;
+      gap: var(--s-2);
+    }
+    .funnel__bar {
+      height: 2.25rem;
+      width: var(--w);
+      border-radius: 6px;
+      background: linear-gradient(to right, var(--sun), var(--sunlit));
+    }
+    .funnel li:nth-child(n + 2) .funnel__bar {
+      background: var(--sky-500);
+    }
+    .funnel li:last-child .funnel__bar {
+      background: var(--ember);
+    }
+    .funnel__text {
+      display: flex;
+      gap: var(--s-3);
+      align-items: baseline;
+      flex-wrap: wrap;
+    }
+    .funnel__step {
+      font-weight: 650;
+    }
+    .funnel__value {
+      font-weight: 760;
+      font-stretch: 110%;
+    }
+    .funnel__note {
+      color: var(--star-soft);
+      font-size: var(--text-small);
+    }
+    .loops-section {
+      display: grid;
+      gap: var(--s-6);
+    }
+    .vloops {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+      gap: var(--s-6) var(--s-7);
+    }
+    .vloops li {
+      display: grid;
+      gap: var(--s-2);
+      align-content: start;
+    }
+    .vloops__name {
+      font-size: 1.125rem;
+      font-stretch: 108%;
+      letter-spacing: 0;
+      color: var(--starlight);
+    }
+    .channels-section {
+      display: grid;
+      gap: var(--s-6);
+    }
+    .table-scroll {
+      overflow-x: auto;
+    }
+    .plan-table {
+      min-width: 44rem;
+    }
+    .budget ul {
+      display: grid;
+      gap: var(--s-2);
+    }
+    .budget li {
+      display: grid;
+      grid-template-columns: minmax(12rem, 18rem) 1fr 6rem;
+      gap: var(--s-4);
+      align-items: center;
+      font-size: var(--text-small);
+    }
+    .budget__bar {
+      height: 0.75rem;
+      width: var(--w);
+      border-radius: var(--r-pill);
+      background: var(--lilac);
+    }
+    .budget__value {
+      text-align: right;
+      font-weight: 650;
+    }
+    .events {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+    .risks {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+      gap: var(--s-5) var(--s-7);
+      margin-top: var(--s-6);
+    }
+    .risks div {
+      display: grid;
+      gap: var(--s-2);
+      padding-top: var(--s-4);
+      border-top: 1px solid var(--border);
+    }
+    .risks dt {
+      font-weight: 700;
+    }
+    .risks dd {
+      margin: 0;
+      color: var(--star-soft);
+    }
+    .ops-section {
+      display: grid;
+      gap: var(--s-6);
+      padding-bottom: var(--section);
+    }
+    .cadence {
+      display: grid;
+    }
+    .cadence div {
+      display: grid;
+      grid-template-columns: 6.5rem 1fr;
+      gap: var(--s-3);
+      padding-block: 0.6rem;
+      border-bottom: 1px solid var(--border);
+      font-size: var(--text-small);
+    }
+    .cadence dt {
+      font-weight: 700;
+    }
+    .cadence dd {
+      margin: 0;
+      color: var(--star-soft);
+    }
+    .deferred {
+      display: grid;
+      gap: var(--s-4);
+      counter-reset: d;
+    }
+    .deferred li {
+      counter-increment: d;
+      display: grid;
+      grid-template-columns: 2rem 1fr;
+      column-gap: var(--s-3);
+    }
+    .deferred li::before {
+      content: counter(d);
+      grid-row: span 2;
+      width: 1.6rem;
+      height: 1.6rem;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--night-700);
+      font-size: var(--text-label);
+      font-weight: 700;
+    }
+    .deferred__title {
+      display: flex;
+      gap: var(--s-3);
+      align-items: baseline;
+      flex-wrap: wrap;
+    }
+    .deferred__title .engrave {
+      color: var(--sun);
+    }
+    .doc-link {
+      color: var(--star-soft);
+      font-size: var(--text-small);
+    }
+    .teaser {
+      margin: var(--s-6) 0 0;
+      display: grid;
+      gap: var(--s-3);
+      max-width: 18rem;
+    }
+    .teaser video {
+      width: 100%;
+      aspect-ratio: 9 / 16;
+      border-radius: var(--r-panel);
+      background: var(--night-800);
+    }
+    .teaser figcaption {
+      font-size: var(--text-small);
+    }
+    @media (max-width: 960px) {
+      .plan-hero__cols,
+      .control__head,
+      .phase,
+      .phase__body,
+      .split {
+        grid-template-columns: 1fr;
+      }
+      .control__switch {
+        grid-template-columns: 1fr 1fr;
+      }
+      .budget li {
+        grid-template-columns: 1fr 5rem;
+      }
+      .budget__bar {
+        grid-column: 1 / -1;
+        grid-row: 2;
+      }
+      .tl__mark {
+        font-size: 0.6875rem;
+      }
+    }
+  }
+</style>
+
+<script>
+  import '@/scripts/pages/launchplan';
+</script>

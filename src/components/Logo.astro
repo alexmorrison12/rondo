@@ -1,0 +1,47 @@
+---
+/**
+ * RONDO wordmark, drawn from geometric strokes so it needs no font and stays crisp at any size.
+ * The final O is ☉, the astronomical symbol for the Sun — the same sun that sits at the centre
+ * of the instrument and colours every primary action on the site.
+ */
+interface Props {
+  class?: string;
+  title?: string;
+  eclipse?: boolean;
+}
+const { class: className, title = 'Rondo', eclipse = false } = Astro.props;
+const id = `wm-${Math.random().toString(36).slice(2, 8)}`;
+---
+
+<svg
+  class:list={['wordmark', className]}
+  viewBox="0 0 509 100"
+  role="img"
+  aria-label={title}
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <defs>
+    <clipPath id={`${id}-clip`}>
+      <rect x="-2" y="0" width="513" height="100"></rect>
+    </clipPath>
+  </defs>
+  <g clip-path={`url(#${id}-clip)`} fill="none" stroke="currentColor" stroke-width="22">
+    <!-- R -->
+    <path d="M11 -10 V110"></path>
+    <path d="M0 11 H45 A27 27 0 0 1 45 65 H11"></path>
+    <path d="M44 62 L78 110"></path>
+    <!-- O -->
+    <circle cx="147" cy="50" r="39"></circle>
+    <!-- N -->
+    <path d="M222 -10 V110 M286 -10 V110 M222 -10 L286 110"></path>
+    <!-- D -->
+    <path d="M322 -10 V110"></path>
+    <path d="M311 11 H345 A39 39 0 0 1 345 89 H311"></path>
+  </g>
+  <!-- ☉ -->
+  <g class="wordmark__sun" data-eclipse={eclipse ? '' : undefined}>
+    <circle cx="459" cy="50" r="39" fill="none" stroke="currentColor" stroke-width="22"></circle>
+    <circle class="wordmark__core" cx="459" cy="50" r="10" fill="currentColor"></circle>
+    {eclipse && <circle class="wordmark__moon" cx="459" cy="50" r="12"></circle>}
+  </g>
+</svg>

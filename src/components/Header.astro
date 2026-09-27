@@ -1,0 +1,66 @@
+---
+import { NAV } from '@/data/site';
+import { ICONS } from '@/lib/icons';
+import { stripBase, url } from '@/lib/url';
+import Cta from './Cta.astro';
+import Logo from './Logo.astro';
+
+interface Props {
+  /** Landing pages drop the nav to keep one path forward. */
+  minimal?: boolean;
+  theme?: 'day' | 'night';
+}
+const { minimal = false, theme = 'day' } = Astro.props;
+const current = stripBase(Astro.url.pathname);
+---
+
+<header class="site-header" data-header data-theme={theme}>
+  <div class="site-header__bar wrap">
+    <a class="brand" href={url('/')} aria-label="Rondo — home">
+      <Logo />
+    </a>
+    {
+      !minimal && (
+        <nav class="site-nav" aria-label="Primary">
+          {NAV.map((item) => (
+            <a href={url(item.href)} aria-current={current.startsWith(item.href) ? 'page' : undefined}>
+              {item.label}
+            </a>
+          ))}
+        </nav>
+      )
+    }
+    <div class="site-header__actions">
+      <button class="icon-btn sound-toggle" type="button" data-sound-toggle aria-pressed="false">
+        <span class="sound-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span class="sound-toggle__label" data-sound-label>Sound off</span>
+      </button>
+      {
+        !minimal && (
+          <button
+            class="icon-btn orbit-btn"
+            type="button"
+            data-orbit-open
+            popovertarget="orbit-log"
+            aria-label="Orbit log"
+          >
+            <Fragment set:html={ICONS.star} />
+            <span data-orbit-count>0/7</span>
+          </button>
+        )
+      }
+      <button class="icon-btn bag-btn" type="button" data-bag-open aria-label="Bag, empty">
+        <Fragment set:html={ICONS.bag} />
+        <span class="badge" data-bag-count data-count="0"></span>
+      </button>
+      {!minimal && <Cta size="sm" class="site-header__cta" />}
+      {
+        !minimal && (
+          <button class="icon-btn menu-btn" type="button" data-menu-open aria-label="Open menu">
+            <Fragment set:html={ICONS.menu} />
+          </button>
+        )
+      }
+    </div>
+  </div>
+</header>

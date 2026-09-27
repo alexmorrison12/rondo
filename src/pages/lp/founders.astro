@@ -1,0 +1,294 @@
+---
+import Base from '@/layouts/Base.astro';
+import { PRODUCT, formatPrice } from '@/data/site';
+import { ICONS } from '@/lib/icons';
+---
+
+<Base
+  title="Claim your Founders number"
+  description="2,000 numbered Founders Editions in black and brass. Choose a number that means something. $49 holds it, fully refundable."
+  og="founders"
+  surface="night"
+  bodyClass="page-founders"
+  minimal
+  themeColor="#040b1a"
+>
+  <section class="fhero wrap" aria-labelledby="f-title">
+    <div class="fhero__copy">
+      <p class="engrave fhero__tag">Founders Edition · {PRODUCT.foundersTotal.toLocaleString('en-US')} made, ever</p>
+      <h1 id="f-title" class="display-l">Claim your number.</h1>
+      <p class="lead soft">
+        Black anodised aluminium, a brass sun, and a serial number you choose: a birthday, a house, a lucky seven. {formatPrice(PRODUCT.foundersDeposit)} holds it, fully refundable until it ships.
+      </p>
+    </div>
+    <div class="fviewer" data-fviewer>
+      <canvas data-fviewer-canvas aria-label="Your Founders Edition, turning to show the engraved number on its base" role="img"></canvas>
+      <p class="fviewer__plate num" data-plate>No. ----</p>
+    </div>
+  </section>
+
+  <section class="picker wrap" aria-labelledby="picker-title">
+    <div class="picker__side">
+      <h2 id="picker-title" class="title">Pick from the spiral</h2>
+      <p class="soft">Bright dots are free. Tap one, or type a number.</p>
+      <form class="picker__search" data-search novalidate>
+        <label class="visually-hidden" for="num">Number, 1 to 2000</label>
+        <input class="input num" id="num" inputmode="numeric" pattern="[0-9]*" maxlength="4" placeholder="0427" data-num />
+        <button class="btn btn--ghost" type="submit">Find</button>
+      </form>
+      <p class="picker__msg" data-msg aria-live="polite"></p>
+      <div class="chip-row">
+        <button class="chip" type="button" data-quick="random"><Fragment set:html={ICONS.dices} /> Surprise me</button>
+        <button class="chip" type="button" data-quick="lucky">Lucky sevens</button>
+        <button class="chip" type="button" data-quick="today">Today's date</button>
+      </div>
+      <p class="picker__count"><span class="num" data-free>0</span> of 2,000 still free</p>
+      <div class="reserve" data-reserve hidden>
+        <p class="reserve__num num" data-reserve-num>No. 0427</p>
+        <button class="btn btn--sun btn--lg btn--block" type="button" data-claim>
+          <Fragment set:html={ICONS.lock} /> <span>Reserve for {formatPrice(PRODUCT.foundersDeposit)}</span>
+        </button>
+        <p class="soft reserve__fine">
+          Then {formatPrice(PRODUCT.foundersPrice - PRODUCT.foundersDeposit)} when it ships in March 2027. Cancel any time before then for a full refund.
+        </p>
+      </div>
+    </div>
+    <div class="spiral">
+      <canvas data-spiral tabindex="0" role="application" aria-label="Spiral of 2,000 numbers. Use arrow keys to move between free numbers and Enter to choose."></canvas>
+      <p class="spiral__tip num" data-tip hidden></p>
+    </div>
+  </section>
+
+  <section class="perks wrap" aria-labelledby="perks-title">
+    <h2 id="perks-title" class="display-m">What Founders get</h2>
+    <dl class="perks__list">
+      <div><dt>Eclipse finish</dt><dd>Black anodised body and rings with a brushed brass sun. Only on Founders.</dd></div>
+      <div><dt>Your number</dt><dd>Laser-engraved on the base: No. 0001 to 2000, never repeated.</dd></div>
+      <div><dt>Walnut dock</dt><dd>Solid walnut, charges through the base. Included.</dd></div>
+      <div><dt>Ships first</dt><dd>Founders leave the line in March 2027, before everyone else.</dd></div>
+      <div><dt>In the credits</dt><dd>Your name, compiled into the firmware's credits screen, forever.</dd></div>
+      <div><dt>Same promise</dt><dd>{PRODUCT.trialNights}-night trial, {PRODUCT.warrantyYears}-year warranty, no subscription, ever.</dd></div>
+    </dl>
+  </section>
+
+  <dialog class="modal claimed" data-claimed aria-labelledby="claimed-title">
+    <div class="claimed__inner">
+      <canvas class="claimed__card" data-card width="1080" height="1080" aria-label="Your shareable Founders card"></canvas>
+      <div class="claimed__copy">
+        <h2 id="claimed-title" class="title" data-claimed-title>No. 0427 is yours.</h2>
+        <p class="soft">It's in your bag. Check out to lock it in with the refundable deposit.</p>
+        <div class="claimed__actions">
+          <a class="btn btn--ink" href="#" data-checkout>Check out</a>
+          <button class="btn btn--ghost" type="button" data-download><Fragment set:html={ICONS.download} /> Save card</button>
+          <button class="btn btn--quiet" type="button" data-close>Close</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+</Base>
+
+<style>
+  @layer page {
+    :global(body.page-founders) {
+      background:
+        radial-gradient(70% 60% at 80% 20%, oklch(0.3 0.05 80 / 0.35), transparent 60%),
+        var(--night-900);
+    }
+    .fhero {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: var(--s-7);
+      align-items: center;
+      padding-top: calc(var(--header-h) + var(--s-6));
+      min-height: 88svh;
+    }
+    .fhero__copy {
+      display: grid;
+      gap: var(--s-5);
+    }
+    .fhero__tag {
+      color: var(--sun);
+    }
+    .fviewer {
+      position: relative;
+      aspect-ratio: 1;
+      width: 100%;
+      max-width: 36rem;
+      justify-self: end;
+    }
+    .fviewer canvas {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      touch-action: pan-y;
+    }
+    .fviewer__plate {
+      position: absolute;
+      left: 50%;
+      bottom: 4%;
+      translate: -50% 0;
+      padding: 0.35rem 0.9rem;
+      border-radius: var(--r-pill);
+      background: oklch(0.78 0.11 80);
+      color: var(--ink);
+      font-weight: 750;
+      font-stretch: 110%;
+      letter-spacing: 0.02em;
+    }
+    .picker {
+      display: grid;
+      grid-template-columns: minmax(18rem, 24rem) 1fr;
+      gap: var(--s-7);
+      padding-block: var(--section-tight);
+      border-top: 1px solid var(--border);
+      align-items: start;
+    }
+    .picker__side {
+      display: grid;
+      gap: var(--s-4);
+      position: sticky;
+      top: calc(var(--header-h) + var(--s-5));
+    }
+    .picker__search {
+      display: flex;
+      gap: var(--s-2);
+    }
+    .picker__search .input {
+      flex: 1;
+      background: var(--night-800);
+      color: var(--starlight);
+      border-color: var(--border);
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+    .picker__msg {
+      min-height: 1.4em;
+      font-size: var(--text-small);
+      color: var(--star-soft);
+    }
+    .picker__count {
+      font-size: var(--text-small);
+      color: var(--star-soft);
+    }
+    .picker__count span {
+      color: var(--starlight);
+      font-weight: 700;
+    }
+    .reserve {
+      display: grid;
+      gap: var(--s-3);
+      padding: var(--s-5);
+      border-radius: var(--r-panel-l);
+      background: var(--night-800);
+    }
+    .reserve__num {
+      font-size: var(--text-display-m);
+      font-weight: 800;
+      font-stretch: 118%;
+      color: oklch(0.82 0.11 80);
+      line-height: 1;
+    }
+    .reserve__fine {
+      font-size: var(--text-small);
+    }
+    .spiral {
+      position: relative;
+      aspect-ratio: 1;
+      width: 100%;
+      max-width: 44rem;
+      justify-self: center;
+    }
+    .spiral canvas {
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+      border-radius: 50%;
+    }
+    .spiral__tip {
+      position: absolute;
+      left: 0;
+      top: 0;
+      padding: 0.3rem 0.6rem;
+      border-radius: var(--r-pill);
+      background: var(--starlight);
+      color: var(--ink);
+      font-size: var(--text-label);
+      font-weight: 700;
+      pointer-events: none;
+      translate: -50% -140%;
+    }
+    .perks {
+      padding-block: var(--section-tight) var(--section);
+      border-top: 1px solid var(--border);
+      display: grid;
+      gap: var(--s-6);
+    }
+    .perks__list {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--s-6) var(--s-7);
+    }
+    .perks__list div {
+      display: grid;
+      gap: var(--s-2);
+    }
+    .perks__list dt {
+      font-size: 1.25rem;
+      font-weight: 720;
+      font-stretch: 110%;
+      color: oklch(0.82 0.11 80);
+    }
+    .perks__list dd {
+      margin: 0;
+      color: var(--star-soft);
+    }
+    .claimed {
+      width: min(52rem, calc(100vw - 2rem));
+      background: var(--night-800);
+      color: var(--starlight);
+    }
+    .claimed__inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--s-6);
+      padding: var(--s-6);
+      align-items: center;
+    }
+    .claimed__card {
+      width: 100%;
+      height: auto;
+      border-radius: var(--r-panel);
+    }
+    .claimed__copy {
+      display: grid;
+      gap: var(--s-4);
+    }
+    .claimed__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s-2);
+    }
+    @media (max-width: 900px) {
+      .fhero,
+      .picker,
+      .claimed__inner {
+        grid-template-columns: 1fr;
+      }
+      .fviewer {
+        justify-self: center;
+        max-width: 24rem;
+      }
+      .picker__side {
+        position: static;
+      }
+      .perks__list {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+</style>
+
+<script>
+  import '@/scripts/pages/founders';
+</script>

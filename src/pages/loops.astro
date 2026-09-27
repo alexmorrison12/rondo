@@ -1,0 +1,1553 @@
+---
+/**
+ * Loops made on Rondo: a night-time listening room. Every record is a real, playable loop
+ * drawn by the same face renderer as Rondo Web, and every one travels as a link.
+ */
+import Cta from '@/components/Cta.astro';
+import Base from '@/layouts/Base.astro';
+import { PRODUCT } from '@/data/site';
+import { ICONS } from '@/lib/icons';
+import { url } from '@/lib/url';
+import { encodePattern } from '@/scripts/seq/codec';
+import { RINGS, cycleLength, type Pattern } from '@/scripts/seq/model';
+import { PRESETS, type Mood } from '@/scripts/seq/presets';
+import { KEYS, scaleById } from '@/scripts/seq/scales';
+
+/** Same finish per loop as the home page rail, so a loop looks the same everywhere. */
+const FEATURED_ID = 'low-tide';
+
+const cycleText = (cycle: number) => {
+  if (cycle % 16 !== 0) return `Repeats every ${cycle} steps`;
+  const bars = cycle / 16;
+  return bars === 1 ? 'Loops every bar' : `Repeats every ${bars} bars`;
+};
+const loopHref = (p: Pattern) => `${url('/play/')}#l=${encodePattern(p)}`;
+
+/** Visible position → layout slot. JS reassigns these after filtering. */
+const slotFor = (i: number) => {
+  const k = i % 6;
+  return { slot: k === 0 ? 'l' : k < 3 ? `s${k}` : `m${k - 2}`, side: Math.floor(i / 6) % 2 ? 'b' : 'a' };
+};
+
+const records = PRESETS.map((preset, i) => {
+  const cycle = cycleLength(preset.pattern);
+  return {
+    ...preset,
+    name: preset.pattern.name,
+    finish: preset.finish,
+    cycle,
+    cycleLabel: cycleText(cycle),
+    href: loopHref(preset.pattern),
+    ...slotFor(i),
+  };
+});
+
+const cities = new Set(PRESETS.map((p) => p.place)).size;
+const words = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve'];
+const spell = (n: number) => words[n] ?? String(n);
+
+const capitalise = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+const MOODS: { id: 'all' | Mood; label: string; note: string }[] = [
+  { id: 'all', label: 'All', note: `${capitalise(spell(records.length))} loops from ${spell(cities)} cities.` },
+  { id: 'Calm', label: 'Calm', note: 'For rain, reading and slow Sundays.' },
+  { id: 'Groove', label: 'Groove', note: 'Swing, bass and somewhere to be.' },
+  { id: 'Dream', label: 'Dream', note: 'Odd scales, long echoes, late nights.' },
+  { id: 'Bright', label: 'Bright', note: 'Big keys and early starts.' },
+];
+
+/* ── Loop of the week ─────────────────────────────────────────── */
+const featured = records.find((r) => r.id === FEATURED_ID) ?? records[0]!;
+const fp = featured.pattern;
+const fBars = Math.max(1, Math.round(featured.cycle / 16));
+const fSeconds = Math.round((featured.cycle * 60) / fp.bpm / 4);
+const fDuration = `${Math.floor(fSeconds / 60)}:${String(fSeconds % 60).padStart(2, '0')}`;
+const fSteps = fp.rings.map((r) => r.steps);
+const listSteps = `${fSteps.slice(0, -1).join(', ')} and ${fSteps.at(-1)}`;
+const fMinutes = Math.floor(fSeconds / 60);
+const fRest = fSeconds % 60;
+const durationWords =
+  fMinutes > 0
+    ? `${fMinutes} minute${fMinutes === 1 ? '' : 's'}${fRest ? ` ${fRest} second${fRest === 1 ? '' : 's'}` : ''}`
+    : `${fSeconds} seconds`;
+const ringLegend = RINGS.map((r, i) => ({ name: r.name, colorVar: r.colorVar, steps: fSteps[i]! }));
+const ticks = Array.from({ length: fBars }, (_, i) => (i / fBars) * 360);
+
+/* ── Describe a moment ────────────────────────────────────────── */
+/* Each suggestion lands on a different sky (golden hour, afternoon, evening, dusk). */
+const moments = ['First warm day of spring', 'Morning swim, cold sea', 'Rain on the window', 'Snow on the lake'];
+const clouds = `--cloud-a: url(${url('/textures/cloud-1.webp')}); --cloud-b: url(${url('/textures/cloud-4.webp')})`;
+---
+
+<Base
+  title="Loops"
+  description={`Loops made on Rondo, from ${spell(cities)} cities. Put one on, open it in Rondo Web, or describe a moment and hear it become a loop.`}
+  og="loops"
+  surface="night"
+  bodyClass="page-loops"
+  themeColor="#040b1a"
+>
+  <!-- Opening ─────────────────────────────────────────────── -->
+  <section class="intro wrap" aria-labelledby="loops-title">
+    <h1 id="loops-title" class="intro__title">Loops made<br /> on Rondo.</h1>
+    <div class="intro__side">
+      <p class="lead intro__lead">
+        Small songs from kitchens, night buses and snow days. Every one is a link: play it here, then make it yours.
+      </p>
+      <a class="btn btn--ghost" href={url('/play/')}>Make your own <Fragment set:html={ICONS.arrowRight} /></a>
+    </div>
+  </section>
+
+  <!-- Loop of the week ────────────────────────────────────── -->
+  <section
+    class="feature wrap"
+    aria-labelledby="feature-kicker feature-title"
+    data-feature
+    data-loop={featured.id}
+    data-finish={featured.finish}
+    data-playing="false"
+  >
+    <header class="feature__head">
+      <p class="feature__kicker" id="feature-kicker">Loop of the week</p>
+      <h2 id="feature-title" class="feature__title">{featured.name}</h2>
+      <p class="feature__by">{featured.author} · {featured.place}</p>
+    </header>
+
+    <div class="feature__stage">
+      <svg class="bezel" viewBox="-100 -100 200 200" aria-hidden="true" data-bezel>
+        {ticks.map((deg) => <line class="bezel__tick" x1="0" y1="-99" x2="0" y2="-93" transform={`rotate(${deg.toFixed(3)})`} />)}
+        <g class="bezel__hand" data-bezel-hand><circle cx="0" cy="-96" r="2.6" /></g>
+      </svg>
+      <div class="disc disc--feature" data-feature-disc>
+        <canvas class="disc__face" aria-hidden="true"></canvas>
+        <span class="disc__glyph" aria-hidden="true">
+          <span class="disc__play" set:html={ICONS.play} />
+          <span class="disc__pause" set:html={ICONS.pause} />
+        </span>
+      </div>
+    </div>
+
+    <div class="feature__actions">
+      <button class="btn btn--sun btn--lg feature__play" type="button" data-feature-toggle>
+        <span class="feature__play-glyph" data-toggle-glyph set:html={ICONS.play} />
+        <span data-toggle-label>Play</span><span class="visually-hidden"> {featured.name}</span>
+      </button>
+      <a class="btn btn--ghost btn--lg" href={featured.href}>
+        Open in Rondo Web<span class="visually-hidden">: {featured.name}</span>
+        <Fragment set:html={ICONS.arrowUpRight} />
+      </a>
+      <button class="btn btn--quiet btn--lg" type="button" data-feature-share>
+        <Fragment set:html={ICONS.share} /> Share<span class="visually-hidden"> {featured.name}</span>
+      </button>
+    </div>
+
+    <dl class="feature__specs engrave">
+      <div><dt>Scale</dt><dd>{scaleById(fp.scale).name}</dd></div>
+      <div><dt>Key</dt><dd>{KEYS[fp.key]}</dd></div>
+      <div><dt>Tempo</dt><dd>{fp.bpm} bpm</dd></div>
+      <div>
+        <dt>Rings</dt>
+        <dd class="feature__rings">
+          {
+            ringLegend.map((r) => (
+              <span style={`--c: var(${r.colorVar})`}>
+                <span class="visually-hidden">{r.name} </span>
+                {r.steps}
+              </span>
+            ))
+          }
+        </dd>
+      </div>
+      <div>
+        <dt>Cycle</dt>
+        <dd data-feature-cycle data-idle={`${fBars} bars · ${fDuration}`}>{fBars} bars · {fDuration}</dd>
+      </div>
+    </dl>
+
+    <p class="feature__note">
+      {featured.author} set four rings to {listSteps} steps. They only line up again after {fBars} bars, so the groove
+      keeps shifting for {durationWords} before a single moment repeats.
+    </p>
+  </section>
+
+  <!-- The gallery ─────────────────────────────────────────── -->
+  <section class="gallery" aria-labelledby="gallery-title">
+    <div class="wrap">
+      <div class="gallery__head">
+        <div class="gallery__intro">
+          <h2 id="gallery-title" class="display-m">Put one on.</h2>
+          <p class="gallery__hint">Tap a record to hear it. One plays at a time, like a real turntable.</p>
+        </div>
+        <div class="gallery__filters">
+          <div class="chip-row" role="radiogroup" aria-label="Filter loops by mood" data-filters>
+            {
+              MOODS.map((m, i) => (
+                <button
+                  class="chip"
+                  type="button"
+                  role="radio"
+                  aria-checked={i === 0 ? 'true' : 'false'}
+                  tabindex={i === 0 ? 0 : -1}
+                  data-mood={m.id}
+                  data-note={m.note}
+                >
+                  {m.label}
+                </button>
+              ))
+            }
+          </div>
+          <p class="gallery__note" data-mood-note>{MOODS[0]!.note}</p>
+        </div>
+      </div>
+
+      <ul class="records" role="list" data-records>
+        {
+          records.map((r) => (
+            <li
+              class="record"
+              data-loop={r.id}
+              data-mood={r.mood}
+              data-finish={r.finish}
+              data-slot={r.slot}
+              data-side={r.side}
+              data-playing="false"
+              style={`--vt: rec-${r.id}`}
+            >
+              <button
+                class="disc record__disc"
+                type="button"
+                aria-pressed="false"
+                aria-label={`Play ${r.name} by ${r.author}`}
+                data-record-toggle
+              >
+                <canvas class="disc__face" aria-hidden="true" />
+                <span class="disc__glyph" aria-hidden="true">
+                  <span class="disc__play" set:html={ICONS.play} />
+                  <span class="disc__pause" set:html={ICONS.pause} />
+                </span>
+              </button>
+              <div class="record__text">
+                <h3 class="record__name">{r.name}</h3>
+                <p class="record__by">
+                  {r.author} · {r.place}
+                </p>
+                <p class="record__meta engrave">
+                  <span class="record__eq" aria-hidden="true">
+                    <i />
+                    <i />
+                    <i />
+                  </span>
+                  <span>{r.mood}</span>
+                  <span aria-hidden="true">·</span>
+                  <span data-cycle data-idle={r.cycleLabel}>
+                    {r.cycleLabel}
+                  </span>
+                </p>
+                <p class="record__links">
+                  <a href={r.href}>
+                    Open in Rondo Web<span class="visually-hidden">: {r.name}</span>
+                    <Fragment set:html={ICONS.arrowUpRight} />
+                  </a>
+                  <a href={r.href}>
+                    Remix<span class="visually-hidden"> {r.name}</span>
+                    <Fragment set:html={ICONS.sliders} />
+                  </a>
+                </p>
+              </div>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <!-- Describe a moment ───────────────────────────────────── -->
+  <section class="moment" aria-labelledby="moment-title" data-moment data-playing="false">
+    <div class="wrap moment__inner">
+      <div class="moment__copy">
+        <h2 id="moment-title" class="display-m">Describe a moment.</h2>
+        <p class="lead moment__lead">
+          Rondo turns a few words into a loop. The mood picks the scale and the sky, the energy picks the tempo. Same
+          words, same song.
+        </p>
+        <form class="moment__form" data-moment-form>
+          <label class="visually-hidden" for="moment-text">A moment, in a few words</label>
+          <input
+            class="input moment__input"
+            id="moment-text"
+            name="moment"
+            type="text"
+            maxlength="80"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="Second coffee, nowhere to be"
+            data-moment-text
+          />
+          <button class="btn btn--sun" type="submit"><Fragment set:html={ICONS.wand} /> Compose</button>
+        </form>
+        <div class="moment__try">
+          <p id="moment-try-label">Or try</p>
+          <ul class="chip-row" role="list" aria-labelledby="moment-try-label">
+            {
+              moments.map((m) => (
+                <li>
+                  <button class="chip" type="button" data-moment-chip>
+                    {m}
+                  </button>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </div>
+
+      <figure class="moment__window" data-moment-window data-state="empty" style={clouds}>
+        <div class="moment__sky" aria-hidden="true">
+          <span class="moment__sun"></span>
+          <span class="moment__cloud moment__cloud--a"></span>
+          <span class="moment__cloud moment__cloud--b"></span>
+        </div>
+        <div class="moment__float">
+          <div class="disc disc--moment" data-moment-disc>
+            <canvas class="disc__face" aria-hidden="true"></canvas>
+            <span class="disc__glyph" aria-hidden="true">
+              <span class="disc__play" set:html={ICONS.play} />
+              <span class="disc__pause" set:html={ICONS.pause} />
+            </span>
+          </div>
+        </div>
+        <figcaption class="moment__transport">
+          <button class="moment__play" type="button" data-moment-toggle disabled aria-label="Play your loop">
+            <span data-toggle-glyph set:html={ICONS.play} />
+          </button>
+          <span class="moment__label">
+            <span class="moment__name" data-moment-name>Waiting for a moment</span>
+            <span class="moment__meta engrave" data-moment-meta>Type a few words, or pick one</span>
+          </span>
+          <a class="moment__open" href={url('/play/')} data-moment-open hidden>
+            Open in Rondo Web <Fragment set:html={ICONS.arrowUpRight} />
+          </a>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- Closing ─────────────────────────────────────────────── -->
+  <section class="closing" aria-labelledby="closing-title">
+    <div class="wrap closing__inner">
+      <h2 id="closing-title" class="closing__title">Hear these on the real thing.</h2>
+      <div class="closing__side">
+        <p class="lead closing__lead">
+          Every loop here was made with four rings and a sun. On Rondo the rings click as you turn them, the sun is
+          sapphire, and the whole thing fits in a coat pocket.
+        </p>
+        <div class="closing__actions">
+          <Cta size="lg" showPrice />
+          <a class="btn btn--ghost btn--lg" href={url('/play/')}>Make your own first</a>
+        </div>
+        <ul class="trust closing__trust" role="list">
+          <li>{PRODUCT.trialNights}-night trial</li>
+          <li>Free shipping</li>
+          <li>No subscription, ever</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <aside class="now" aria-label="Now playing" data-now data-visible="false">
+    <span class="now__eq" aria-hidden="true"><i></i><i></i><i></i></span>
+    <button class="now__title" type="button" data-now-jump>
+      <span class="visually-hidden">Now playing: </span><span data-now-name>Low Tide</span>
+      <span class="now__by"><span class="visually-hidden">by </span><span data-now-by>Sade</span></span>
+    </button>
+    <button class="icon-btn now__stop" type="button" data-now-stop aria-label="Pause" set:html={ICONS.pause} />
+  </aside>
+
+  <p class="visually-hidden" aria-live="polite" data-announce></p>
+</Base>
+
+<style>
+  /* Registered so the moment window's painted sky can transition between times of day.
+     Initial values can't reference variables: they are the night palette from lib/skies.ts. */
+  @property --m-top {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: oklch(0.11 0.03 266);
+  }
+  @property --m-mid {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: oklch(0.15 0.04 262);
+  }
+  @property --m-bottom {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: oklch(0.23 0.05 256);
+  }
+  @property --m-sun {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: oklch(0.5 0.05 260);
+  }
+  @property --m-clouds {
+    syntax: '<number>';
+    inherits: true;
+    initial-value: 0;
+  }
+
+  @layer page {
+    :global(body.page-loops) {
+      background:
+        radial-gradient(90% 60% at 50% -10%, oklch(from var(--night-800) l c h / 0.9), transparent 70%) no-repeat,
+        var(--night-900);
+    }
+    /* Light spill and turning records may reach past the gutters; never past the viewport. */
+    :global(body.page-loops #main) {
+      overflow-x: clip;
+    }
+
+    /* ── Shared: the disc (a Rondo face you can press) ───────── */
+    .disc {
+      position: relative;
+      display: block;
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      isolation: isolate;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* Warm light spill while a record plays: the lamp in the listening room. */
+    .disc::before {
+      content: '';
+      position: absolute;
+      inset: -16%;
+      z-index: -1;
+      border-radius: 50%;
+      background: radial-gradient(
+        closest-side,
+        oklch(from var(--sun) l c h / 0.22),
+        oklch(from var(--sun) l c h / 0.07) 55%,
+        transparent
+      );
+      opacity: 0;
+      scale: calc(0.92 + var(--level, 0) * 0.14);
+      transition: opacity var(--t-panel) var(--ease-out);
+      pointer-events: none;
+    }
+    [data-playing='true'] > .disc::before,
+    [data-playing='true'] .feature__stage .disc::before,
+    [data-playing='true'] .moment__float .disc::before {
+      opacity: 1;
+    }
+    .disc__face {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      /* Stand-in until the face renderer paints over it. */
+      background:
+        radial-gradient(circle, var(--night-900) 0 27%, transparent 27.5%),
+        radial-gradient(circle, color-mix(in oklch, var(--finish, var(--finish-noon)) 55%, var(--night-800)) 0 96%, transparent 96.5%);
+    }
+    [data-finish='noon'] {
+      --finish: var(--finish-noon);
+    }
+    [data-finish='ember'] {
+      --finish: var(--finish-ember);
+    }
+    [data-finish='moon'] {
+      --finish: var(--finish-moon);
+    }
+    [data-finish='eclipse'] {
+      --finish: var(--finish-eclipse);
+    }
+    /* The play glyph sits exactly on the sapphire sun, like the real button. */
+    .disc__glyph {
+      position: absolute;
+      inset: 0;
+      margin: auto;
+      width: 27.5%;
+      height: 27.5%;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: oklch(from var(--white) l c h / 0.86);
+      pointer-events: none;
+    }
+    .disc__glyph > span {
+      grid-area: 1 / 1;
+      display: grid;
+      place-items: center;
+      width: 36%;
+      transition:
+        opacity var(--t-state) var(--ease-out),
+        scale var(--t-state) var(--ease-out);
+    }
+    .disc__glyph :global(svg) {
+      width: 100%;
+      height: auto;
+      fill: currentColor;
+      stroke-width: 1;
+    }
+    .disc__play {
+      translate: 6% 0;
+    }
+    .disc__pause {
+      opacity: 0;
+      scale: 0.6;
+    }
+    [data-playing='true'] .disc__play {
+      opacity: 0;
+      scale: 0.6;
+    }
+    /* While playing the sun glows warm-white, so the pause mark is engraved dark into it. */
+    [data-playing='true'] .disc__pause {
+      opacity: 1;
+      scale: 1;
+      color: oklch(from var(--ink) l c h / 0.72);
+    }
+    button.disc,
+    [data-feature-disc],
+    [data-moment-disc] {
+      cursor: pointer;
+      transition: scale var(--t-press) var(--ease-out);
+    }
+    button.disc:hover,
+    [data-feature-disc]:hover {
+      scale: 1.012;
+    }
+    button.disc:active,
+    [data-feature-disc]:active,
+    [data-moment-disc]:active {
+      scale: 0.985;
+    }
+    button.disc:focus-visible {
+      outline-offset: 6px;
+      border-radius: 50%;
+    }
+    [data-moment-window][data-state='empty'] [data-moment-disc] {
+      cursor: default;
+    }
+    [data-moment-window][data-state='empty'] .disc__glyph {
+      opacity: 0;
+    }
+    [data-moment-window][data-instant],
+    [data-moment-window][data-instant] .moment__sun {
+      transition: none;
+    }
+    [data-pending='true'] .disc__glyph {
+      animation: pending 700ms var(--ease-io) infinite alternate;
+    }
+    @keyframes pending {
+      to {
+        opacity: 0.35;
+      }
+    }
+
+    /* ── Opening ─────────────────────────────────────────────── */
+    .intro {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(18rem, 25rem);
+      align-items: end;
+      gap: var(--s-5) var(--s-7);
+      padding-block: calc(var(--header-h) + var(--s-8)) var(--s-6);
+    }
+    .intro__title {
+      font-size: var(--text-display-xl);
+      font-weight: 800;
+      font-stretch: 125%;
+      letter-spacing: -0.025em;
+      line-height: 0.94;
+      animation: inhale 1100ms var(--ease-out) both;
+    }
+    .intro__side {
+      display: grid;
+      gap: var(--s-5);
+      justify-items: start;
+      max-width: 34rem;
+      padding-bottom: 0.4rem;
+      animation: surface 900ms 240ms var(--ease-out) both;
+    }
+    .intro__lead {
+      color: var(--star-soft);
+    }
+    @keyframes inhale {
+      from {
+        font-stretch: 62%;
+        font-weight: 300;
+        opacity: 0;
+      }
+      40% {
+        opacity: 1;
+      }
+    }
+    @keyframes surface {
+      from {
+        opacity: 0;
+        translate: 0 0.75rem;
+      }
+    }
+    /* Two columns only once "Loops made" fits on one line beside the lead. */
+    @media (max-width: 1240px) {
+      .intro {
+        grid-template-columns: 1fr;
+      }
+      .intro__side {
+        max-width: 36rem;
+      }
+    }
+    @media (max-width: 860px) {
+      .intro {
+        padding-block: calc(var(--header-h) + var(--s-6)) var(--s-6);
+      }
+    }
+
+    /* ── Loop of the week ────────────────────────────────────── */
+    .feature {
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+      grid-template-rows: 1fr auto auto auto auto 1fr;
+      grid-template-areas:
+        'stage .'
+        'stage head'
+        'stage actions'
+        'stage specs'
+        'stage note'
+        'stage .';
+      column-gap: var(--s-8);
+      padding-block: 0 var(--s-8);
+    }
+    .feature__head {
+      grid-area: head;
+      display: grid;
+      gap: var(--s-2);
+    }
+    .feature__kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      font-size: var(--text-small);
+      font-weight: 600;
+      font-stretch: 104%;
+      color: var(--star-soft);
+    }
+    .feature__kicker::before {
+      content: '';
+      width: 0.45rem;
+      height: 0.45rem;
+      border-radius: 50%;
+      background: var(--starlight);
+      box-shadow: 0 0 10px oklch(from var(--starlight) l c h / 0.8);
+    }
+    .feature__title {
+      font-size: var(--text-display-l);
+      font-stretch: 118%;
+      font-weight: 760;
+      letter-spacing: -0.02em;
+      line-height: 0.98;
+    }
+    [data-feature][data-playing='true'] .feature__title {
+      font-variation-settings:
+        'wdth' calc(118 + var(--breathe, 0) * 6),
+        'wght' calc(760 + var(--breathe, 0) * 120);
+    }
+    .feature__by {
+      font-size: var(--text-lead);
+      color: var(--star-soft);
+    }
+    .feature__stage {
+      grid-area: stage;
+      position: relative;
+      width: min(100%, 33rem);
+      aspect-ratio: 1;
+      align-self: center;
+      animation: spin-up 1400ms 120ms var(--ease-out) both;
+    }
+    .disc--feature {
+      position: absolute;
+      inset: 7.5%;
+      width: auto;
+    }
+    .bezel {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+    .bezel__tick {
+      stroke: var(--starlight);
+      stroke-opacity: 0.22;
+      stroke-width: 1.1;
+      stroke-linecap: round;
+      transition:
+        stroke var(--t-state) var(--ease-out),
+        stroke-opacity var(--t-state) var(--ease-out);
+    }
+    .bezel__tick[data-on] {
+      stroke: var(--sun);
+      stroke-opacity: 0.55;
+    }
+    .bezel__tick[data-now] {
+      stroke: var(--sun);
+      stroke-opacity: 1;
+      stroke-width: 1.8;
+    }
+    /* The rings have lined up again: the whole bezel lights, then settles. */
+    .bezel[data-lap] .bezel__tick {
+      stroke: var(--sun);
+      stroke-opacity: 1;
+      transition: none;
+    }
+    .bezel__hand {
+      fill: var(--sun);
+      opacity: 0;
+      transition: opacity var(--t-panel) var(--ease-out);
+    }
+    [data-feature][data-playing='true'] .bezel__hand {
+      opacity: 1;
+    }
+    .feature__actions {
+      grid-area: actions;
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s-3);
+      margin-top: var(--s-6);
+    }
+    .feature__play {
+      min-width: 8.5rem;
+    }
+    .feature__play-glyph {
+      display: inline-grid;
+    }
+    .feature__play-glyph :global(svg) {
+      width: 1.1em;
+      height: 1.1em;
+      fill: currentColor;
+    }
+    .feature__specs {
+      grid-area: specs;
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s-4) var(--s-6);
+      margin-top: var(--s-6);
+      padding-top: var(--s-5);
+      border-top: 1px solid var(--border);
+      font-size: 0.875rem;
+    }
+    .feature__specs div {
+      display: grid;
+      gap: 0.2rem;
+    }
+    .feature__specs dt {
+      color: var(--star-soft);
+    }
+    .feature__specs dd {
+      margin: 0;
+      font-weight: 700;
+      font-stretch: 90%;
+      color: var(--starlight);
+    }
+    .feature__rings {
+      display: flex;
+      gap: var(--s-3);
+    }
+    .feature__rings > span {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .feature__rings > span::before {
+      content: '';
+      width: 0.55rem;
+      height: 0.55rem;
+      border-radius: 50%;
+      background: var(--c);
+      box-shadow: 0 0 8px var(--c);
+    }
+    .feature__note {
+      grid-area: note;
+      max-width: 34rem;
+      margin-top: var(--s-5);
+      color: var(--star-soft);
+    }
+    @keyframes spin-up {
+      from {
+        opacity: 0;
+        rotate: -50deg;
+        scale: 0.94;
+      }
+    }
+    @media (max-width: 900px) {
+      .feature {
+        grid-template-columns: 1fr;
+        grid-template-rows: none;
+        grid-template-areas: 'stage' 'head' 'actions' 'specs' 'note';
+        padding-top: 0;
+      }
+      .feature__stage {
+        justify-self: center;
+        width: min(100%, 30rem);
+        margin-bottom: var(--s-6);
+      }
+      .feature__actions {
+        margin-top: var(--s-5);
+      }
+    }
+    @media (max-width: 520px) {
+      .feature__actions .btn {
+        flex: 1 1 auto;
+      }
+      .feature__play {
+        flex-basis: 100%;
+      }
+    }
+
+    /* ── Gallery ─────────────────────────────────────────────── */
+    .gallery {
+      padding-block: var(--section-tight) var(--s-7);
+    }
+    .gallery__head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: end;
+      gap: var(--s-5) var(--s-8);
+    }
+    .gallery__intro {
+      display: grid;
+      gap: var(--s-4);
+    }
+    .gallery__hint {
+      color: var(--star-soft);
+      max-width: 34ch;
+    }
+    .gallery__filters {
+      display: grid;
+      gap: var(--s-3);
+      justify-items: end;
+    }
+    .gallery__filters .chip-row {
+      justify-content: flex-end;
+    }
+    .gallery__note {
+      font-size: var(--text-small);
+      color: var(--star-soft);
+      min-height: 1.6em;
+    }
+    @media (max-width: 420px) {
+      .gallery__filters .chip-row {
+        gap: 0.375rem;
+      }
+      .gallery__filters .chip {
+        padding-inline: 0.8em;
+      }
+    }
+    @media (max-width: 860px) {
+      .gallery__head {
+        grid-template-columns: 1fr;
+      }
+      .gallery__filters {
+        justify-items: start;
+      }
+      .gallery__filters .chip-row {
+        justify-content: flex-start;
+      }
+    }
+
+    .records {
+      --row-gap: var(--s-8);
+      --pair-drop: clamp(5rem, 15vw, 14.5rem);
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      grid-auto-flow: row dense;
+      column-gap: var(--s-6);
+      row-gap: var(--row-gap);
+      align-items: start;
+      margin-top: var(--s-8);
+    }
+    .record {
+      display: grid;
+      gap: var(--s-4);
+      align-content: start;
+      min-width: 0;
+    }
+    /* Scroll-linked: each record turns a few degrees into place as it arrives, like a ring clicking
+       home. Only rotation moves; nothing is ever hidden waiting for a reveal. */
+    @supports (animation-timeline: view()) {
+      .record__disc {
+        animation: settle linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 85%;
+      }
+    }
+    @keyframes settle {
+      from {
+        rotate: -30deg;
+      }
+    }
+    /* Named only while filtering, so records glide to their new places. */
+    :global(html[data-vt='filter']) .record {
+      view-transition-name: var(--vt);
+    }
+
+    /* Slots (desktop): one large record with two companions, then a row of small ones. */
+    .record[data-slot='l'] {
+      grid-column: 1 / span 6;
+      width: min(100%, 30rem);
+    }
+    .record[data-slot='s1'] {
+      grid-column: 7 / span 3;
+    }
+    .record[data-slot='s2'] {
+      grid-column: 10 / span 3;
+      margin-top: var(--pair-drop);
+    }
+    .record[data-side='b'][data-slot='l'] {
+      grid-column: 7 / span 6;
+      justify-self: end;
+    }
+    .record[data-side='b'][data-slot='s1'] {
+      grid-column: 1 / span 3;
+      margin-top: var(--pair-drop);
+    }
+    .record[data-side='b'][data-slot='s2'] {
+      grid-column: 4 / span 3;
+      margin-top: 0;
+    }
+    .record[data-slot^='m'] {
+      grid-column: span 4;
+      grid-template-columns: 7.5rem minmax(0, 1fr);
+      align-items: center;
+      gap: var(--s-5);
+    }
+
+    .record__text {
+      display: grid;
+      gap: 0.3rem;
+      justify-items: start;
+    }
+    .record__name {
+      font-size: 1.3rem;
+      font-weight: 700;
+      font-stretch: 110%;
+      letter-spacing: -0.01em;
+      line-height: 1.1;
+    }
+    .record[data-slot='l'] .record__name {
+      font-size: var(--text-title);
+    }
+    .record[data-slot^='m'] .record__name {
+      font-size: 1.125rem;
+    }
+    .record__by {
+      font-size: var(--text-small);
+      color: var(--star-soft);
+    }
+    .record__meta {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.4em;
+      margin-top: 0.2rem;
+      color: var(--star-soft);
+    }
+    [data-playing='true'] .record__meta {
+      color: var(--starlight);
+    }
+    .record__eq {
+      display: none;
+      align-items: flex-end;
+      gap: 2px;
+      height: 0.75rem;
+      margin-right: 0.15rem;
+    }
+    .record__eq i,
+    .now__eq i {
+      width: 3px;
+      height: 100%;
+      border-radius: 1px;
+      background: var(--sun);
+      transform-origin: 50% 100%;
+      scale: 1 0.35;
+      animation: eq 780ms var(--ease-io) infinite alternate;
+    }
+    .record__eq i:nth-child(2),
+    .now__eq i:nth-child(2) {
+      animation-delay: -260ms;
+    }
+    .record__eq i:nth-child(3),
+    .now__eq i:nth-child(3) {
+      animation-delay: -520ms;
+    }
+    [data-playing='true'] .record__eq {
+      display: inline-flex;
+    }
+    @keyframes eq {
+      to {
+        scale: 1 1;
+      }
+    }
+    .record__links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0 var(--s-4);
+      margin-top: 0.1rem;
+    }
+    .record__links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35em;
+      min-height: 2.75rem;
+      font-size: var(--text-small);
+      font-weight: 600;
+      text-decoration: none;
+      color: var(--starlight);
+    }
+    .record__links a:hover {
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+    }
+    .record__links :global(svg) {
+      width: 1rem;
+      height: 1rem;
+      color: var(--star-soft);
+    }
+
+    @media (max-width: 1099px) {
+      .records {
+        --row-gap: var(--s-7);
+        column-gap: var(--s-5);
+      }
+      .record[data-slot='l'],
+      .record[data-side='b'][data-slot='l'] {
+        grid-column: 1 / -1;
+        width: auto;
+        justify-self: stretch;
+        grid-template-columns: minmax(0, 24rem) minmax(0, 1fr);
+        align-items: end;
+        column-gap: var(--s-6);
+      }
+      .record[data-side='b'][data-slot='l'] {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 24rem);
+      }
+      .record[data-side='b'][data-slot='l'] .record__disc {
+        grid-column: 2;
+        grid-row: 1;
+      }
+      .record[data-side='b'][data-slot='l'] .record__text {
+        grid-column: 1;
+        grid-row: 1;
+        justify-items: end;
+        text-align: right;
+      }
+      .record[data-side='b'][data-slot='l'] .record__meta,
+      .record[data-side='b'][data-slot='l'] .record__links {
+        justify-content: flex-end;
+      }
+      .record[data-slot='s1'],
+      .record[data-side='b'][data-slot='s1'] {
+        grid-column: 1 / span 6;
+        margin-top: 0;
+      }
+      .record[data-slot='s2'],
+      .record[data-side='b'][data-slot='s2'] {
+        grid-column: 7 / span 6;
+        margin-top: var(--s-8);
+      }
+      .record[data-slot^='s'] .record__disc {
+        width: min(100%, 16rem);
+      }
+      .record[data-slot^='m'] {
+        grid-column: 1 / -1;
+        grid-template-columns: 6.5rem minmax(0, 1fr);
+      }
+      .record[data-slot='m2'],
+      .record[data-slot='m3'] {
+        margin-top: calc(var(--s-3) - var(--row-gap));
+      }
+    }
+    /* Tablet: the small records become a track list that uses the full width. */
+    @media (min-width: 700px) and (max-width: 1099px) {
+      .record[data-slot^='m'] .record__text {
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) auto;
+        grid-template-areas:
+          'name meta links'
+          'by meta links';
+        align-items: center;
+        column-gap: var(--s-5);
+      }
+      .record[data-slot^='m'] .record__name {
+        grid-area: name;
+      }
+      .record[data-slot^='m'] .record__by {
+        grid-area: by;
+      }
+      .record[data-slot^='m'] .record__meta {
+        grid-area: meta;
+        margin: 0;
+      }
+      .record[data-slot^='m'] .record__links {
+        grid-area: links;
+        margin: 0;
+      }
+    }
+    @media (max-width: 640px) {
+      .records {
+        column-gap: var(--s-4);
+        margin-top: var(--s-7);
+      }
+      .record[data-slot='l'],
+      .record[data-side='b'][data-slot='l'] {
+        grid-template-columns: 1fr;
+        align-items: start;
+      }
+      .record[data-slot='l'] .record__disc {
+        width: min(100%, 22rem);
+      }
+      .record[data-side='b'][data-slot='l'] .record__disc {
+        grid-column: 1;
+        grid-row: 1;
+        justify-self: end;
+      }
+      .record[data-side='b'][data-slot='l'] .record__text {
+        grid-row: 2;
+      }
+      .record[data-slot='s2'],
+      .record[data-side='b'][data-slot='s2'] {
+        margin-top: var(--s-7);
+      }
+      .record[data-slot^='s'] .record__links {
+        flex-direction: column;
+        gap: 0;
+      }
+      .record[data-slot^='s'] .record__links a {
+        min-height: 2.5rem;
+      }
+      .record[data-slot^='m'] {
+        grid-template-columns: 5.5rem minmax(0, 1fr);
+        gap: var(--s-4);
+      }
+    }
+
+    /* ── Describe a moment ───────────────────────────────────── */
+    .moment {
+      padding-block: var(--section-tight);
+    }
+    .moment__inner {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      gap: var(--s-7) var(--s-8);
+      align-items: center;
+    }
+    .moment__copy {
+      display: grid;
+      gap: var(--s-5);
+      max-width: 34rem;
+    }
+    .moment__lead {
+      color: var(--star-soft);
+    }
+    .moment__form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s-2);
+      margin-top: var(--s-2);
+    }
+    .moment__input {
+      flex: 1 1 14rem;
+      border-radius: var(--r-pill);
+      padding-inline: 1.2rem;
+    }
+    .moment__try {
+      display: grid;
+      gap: var(--s-3);
+    }
+    .moment__try > p {
+      font-size: var(--text-small);
+      font-weight: 600;
+      color: var(--star-soft);
+    }
+    .moment__try .chip-row {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .moment__window {
+      --pad-bottom: 5.5rem;
+      position: relative;
+      margin: 0;
+      aspect-ratio: 5 / 4;
+      border-radius: var(--r-panel-l);
+      overflow: clip;
+      display: grid;
+      place-items: center;
+      padding: var(--s-5) var(--s-5) var(--pad-bottom);
+      background: linear-gradient(to bottom, var(--m-top), var(--m-mid) 58%, var(--m-bottom));
+      transition:
+        --m-top 1.6s var(--ease-io),
+        --m-mid 1.6s var(--ease-io),
+        --m-bottom 1.6s var(--ease-io),
+        --m-sun 1.6s var(--ease-io),
+        --m-clouds 1.6s var(--ease-io);
+    }
+    .moment__sky {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+    .moment__sun {
+      position: absolute;
+      left: 76%;
+      top: var(--m-sun-y, 120%);
+      width: 34%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      translate: -50% -50%;
+      background: radial-gradient(
+        closest-side,
+        var(--m-sun),
+        oklch(from var(--m-sun) l c h / 0.45) 22%,
+        oklch(from var(--m-sun) l c h / 0) 100%
+      );
+      transition: top 1.6s var(--ease-io);
+    }
+    .moment__cloud {
+      position: absolute;
+      width: 62%;
+      aspect-ratio: 2;
+      background: var(--cloud-a) center / contain no-repeat;
+      opacity: calc(var(--m-clouds) * 0.9);
+      filter: brightness(1.15);
+      /* Screen lets cloud light up the sky it sits in: bright cumulus by day, faint haze after dark. */
+      mix-blend-mode: screen;
+      animation: drift 46s var(--ease-io) infinite alternate;
+    }
+    .moment__cloud--a {
+      left: -10%;
+      top: 8%;
+    }
+    .moment__cloud--b {
+      right: -14%;
+      top: 34%;
+      width: 48%;
+      background-image: var(--cloud-b);
+      animation-duration: 62s;
+      animation-direction: alternate-reverse;
+    }
+    @keyframes drift {
+      from {
+        translate: -5% 0;
+      }
+      to {
+        translate: 7% 0;
+      }
+    }
+    .moment__float {
+      position: relative;
+      width: min(58%, 20rem);
+      animation: bob 7s var(--ease-io) infinite alternate;
+    }
+    @keyframes bob {
+      from {
+        translate: 0 -2%;
+      }
+      to {
+        translate: 0 2%;
+      }
+    }
+    .moment__transport {
+      position: absolute;
+      left: var(--s-4);
+      right: var(--s-4);
+      bottom: var(--s-4);
+      display: flex;
+      align-items: center;
+      gap: var(--s-3);
+      padding: 0.4rem 0.4rem 0.4rem 0.4rem;
+      border-radius: var(--r-pill);
+      background: var(--night-800);
+      color: var(--starlight);
+      box-shadow: 0 12px 28px -14px oklch(from var(--night-900) l c h / 0.7);
+    }
+    .moment__play {
+      flex: none;
+      display: grid;
+      place-items: center;
+      width: 2.75rem;
+      height: 2.75rem;
+      border-radius: 50%;
+      background: var(--sun);
+      color: var(--ink);
+      transition:
+        background-color var(--t-state) var(--ease-out),
+        scale var(--t-press) var(--ease-out),
+        opacity var(--t-state) var(--ease-out);
+    }
+    .moment__play:hover {
+      background: var(--sun-press);
+    }
+    .moment__play:active {
+      scale: 0.94;
+    }
+    .moment__play[disabled] {
+      opacity: 0.35;
+      cursor: default;
+    }
+    .moment__play :global(svg) {
+      width: 1.05rem;
+      height: 1.05rem;
+      fill: currentColor;
+    }
+    .moment__label {
+      flex: 1;
+      min-width: 0;
+      display: grid;
+      gap: 0.1rem;
+    }
+    .moment__name {
+      font-weight: 680;
+      font-stretch: 106%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .moment__meta {
+      color: var(--star-soft);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .moment__open {
+      flex: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      min-height: 2.75rem;
+      padding-inline: 1rem;
+      border-radius: var(--r-pill);
+      font-size: var(--text-small);
+      font-weight: 650;
+      text-decoration: none;
+      box-shadow: inset 0 0 0 1px oklch(from var(--starlight) l c h / 0.35);
+      transition: background-color var(--t-state) var(--ease-out);
+    }
+    .moment__open:hover {
+      background: oklch(from var(--starlight) l c h / 0.1);
+    }
+    .moment__open :global(svg) {
+      width: 1rem;
+      height: 1rem;
+    }
+    @media (max-width: 1000px) {
+      .moment__inner {
+        grid-template-columns: 1fr;
+      }
+    }
+    @media (max-width: 560px) {
+      .moment__window {
+        --pad-bottom: 7.25rem;
+        aspect-ratio: 4 / 5;
+      }
+      .moment__float {
+        width: 72%;
+      }
+      .moment__transport {
+        flex-wrap: wrap;
+        border-radius: var(--r-panel);
+        padding: 0.5rem;
+      }
+      .moment__open {
+        flex: 1 1 100%;
+        justify-content: center;
+      }
+    }
+
+    /* ── Closing ─────────────────────────────────────────────── */
+    /* Bookends the opening: big line on the left, the offer on the right. */
+    .closing {
+      padding-block: 0 var(--section);
+    }
+    .closing__inner {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(18rem, 30rem);
+      align-items: end;
+      gap: var(--s-6) var(--s-7);
+      padding-top: var(--s-8);
+      border-top: 1px solid var(--border);
+    }
+    .closing__title {
+      font-size: var(--text-display-l);
+      font-stretch: 118%;
+      font-weight: 760;
+      letter-spacing: -0.02em;
+      line-height: 0.98;
+      max-width: 12ch;
+    }
+    .closing__side {
+      display: grid;
+      gap: var(--s-5);
+      justify-items: start;
+      max-width: 34rem;
+    }
+    .closing__lead {
+      color: var(--star-soft);
+    }
+    .closing__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s-3);
+    }
+    @media (max-width: 860px) {
+      .closing__inner {
+        grid-template-columns: 1fr;
+      }
+    }
+    .closing__trust li + li::before {
+      content: '·';
+      margin-right: var(--s-3);
+    }
+    .closing__trust {
+      gap: var(--s-3);
+    }
+    @media (max-width: 520px) {
+      .closing__trust {
+        gap: var(--s-1) var(--s-5);
+      }
+      .closing__trust li + li::before {
+        content: none;
+      }
+    }
+
+    /* ── Now playing ─────────────────────────────────────────── */
+    .now {
+      position: fixed;
+      left: 50%;
+      bottom: calc(var(--s-4) + env(safe-area-inset-bottom));
+      z-index: var(--z-sticky);
+      display: flex;
+      align-items: center;
+      gap: var(--s-1);
+      max-width: calc(100vw - 2rem);
+      padding: 0.3rem 0.3rem 0.3rem 1rem;
+      border-radius: var(--r-pill);
+      background: var(--night-700);
+      color: var(--starlight);
+      box-shadow: 0 16px 40px -14px oklch(from var(--night-900) l c h / 0.85);
+      translate: -50% calc(100% + 2rem);
+      visibility: hidden;
+      transition:
+        translate var(--t-panel) var(--ease-out),
+        visibility 0s linear var(--t-panel);
+    }
+    .now[data-visible='true'] {
+      translate: -50% 0;
+      visibility: visible;
+      transition:
+        translate var(--t-panel) var(--ease-out),
+        visibility 0s;
+    }
+    :global(body:has([data-toasts] .toast)) .now[data-visible='true'] {
+      translate: -50% -4.5rem;
+    }
+    .now__eq {
+      display: inline-flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 0.8rem;
+    }
+    .now__title {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0.45rem;
+      min-height: 2.75rem;
+      min-width: 0;
+      padding-inline: 0.5rem;
+      border-radius: var(--r-pill);
+      font-weight: 650;
+      font-stretch: 106%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      align-items: center;
+    }
+    .now__title:hover {
+      text-decoration: underline;
+      text-underline-offset: 0.2em;
+    }
+    .now__by {
+      font-weight: 450;
+      color: var(--star-soft);
+    }
+    .now__stop {
+      flex: none;
+      background: var(--sun);
+      color: var(--ink);
+    }
+    .now__stop:hover {
+      background: var(--sun-press);
+    }
+    .now__stop :global(svg) {
+      width: 1rem;
+      height: 1rem;
+      fill: currentColor;
+    }
+
+    /* Filtering: records glide, the rest of the page crossfades without the page-navigation blur. */
+    :global(html[data-vt='filter']::view-transition-old(root)) {
+      animation: 180ms var(--ease-out) both loops-vt-out;
+    }
+    :global(html[data-vt='filter']::view-transition-new(root)) {
+      animation: 260ms var(--ease-out) both loops-vt-in;
+    }
+    :global(html[data-vt='filter']::view-transition-group(*)) {
+      animation-duration: 560ms;
+      animation-timing-function: var(--ease-out);
+    }
+    /* Moving records swap snapshots quickly so text never ghosts while the box glides. */
+    :global(html[data-vt='filter']::view-transition-old(*)) {
+      animation: 160ms var(--ease-out) both loops-vt-out;
+    }
+    :global(html[data-vt='filter']::view-transition-new(*)) {
+      animation: 220ms 40ms var(--ease-out) both loops-vt-in;
+    }
+    /* Records leaving get out of the way first; records arriving fade in behind them. */
+    :global(html[data-vt='filter']::view-transition-old(*):only-child) {
+      animation: 160ms var(--ease-out) both loops-vt-out;
+    }
+    :global(html[data-vt='filter']::view-transition-new(*):only-child) {
+      animation: 380ms 140ms var(--ease-out) both loops-vt-in;
+    }
+    @keyframes loops-vt-out {
+      to {
+        opacity: 0;
+      }
+    }
+    @keyframes loops-vt-in {
+      from {
+        opacity: 0;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .record__disc,
+      .feature__stage,
+      .moment__cloud,
+      .moment__float,
+      .intro__title,
+      .intro__side {
+        animation: none;
+      }
+      .record__eq i,
+      .now__eq i {
+        animation: none;
+        scale: 1 0.7;
+      }
+      [data-feature][data-playing='true'] .feature__title {
+        font-variation-settings: normal;
+      }
+    }
+  }
+</style>
+
+<script>
+  import '@/scripts/pages/loops';
+</script>

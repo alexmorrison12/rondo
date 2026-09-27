@@ -1,0 +1,300 @@
+---
+import Base from '@/layouts/Base.astro';
+import { ICONS } from '@/lib/icons';
+
+const reveals = [
+  { week: 'Week 1', title: 'It fits in your hand.', text: '108 millimetres across. Lighter than a paperback.', open: true },
+  { week: 'Week 2', title: 'It plays in circles.', text: 'Four rings, four loops, drifting in and out of time.', open: true },
+  { week: 'Week 3', title: 'Revealed 20 October', text: '', open: false },
+  { week: 'Week 4', title: 'Revealed 27 October', text: '', open: false },
+];
+---
+
+<Base
+  title="Something is coming into orbit"
+  description="On 17 November, something small will change how you make music. Join the list, move closer to the sun."
+  og="signal"
+  surface="night"
+  bodyClass="page-signal"
+  minimal
+  themeColor="#040b1a"
+>
+  <section class="signal" aria-labelledby="signal-title">
+    <canvas class="signal__ring" data-ring aria-hidden="true"></canvas>
+    <div class="signal__copy">
+      <p class="engrave signal__date">17 · 11 · 2026</p>
+      <h1 id="signal-title" class="signal__title">Something small is coming into orbit.</h1>
+      <p class="lead signal__lead">Move your pointer around the ring. Turn the sound on to hear it answer.</p>
+      <div class="countdown" role="timer" aria-label="Time until reveal" data-countdown>
+        <div><span class="num" data-cd="d">00</span><small>days</small></div>
+        <div><span class="num" data-cd="h">00</span><small>hours</small></div>
+        <div><span class="num" data-cd="m">00</span><small>minutes</small></div>
+        <div><span class="num" data-cd="s">00</span><small>seconds</small></div>
+      </div>
+
+      <form class="join" data-join novalidate>
+        <label class="visually-hidden" for="join-email">Email address</label>
+        <input class="input" id="join-email" type="email" name="email" autocomplete="email" placeholder="you@example.com" required />
+        <button class="btn btn--sun btn--lg" type="submit">Join the list</button>
+        <p class="field__error" data-join-error hidden></p>
+        <p class="join__fine">One email when it's revealed, one when Founders numbers open. That's it.</p>
+      </form>
+
+      <div class="rank" data-rank hidden aria-live="polite">
+        <p class="rank__label engrave">Your place in orbit</p>
+        <p class="rank__number num" data-rank-number>#4,113</p>
+        <p class="rank__text" data-rank-text>Every friend who joins with your link pulls you 100 places closer to the sun.</p>
+        <svg class="rank__orbit" viewBox="-100 -100 200 200" aria-hidden="true" data-rank-orbit>
+          <circle r="92" fill="none" stroke="currentColor" stroke-opacity="0.2"></circle>
+          <circle r="64" fill="none" stroke="currentColor" stroke-opacity="0.2"></circle>
+          <circle r="36" fill="none" stroke="currentColor" stroke-opacity="0.2"></circle>
+          <circle r="12" fill="var(--sun)"></circle>
+          <circle data-you r="6" cx="92" cy="0" fill="var(--starlight)"></circle>
+        </svg>
+        <div class="share">
+          <label class="visually-hidden" for="ref-link">Your invite link</label>
+          <input class="input" id="ref-link" readonly data-ref-link />
+          <button class="btn btn--sun" type="button" data-share><Fragment set:html={ICONS.share} /> Share</button>
+        </div>
+        <ol class="tiers" role="list">
+          <li data-tier="1"><span class="num">1</span> friend · jump 100 places</li>
+          <li data-tier="3"><span class="num">3</span> friends · guaranteed Founders window</li>
+          <li data-tier="10"><span class="num">10</span> friends · your loop ships on every Rondo as a preset</li>
+        </ol>
+        <button class="demo-link" type="button" data-simulate>Preview: simulate a friend joining</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="reveals wrap" aria-labelledby="reveals-title">
+    <h2 id="reveals-title" class="display-m">Revealed so far</h2>
+    <ol class="reveal-list" role="list">
+      {
+        reveals.map((r) => (
+          <li data-open={String(r.open)}>
+            <span class="engrave">{r.week}</span>
+            <p class="reveal-list__title">{r.title}</p>
+            {r.text && <p class="soft">{r.text}</p>}
+          </li>
+        ))
+      }
+    </ol>
+  </section>
+</Base>
+
+<style>
+  @layer page {
+    :global(body.page-signal) {
+      background: radial-gradient(120% 90% at 70% 110%, oklch(0.24 0.06 270), var(--night-900) 60%);
+      min-height: 100dvh;
+    }
+    .signal {
+      position: relative;
+      min-height: 100svh;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: center;
+      padding: calc(var(--header-h) + var(--s-5)) var(--gutter) var(--s-7);
+      gap: var(--s-6);
+      max-width: 1400px;
+      margin-inline: auto;
+    }
+    .signal__ring {
+      width: 100%;
+      aspect-ratio: 1;
+      max-width: 40rem;
+      justify-self: center;
+      cursor: crosshair;
+      touch-action: none;
+    }
+    .signal__copy {
+      display: grid;
+      gap: var(--s-5);
+      max-width: 34rem;
+    }
+    .signal__date {
+      color: var(--sun);
+      font-size: 0.9375rem;
+    }
+    .signal__title {
+      font-size: var(--text-display-l);
+      font-stretch: 118%;
+      font-weight: 780;
+      line-height: 0.98;
+    }
+    .signal__lead {
+      color: var(--star-soft);
+    }
+    .countdown {
+      display: flex;
+      gap: var(--s-5);
+    }
+    .countdown div {
+      display: grid;
+      gap: 0.1rem;
+    }
+    .countdown span {
+      font-size: var(--text-title);
+      font-weight: 760;
+      font-stretch: 110%;
+    }
+    .countdown small {
+      font-size: var(--text-label);
+      color: var(--star-soft);
+    }
+    .join {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: var(--s-2) var(--s-2);
+    }
+    .join .input {
+      border-radius: var(--r-pill);
+      padding-inline: 1.25rem;
+      min-height: 3.5rem;
+      background: var(--night-800);
+      color: var(--starlight);
+      border-color: var(--border);
+    }
+    .join .field__error,
+    .join__fine {
+      grid-column: 1 / -1;
+    }
+    .join__fine {
+      font-size: var(--text-small);
+      color: var(--star-soft);
+    }
+    .rank {
+      display: grid;
+      gap: var(--s-3);
+      padding: var(--s-5);
+      border-radius: var(--r-panel-l);
+      background: var(--night-800);
+      grid-template-columns: 1fr 7rem;
+    }
+    .rank > *:not(.rank__orbit) {
+      grid-column: 1 / -1;
+    }
+    .rank__label {
+      color: var(--sun);
+      grid-column: 1 !important;
+    }
+    .rank__number {
+      font-size: var(--text-display-m);
+      font-weight: 800;
+      font-stretch: 120%;
+      line-height: 1;
+      grid-column: 1 !important;
+    }
+    .rank__text {
+      color: var(--star-soft);
+      grid-column: 1 !important;
+    }
+    .rank__orbit {
+      grid-column: 2;
+      grid-row: 1 / span 3;
+      width: 7rem;
+      height: 7rem;
+      color: var(--starlight);
+    }
+    .rank__orbit [data-you] {
+      transition:
+        cx var(--t-enter) var(--ease-out),
+        cy var(--t-enter) var(--ease-out);
+    }
+    .share {
+      display: flex;
+      gap: var(--s-2);
+    }
+    .share .input {
+      flex: 1;
+      background: var(--night-900);
+      color: var(--starlight);
+      border-color: var(--border);
+      font-size: var(--text-small);
+    }
+    .tiers {
+      display: grid;
+      gap: var(--s-2);
+      font-size: var(--text-small);
+      color: var(--star-soft);
+    }
+    .tiers li {
+      display: flex;
+      gap: var(--s-3);
+      align-items: center;
+    }
+    .tiers li span {
+      width: 1.6rem;
+      height: 1.6rem;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      box-shadow: inset 0 0 0 1.5px currentColor;
+      font-weight: 700;
+      font-size: var(--text-label);
+    }
+    .tiers li[data-reached='true'] {
+      color: var(--starlight);
+    }
+    .tiers li[data-reached='true'] span {
+      background: var(--sun);
+      color: var(--ink);
+      box-shadow: none;
+    }
+    .demo-link {
+      justify-self: start;
+      font-size: var(--text-label);
+      color: var(--star-soft);
+      text-decoration: underline;
+      text-underline-offset: 0.2em;
+    }
+    .reveals {
+      padding-block: var(--section-tight) var(--section);
+      display: grid;
+      gap: var(--s-6);
+    }
+    .reveal-list {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--s-5);
+    }
+    .reveal-list li {
+      display: grid;
+      gap: var(--s-2);
+      align-content: start;
+      padding-top: var(--s-4);
+      border-top: 2px solid var(--sun);
+    }
+    .reveal-list li[data-open='false'] {
+      border-top-color: var(--border);
+      color: var(--star-soft);
+    }
+    .reveal-list .engrave {
+      color: var(--sun);
+    }
+    .reveal-list li[data-open='false'] .engrave {
+      color: var(--star-soft);
+    }
+    .reveal-list__title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      font-stretch: 108%;
+    }
+    @media (max-width: 900px) {
+      .signal {
+        grid-template-columns: 1fr;
+        padding-top: calc(var(--header-h) + var(--s-3));
+      }
+      .signal__ring {
+        max-width: 22rem;
+      }
+      .reveal-list {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  }
+</style>
+
+<script>
+  import '@/scripts/pages/signal';
+</script>

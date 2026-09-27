@@ -1,0 +1,455 @@
+---
+import Base from '@/layouts/Base.astro';
+import { ADDONS, COLORWAYS, PRODUCT, formatPrice } from '@/data/site';
+import { ICONS } from '@/lib/icons';
+import { url } from '@/lib/url';
+
+const quarter = formatPrice(PRODUCT.price / 4, { cents: true });
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: 'Rondo',
+  description: PRODUCT.oneLiner,
+  brand: { '@type': 'Brand', name: 'Rondo' },
+  offers: [
+    { '@type': 'Offer', name: 'Rondo', price: PRODUCT.price, priceCurrency: 'USD', availability: 'https://schema.org/PreOrder' },
+    { '@type': 'Offer', name: 'Rondo Founders Edition', price: PRODUCT.foundersPrice, priceCurrency: 'USD', availability: 'https://schema.org/LimitedAvailability' },
+  ],
+};
+---
+
+<Base
+  title="Choose your Rondo"
+  description="Choose a finish, add free engraving and pre-order Rondo. 100-night trial, five-year warranty, no subscription."
+  og="shop"
+  surface="haze"
+  bodyClass="page-shop"
+  jsonLd={jsonLd}
+>
+  <section class="shop wrap" aria-labelledby="shop-title">
+    <div class="viewer" data-viewer>
+      <canvas class="viewer__canvas" data-viewer-canvas aria-label="3D view of your Rondo. Drag to turn it." role="img"></canvas>
+      <div class="viewer__views" role="group" aria-label="Views">
+        <button class="chip" type="button" data-view="top" aria-pressed="true">Top</button>
+        <button class="chip" type="button" data-view="side" aria-pressed="false">Side</button>
+        <button class="chip" type="button" data-view="base" aria-pressed="false">Base</button>
+      </div>
+      <p class="viewer__hint soft">Drag to turn</p>
+    </div>
+
+    <div class="config">
+      <p class="phase-note"><span data-phase-status>Pre-orders open</span></p>
+      <h1 id="shop-title" class="display-m">Choose your Rondo.</h1>
+      <p class="config__price">
+        <span class="config__amount num" data-price>{formatPrice(PRODUCT.price)}</span>
+        <span class="soft">or <span class="num" data-quarter>{quarter}</span> × 4, interest-free</span>
+      </p>
+
+      <fieldset class="config__group">
+        <legend class="config__legend">Edition</legend>
+        <div class="editions" role="radiogroup" aria-label="Edition">
+          <button class="edition" type="button" role="radio" aria-checked="true" data-edition="standard">
+            <span class="edition__name">Rondo</span>
+            <span class="edition__price num">{formatPrice(PRODUCT.price)}</span>
+            <span class="edition__note">Noon, Ember or Moon</span>
+          </button>
+          <button class="edition" type="button" role="radio" aria-checked="false" data-edition="founders">
+            <span class="edition__name">Founders Edition</span>
+            <span class="edition__price num">{formatPrice(PRODUCT.foundersPrice)}</span>
+            <span class="edition__note">Numbered of 2,000 · black and brass · walnut dock included</span>
+          </button>
+        </div>
+      </fieldset>
+
+      <fieldset class="config__group">
+        <legend class="config__legend">Finish: <span class="soft" data-finish-label>Noon · Anodised sky blue</span></legend>
+        <div class="swatches" role="radiogroup" aria-label="Finish">
+          {
+            COLORWAYS.map((c, i) => (
+              <button
+                class="swatch"
+                type="button"
+                role="radio"
+                aria-checked={i === 0 ? 'true' : 'false'}
+                aria-label={`${c.name}: ${c.note}`}
+                data-finish={c.id}
+                data-founders-only={c.foundersOnly ? '' : undefined}
+                style={`--sw: ${c.swatch}`}
+              />
+            ))
+          }
+        </div>
+      </fieldset>
+
+      <fieldset class="config__group">
+        <legend class="config__legend">Engraving <span class="soft">· free, on the base</span></legend>
+        <div class="engraving">
+          <label class="visually-hidden" for="engraving">Engraving text, up to 24 characters</label>
+          <input class="input" id="engraving" type="text" maxlength="24" placeholder="For Sam, who taught me Dorian" data-engraving autocomplete="off" />
+          <output class="engraving__count num soft" data-engraving-count>0/24</output>
+        </div>
+        <p class="field__hint">We'll show it on the 3D model as you type.</p>
+      </fieldset>
+
+      <fieldset class="config__group">
+        <legend class="config__legend">Add-ons</legend>
+        <ul class="addons" role="list">
+          {
+            ADDONS.map((a) => (
+              <li>
+                <label class="addon">
+                  <input type="checkbox" data-addon={a.id} />
+                  <span class="addon__box" aria-hidden="true" set:html={ICONS.check} />
+                  <span class="addon__text">
+                    <span class="addon__name">{a.name}</span>
+                    <span class="addon__note">{a.note}</span>
+                  </span>
+                  <span class="addon__price num" data-addon-price={a.id}>
+                    +{formatPrice(a.price)}
+                  </span>
+                </label>
+              </li>
+            ))
+          }
+        </ul>
+      </fieldset>
+
+      <div class="config__summary">
+        <p class="config__reward" data-reward hidden>
+          <Fragment set:html={ICONS.star} /> <span>Orbit log reward: a walnut dock ships free with this Rondo.</span>
+        </p>
+        <p class="config__ship">
+          <Fragment set:html={ICONS.truck} /> <span data-phase-shipping>Ships spring 2027</span> · free shipping and returns
+        </p>
+        <button class="btn btn--ink btn--lg btn--block" type="button" data-add>
+          <Fragment set:html={ICONS.bag} />
+          <span data-add-label>Pre-order</span>
+          <span class="btn__meta num" data-add-total>{formatPrice(PRODUCT.price)}</span>
+        </button>
+        <a class="btn btn--sun btn--lg btn--block" href="#" data-phase-link hidden>Join the list</a>
+        <ul class="trust" role="list">
+          <li><Fragment set:html={ICONS.shield} /> {PRODUCT.trialNights}-night trial</li>
+          <li><Fragment set:html={ICONS.wrench} /> {PRODUCT.warrantyYears}-year warranty</li>
+          <li><Fragment set:html={ICONS.infinity} /> No subscription, ever</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="details wrap" aria-labelledby="box-title">
+    <div class="details__box">
+      <h2 id="box-title" class="title">In the box</h2>
+      <ul role="list" class="box-list">
+        <li><strong>Rondo</strong> in your finish, charged to 80%</li>
+        <li><strong>Braided USB-C cable</strong>, 1 m</li>
+        <li><strong>Wrist loop</strong> in waxed cotton</li>
+        <li><strong>Field guide</strong>: 24 printed pages, mostly pictures</li>
+      </ul>
+    </div>
+    <div class="details__compare">
+      <h2 class="title">Rondo or Founders?</h2>
+      <table class="compare">
+        <thead>
+          <tr><th scope="col"><span class="visually-hidden">Feature</span></th><th scope="col">Rondo</th><th scope="col">Founders</th></tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">Price</th><td class="num">{formatPrice(PRODUCT.price)}</td><td class="num">{formatPrice(PRODUCT.foundersPrice)}</td></tr>
+          <tr><th scope="row">Finishes</th><td>Noon, Ember, Moon</td><td>Eclipse (black, brass sun)</td></tr>
+          <tr><th scope="row">Serial number</th><td>—</td><td>Laser-engraved, 0001–2000</td></tr>
+          <tr><th scope="row">Walnut dock</th><td>{formatPrice(ADDONS[0]!.price)} add-on</td><td>Included</td></tr>
+          <tr><th scope="row">Your name in the firmware credits</th><td>—</td><td>Yes, forever</td></tr>
+          <tr><th scope="row">Ships</th><td>Spring 2027</td><td>First, March 2027</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="details__help">
+      <h2 class="title">Not sure yet?</h2>
+      <p class="soft">Play the whole instrument in your browser first. It's free, and everything you make there works on the real thing.</p>
+      <a class="btn btn--ghost" href={url('/play/')}>Play Rondo in your browser <Fragment set:html={ICONS.arrowRight} /></a>
+      <p class="soft" style="margin-top: var(--s-5)">Questions? <a href={url('/support/')}>Support</a> answers most things in a sentence.</p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  @layer page {
+    .shop {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(22rem, 30rem);
+      gap: var(--s-7);
+      padding-top: calc(var(--header-h) + var(--s-5));
+      padding-bottom: var(--section-tight);
+      align-items: start;
+    }
+    .viewer {
+      position: sticky;
+      top: calc(var(--header-h) + var(--s-4));
+      aspect-ratio: 1 / 1;
+      max-height: calc(100dvh - var(--header-h) - 3rem);
+      width: 100%;
+      border-radius: var(--r-panel-l);
+      overflow: hidden;
+      background: linear-gradient(to bottom, var(--sky-500), var(--sky-100));
+    }
+    .viewer__canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: grab;
+      touch-action: pan-y;
+    }
+    .viewer__canvas:active {
+      cursor: grabbing;
+    }
+    .viewer__views {
+      position: absolute;
+      left: 50%;
+      bottom: var(--s-4);
+      translate: -50% 0;
+      display: flex;
+      gap: var(--s-1);
+      padding: 0.3rem;
+      border-radius: var(--r-pill);
+      background: oklch(1 0 0 / 0.72);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .viewer__views .chip {
+      min-height: 2.25rem;
+      box-shadow: none;
+    }
+    .viewer__hint {
+      position: absolute;
+      top: var(--s-4);
+      right: var(--s-4);
+      font-size: var(--text-label);
+      color: var(--ink-sky-soft);
+    }
+
+    .config {
+      display: grid;
+      gap: var(--s-5);
+    }
+    .config__price {
+      display: flex;
+      align-items: baseline;
+      gap: var(--s-3);
+      flex-wrap: wrap;
+    }
+    .config__amount {
+      font-size: var(--text-title);
+      font-weight: 760;
+      font-stretch: 112%;
+    }
+    .config__group {
+      border: 0;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: var(--s-3);
+    }
+    .config__legend {
+      font-weight: 650;
+      font-size: var(--text-small);
+      margin-bottom: var(--s-3);
+      padding: 0;
+    }
+    .editions {
+      display: grid;
+      gap: var(--s-2);
+    }
+    .edition {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.2rem var(--s-3);
+      text-align: left;
+      padding: var(--s-4);
+      border-radius: var(--r-panel);
+      background: var(--white);
+      box-shadow: inset 0 0 0 1px var(--line);
+      transition: box-shadow var(--t-state) var(--ease-out);
+    }
+    .edition:hover {
+      box-shadow: inset 0 0 0 1px var(--line-strong);
+    }
+    .edition[aria-checked='true'] {
+      box-shadow: inset 0 0 0 2px var(--ink);
+    }
+    .edition__name {
+      font-weight: 700;
+      font-stretch: 108%;
+    }
+    .edition__price {
+      font-weight: 650;
+    }
+    .edition__note {
+      grid-column: 1 / -1;
+      font-size: var(--text-small);
+      color: var(--ink-soft);
+    }
+    .swatch[data-founders-only] {
+      display: none;
+    }
+    :global(.page-shop[data-edition='founders']) .swatch[data-founders-only] {
+      display: block;
+    }
+    :global(.page-shop[data-edition='founders']) .swatch:not([data-founders-only]) {
+      display: none;
+    }
+    .engraving {
+      position: relative;
+    }
+    .engraving .input {
+      padding-right: 4rem;
+    }
+    .engraving__count {
+      position: absolute;
+      right: 0.9rem;
+      top: 50%;
+      translate: 0 -50%;
+      font-size: var(--text-label);
+    }
+    .addons {
+      display: grid;
+      gap: var(--s-2);
+    }
+    .addon {
+      display: grid;
+      grid-template-columns: 1.4rem 1fr auto;
+      gap: var(--s-3);
+      align-items: start;
+      padding: var(--s-3) var(--s-4);
+      border-radius: var(--r-panel);
+      background: var(--white);
+      box-shadow: inset 0 0 0 1px var(--line);
+      cursor: pointer;
+    }
+    .addon input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .addon__box {
+      width: 1.4rem;
+      height: 1.4rem;
+      border-radius: 5px;
+      box-shadow: inset 0 0 0 1.5px var(--line-strong);
+      display: grid;
+      place-items: center;
+      color: transparent;
+      transition:
+        background-color var(--t-state) var(--ease-out),
+        color var(--t-state) var(--ease-out);
+    }
+    .addon__box :global(svg) {
+      width: 1rem;
+      height: 1rem;
+    }
+    .addon:has(input:checked) {
+      box-shadow: inset 0 0 0 2px var(--ink);
+    }
+    .addon:has(input:checked) .addon__box {
+      background: var(--ink);
+      color: var(--white);
+      box-shadow: none;
+    }
+    .addon:has(input:focus-visible) {
+      outline: 2px solid var(--focus);
+      outline-offset: 2px;
+    }
+    .addon:has(input:disabled) {
+      opacity: 0.7;
+      cursor: default;
+    }
+    .addon__text {
+      display: grid;
+    }
+    .addon__name {
+      font-weight: 650;
+    }
+    .addon__note {
+      font-size: var(--text-small);
+      color: var(--ink-soft);
+    }
+    .addon__price {
+      font-weight: 600;
+      font-size: var(--text-small);
+    }
+    .config__summary {
+      display: grid;
+      gap: var(--s-3);
+      padding-top: var(--s-5);
+      border-top: 1px solid var(--line);
+    }
+    .config__ship,
+    .config__reward {
+      display: flex;
+      gap: var(--s-2);
+      align-items: center;
+      font-size: var(--text-small);
+    }
+    .config__ship :global(svg),
+    .config__reward :global(svg) {
+      width: 1.1rem;
+      height: 1.1rem;
+      flex: none;
+    }
+    .config__reward {
+      padding: var(--s-3) var(--s-4);
+      border-radius: var(--r-panel);
+      background: oklch(0.92 0.15 95 / 0.35);
+      font-weight: 560;
+    }
+    .config__summary .trust {
+      justify-content: center;
+    }
+
+    .details {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr 1fr;
+      gap: var(--s-7);
+      padding-block: var(--section-tight);
+      border-top: 1px solid var(--line);
+    }
+    .details h2 {
+      margin-bottom: var(--s-4);
+    }
+    .box-list {
+      display: grid;
+      gap: var(--s-3);
+    }
+    .compare th,
+    .compare td {
+      text-align: left;
+      padding: 0.7rem 0.5rem;
+      border-bottom: 1px solid var(--line);
+      font-size: var(--text-small);
+      vertical-align: top;
+    }
+    .compare thead th {
+      font-weight: 700;
+      font-stretch: 106%;
+    }
+    .compare tbody th {
+      font-weight: 560;
+      color: var(--ink-soft);
+    }
+    @media (max-width: 1024px) {
+      .shop {
+        grid-template-columns: 1fr;
+      }
+      .viewer {
+        position: relative;
+        top: 0;
+        max-height: 70vh;
+      }
+      .details {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+</style>
+
+<script>
+  import '@/scripts/pages/shop';
+</script>

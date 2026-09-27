@@ -1,0 +1,392 @@
+---
+import Base from '@/layouts/Base.astro';
+import { PRODUCT, formatPrice, perMonthOverTenYears } from '@/data/site';
+import { ICONS, RING_GLYPH } from '@/lib/icons';
+import { url } from '@/lib/url';
+
+const quarter = formatPrice(PRODUCT.price / 4, { cents: true });
+const perMonth = formatPrice(perMonthOverTenYears(PRODUCT.price), { cents: true });
+const moods = ['Rainy Sunday', 'Night drive', 'First day of spring', 'Deadline at midnight'];
+---
+
+<Base
+  title="Ten seconds to your first song"
+  description="Rondo is a palm-sized instrument with four turning rings. Try it right here, then pre-order for $449. 100-night trial, no subscription."
+  og="launch"
+  surface="sky"
+  bodyClass="page-launch"
+  minimal
+>
+  <section class="lhero" aria-labelledby="l-title">
+    <canvas class="lhero__stage" data-lstage aria-hidden="true"></canvas>
+    <div class="wrap lhero__copy">
+      <p class="phase-note">Pre-orders open · ships {PRODUCT.shipWindow}</p>
+      <h1 id="l-title" class="lhero__title">Ten seconds to your first song.</h1>
+      <p class="lead lhero__lead">
+        Rondo is a palm-sized instrument with four turning rings. No lessons, no screen, no subscription. Try it right here.
+      </p>
+      <div class="lhero__actions">
+        <a class="btn btn--sun btn--lg" href={url('/shop/')} data-cta data-cta-fixed>
+          <Fragment set:html={RING_GLYPH} /> Pre-order <span class="btn__meta">{formatPrice(PRODUCT.price)}</span>
+        </a>
+        <a class="btn btn--ghost btn--lg" href="#try">Try it first</a>
+      </div>
+      <p class="lhero__trust">{PRODUCT.trialNights}-night trial · free shipping · or {quarter} × 4</p>
+    </div>
+  </section>
+
+  <section class="try wrap" id="try" aria-labelledby="try-title">
+    <div class="try__copy">
+      <h2 id="try-title" class="display-m">Go on, play it.</h2>
+      <ol class="try__steps" role="list">
+        <li><strong>Tap the sun</strong> to start.</li>
+        <li><strong>Tap a ring</strong> to add a note.</li>
+        <li><strong>Drag around</strong> a ring to shift the groove.</li>
+      </ol>
+      <p class="soft">Or let a mood compose one for you:</p>
+      <div class="chip-row">
+        {moods.map((m) => <button class="chip" type="button" data-mood>{m}</button>)}
+        <button class="chip" type="button" data-roll><Fragment set:html={ICONS.dices} /> Surprise me</button>
+      </div>
+      <p class="try__nudge" data-nudge hidden>
+        That's the whole idea. <a href={url('/shop/')}>The real one clicks as you turn it →</a>
+      </p>
+    </div>
+    <div class="try__face">
+      <canvas data-try-face tabindex="0" role="application" aria-label="Playable Rondo. Tap the centre to play, tap rings to add notes."></canvas>
+    </div>
+  </section>
+
+  <section class="reasons wrap" aria-labelledby="reasons-title">
+    <h2 id="reasons-title" class="visually-hidden">Why people pre-order</h2>
+    <article class="reason">
+      <canvas class="reason__face" data-reason-face="noon" aria-hidden="true"></canvas>
+      <div>
+        <h3 class="display-m">Instantly musical.</h3>
+        <p class="lead">
+          Every ring is locked to a scale, so there are no wrong notes. Four loops of different lengths drift against each
+          other, so even three taps sound like an arrangement.
+        </p>
+      </div>
+    </article>
+    <article class="reason reason--flip">
+      <canvas class="reason__face" data-reason-face="ember" aria-hidden="true"></canvas>
+      <div>
+        <h3 class="display-m">Deep enough for years.</h3>
+        <p class="lead">
+          Five synthesised voices, twelve scales, MIDI in and out, Bluetooth and USB audio. Musicians use it as a pocket
+          sketchbook; everyone else just keeps finding new songs.
+        </p>
+      </div>
+    </article>
+    <article class="reason">
+      <canvas class="reason__face" data-reason-face="moon" aria-hidden="true"></canvas>
+      <div>
+        <h3 class="display-m">Built to be kept.</h3>
+        <p class="lead">
+          Aluminium, steel and sapphire. A battery you can replace. Open firmware and updates until 2036. That's {perMonth} a
+          month over ten years, and no subscription, ever.
+        </p>
+      </div>
+    </article>
+  </section>
+
+  <section class="lquotes" aria-label="What testers said">
+    <div class="wrap lquotes__inner">
+      <blockquote>“I'm not musical. I made my first loop on the bus and missed my stop.” <cite>Maya, beta tester</cite></blockquote>
+      <blockquote>“The first instrument my daughter and I both actually play.” <cite>Tom, beta tester</cite></blockquote>
+    </div>
+  </section>
+
+  <section class="loffer wrap" aria-labelledby="loffer-title">
+    <div class="loffer__card">
+      <h2 id="loffer-title" class="display-m">Rondo, {formatPrice(PRODUCT.price)}.</h2>
+      <p class="soft">or {quarter} × 4 interest-free · charged when it ships in {PRODUCT.shipWindow}</p>
+      <ul class="loffer__list" role="list">
+        <li><Fragment set:html={ICONS.check} /> Choose Noon, Ember or Moon, with free engraving</li>
+        <li><Fragment set:html={ICONS.check} /> {PRODUCT.trialNights}-night trial and free returns</li>
+        <li><Fragment set:html={ICONS.check} /> {PRODUCT.warrantyYears}-year warranty, repairable for life</li>
+        <li><Fragment set:html={ICONS.check} /> Cancel any time before it ships</li>
+      </ul>
+      <a class="btn btn--sun btn--lg btn--block" href={url('/shop/')} data-cta data-cta-fixed>
+        <Fragment set:html={RING_GLYPH} /> Choose your finish
+      </a>
+      <a class="loffer__founders" href={url('/lp/founders/')}>Or claim a numbered Founders Edition <Fragment set:html={ICONS.arrowRight} /></a>
+    </div>
+    <div class="faq loffer__faq">
+      <details>
+        <summary>Do I need to know music?</summary>
+        <div><p>No. That's the point. If you can tap and turn, you can play Rondo, and you just did.</p></div>
+      </details>
+      <details>
+        <summary>Is there an app or subscription?</summary>
+        <div><p>Neither. Rondo works on its own. Everything is included, forever.</p></div>
+      </details>
+      <details>
+        <summary>When does it arrive?</summary>
+        <div><p>Pre-orders ship in {PRODUCT.shipWindow}, in order. You're only charged when yours ships.</p></div>
+      </details>
+      <details>
+        <summary>What if I don't love it?</summary>
+        <div><p>Send it back within {PRODUCT.trialNights} nights for a full refund. We pay for the return.</p></div>
+      </details>
+    </div>
+  </section>
+
+  <aside class="lbar" data-lbar aria-label="Pre-order">
+    <span><strong>Rondo</strong> <span class="num soft">{formatPrice(PRODUCT.price)}</span></span>
+    <a class="btn btn--sun btn--sm" href={url('/shop/')}>Pre-order</a>
+  </aside>
+</Base>
+
+<style>
+  @layer page {
+    :global(body.page-launch) {
+      background: var(--sky-100);
+    }
+    .lhero {
+      position: relative;
+      min-height: 100svh;
+      display: flex;
+      align-items: flex-end;
+      overflow: hidden;
+      background: linear-gradient(to bottom, var(--sky-500), var(--sky-100));
+    }
+    .lhero__stage {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .lhero__copy {
+      position: relative;
+      display: grid;
+      gap: var(--s-5);
+      justify-items: start;
+      padding-block: calc(var(--header-h) + var(--s-6)) var(--s-8);
+      pointer-events: none;
+    }
+    .lhero__copy > * {
+      pointer-events: auto;
+    }
+    .lhero__title {
+      font-size: var(--text-display-xl);
+      font-stretch: 122%;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      line-height: 0.94;
+      max-width: 11ch;
+    }
+    .lhero__lead {
+      max-width: 32rem;
+      color: var(--ink-sky-soft);
+    }
+    .lhero__actions {
+      display: flex;
+      gap: var(--s-3);
+      flex-wrap: wrap;
+    }
+    .lhero__trust {
+      font-size: var(--text-small);
+      color: var(--ink-sky-soft);
+    }
+
+    .try {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+      gap: var(--s-8);
+      align-items: center;
+      padding-block: var(--section-tight);
+    }
+    .try__copy {
+      display: grid;
+      gap: var(--s-4);
+      align-content: center;
+    }
+    .try__steps {
+      display: grid;
+      gap: var(--s-2);
+      font-size: var(--text-lead);
+      counter-reset: t;
+    }
+    .try__steps li {
+      counter-increment: t;
+      display: flex;
+      gap: var(--s-3);
+    }
+    .try__steps li::before {
+      content: counter(t);
+      width: 1.9rem;
+      height: 1.9rem;
+      flex: none;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--ink);
+      color: var(--sun);
+      font-size: 0.9375rem;
+      font-weight: 700;
+    }
+    .try__nudge {
+      padding: var(--s-3) var(--s-4);
+      border-radius: var(--r-panel);
+      background: oklch(0.92 0.15 95 / 0.4);
+      font-weight: 560;
+    }
+    .try__face {
+      aspect-ratio: 1;
+      width: 100%;
+      max-width: 34rem;
+      justify-self: center;
+    }
+    .try__face canvas {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+    }
+
+    .reasons {
+      display: grid;
+      gap: var(--s-8);
+      padding-block: var(--section-tight);
+    }
+    .reason {
+      display: grid;
+      grid-template-columns: minmax(10rem, 18rem) 1fr;
+      gap: var(--s-8);
+      align-items: center;
+    }
+    .reason > div {
+      display: grid;
+      gap: var(--s-4);
+      max-width: 38rem;
+    }
+    .reason .lead {
+      color: var(--ink-soft);
+    }
+    .reason--flip {
+      grid-template-columns: 1fr minmax(10rem, 18rem);
+    }
+    .reason--flip canvas {
+      order: 2;
+    }
+    .reason__face {
+      width: 100%;
+      aspect-ratio: 1;
+    }
+    .lquotes {
+      background: var(--night-900);
+      color: var(--starlight);
+      padding-block: var(--section-tight);
+    }
+    .lquotes__inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--s-8);
+    }
+    .lquotes blockquote {
+      margin: 0;
+      font-size: clamp(1.4rem, 1.1rem + 1vw, 2rem);
+      font-weight: 600;
+      font-stretch: 106%;
+      line-height: 1.25;
+    }
+    .lquotes cite {
+      display: block;
+      margin-top: var(--s-3);
+      font-style: normal;
+      font-size: var(--text-small);
+      font-weight: 450;
+      color: var(--star-soft);
+    }
+    .loffer {
+      display: grid;
+      grid-template-columns: minmax(0, 28rem) 1fr;
+      gap: var(--s-8);
+      padding-block: var(--section-tight) var(--section);
+      align-items: start;
+    }
+    .loffer__card {
+      display: grid;
+      gap: var(--s-4);
+      padding: var(--s-6);
+      border-radius: var(--r-panel-l);
+      background: var(--night-800);
+      color: var(--starlight);
+      --fg-soft: var(--star-soft);
+    }
+    .loffer__list {
+      display: grid;
+      gap: var(--s-2);
+      font-size: var(--text-small);
+      color: var(--star-soft);
+    }
+    .loffer__list li {
+      display: flex;
+      gap: var(--s-3);
+    }
+    .loffer__list :global(svg) {
+      width: 1.1rem;
+      height: 1.1rem;
+      flex: none;
+      color: var(--success-bright);
+      margin-top: 0.15rem;
+    }
+    .loffer__founders {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: var(--text-small);
+      color: var(--starlight);
+    }
+    .loffer__founders :global(svg) {
+      width: 1rem;
+      height: 1rem;
+    }
+    .lbar {
+      position: fixed;
+      left: var(--s-3);
+      right: var(--s-3);
+      bottom: calc(var(--s-3) + env(safe-area-inset-bottom));
+      z-index: var(--z-sticky);
+      display: none;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.4rem 0.4rem 0.4rem 1.1rem;
+      border-radius: var(--r-pill);
+      background: var(--night-800);
+      color: var(--starlight);
+      --fg-soft: var(--star-soft);
+      transform: translateY(160%);
+      transition: transform var(--t-panel) var(--ease-out);
+    }
+    .lbar[data-visible='true'] {
+      transform: none;
+    }
+    @media (max-width: 900px) {
+      .try,
+      .reason,
+      .reason--flip,
+      .lquotes__inner,
+      .loffer {
+        grid-template-columns: 1fr;
+      }
+      .reason--flip canvas {
+        order: 0;
+      }
+      .reason__face {
+        max-width: 12rem;
+      }
+      .lbar {
+        display: flex;
+      }
+      .lhero__copy {
+        padding-top: 48svh;
+      }
+    }
+  }
+</style>
+
+<script>
+  import '@/scripts/pages/launch';
+</script>

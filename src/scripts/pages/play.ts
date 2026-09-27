@@ -1,34 +1,84 @@
 /** Rondo Web: the full instrument page. */
 import { RondoEngine, renderLoop } from '../audio/engine';
-import { audioBufferToWav } from '../audio/wav';
+import { audioBufferToWav, masterBuffer } from '../audio/wav';
 import { earn } from '../core/achievements';
 import { downloadBlob, shareLink } from '../core/share';
 import { ensureSound, soundPref } from '../core/sound';
-import { persisted } from '../core/store';
+import { persisted, sessionValue } from '../core/store';
 import { toast } from '../core/toast';
 import { InstrumentFace, type EditEvent } from '../instrument/face';
-import { SKIES, cssOklch } from '../lib/skies';
+import { SKIES, SKY_ORDER, cssOklch, type SkyDef } from '../lib/skies';
 import { patternFromHash, encodePattern } from '../seq/codec';
 import { generatePattern, moodToPattern, morningOrbit } from '../seq/generate';
-import { ENGINES, MAX_STEPS, clonePattern, cycleLength, noteCount, type EngineId, type Pattern } from '../seq/model';
+import { ENGINES, MAX_STEPS, clonePattern, cycleLength, type EngineId, type Pattern } from '../seq/model';
 import { presetById } from '../seq/presets';
 import { scaleById, type ScaleId } from '../seq/scales';
 import { ICONS } from '@/lib/icons';
+import { url } from '@/lib/url';
 
 const $ = <T extends Element = HTMLElement>(sel: string, root: ParentNode = document) => root.querySelector<T>(sel)!;
 const $$ = <T extends Element = HTMLElement>(sel: string, root: ParentNode = document) => [...root.querySelectorAll<T>(sel)];
 
 const lastLoop = persisted<string | null>('last-loop', null);
+/** The name people sign their shared loops with, remembered for next time. */
+const shareFrom = persisted<string>('share-from', '');
+/** Who this visitor is making a loop back for (set by "Make one back"). */
+const replyTo = sessionValue<string>('reply-to');
+
+/* ── Shared links: #l=<loop>&f=<first name>&t=<HHMM, sender's local time> ── */
+interface Arrival {
+  from: string;
+  time: string | null;
+}
+
+const codeIn = (hash: string) => /[#&]l=([A-Za-z0-9_-]+)/.exec(hash)?.[1] ?? null;
+const cleanName = (s: string) =>
+  s
+    .replace(/[^\p{L}\p{N} .'’-]/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 24);
+
+function readArrival(hash: string): Arrival | null {
+  const params = new URLSearchParams(hash.replace(/^#/, ''));
+  if (!params.get('l') || !(params.has('f') || params.has('t'))) return null;
+  const t = params.get('t') ?? '';
+  const valid = /^\d{4}$/.test(t) && Number(t.slice(0, 2)) < 24 && Number(t.slice(2)) < 60;
+  return { from: cleanName(params.get('f') ?? ''), time: valid ? `${t.slice(0, 2)}:${t.slice(2)}` : null };
+}
+
+/** The sky the sender was under: nearest of the eight skies to their clock (small hours are night). */
+function skyForTime(hhmm: string): SkyDef {
+  const [h, m] = hhmm.split(':').map(Number);
+  const mins = h! * 60 + m!;
+  if (mins < 5 * 60) return SKIES.night;
+  let best = SKIES[SKY_ORDER[0]!];
+  let bestD = Infinity;
+  for (const id of SKY_ORDER) {
+    const [sh, sm] = SKIES[id].clock.split(':').map(Number);
+    const d = Math.abs(sh! * 60 + sm! - mins);
+    if (d < bestD) {
+      bestD = d;
+      best = SKIES[id];
+    }
+  }
+  return best;
+}
 
 /* ── Initial pattern: shared link › dice › last session › flagship ── */
-function initialPattern(): { pattern: Pattern; source: 'shared' | 'dice' | 'resume' | 'default' } {
+function initialPattern(): { pattern: Pattern; source: 'shared' | 'link' | 'dice' | 'resume' | 'default' } {
   const shared = patternFromHash(location.hash);
-  if (shared) return { pattern: shared, source: 'shared' };
+  if (shared) {
+    if (readArrival(location.hash)) return { pattern: shared, source: 'shared' };
+    // A reload of your own loop (the address bar keeps it) isn't a message from someone else.
+    if (codeIn(location.hash) === lastLoop.get()) return { pattern: shared, source: 'resume' };
+    return { pattern: shared, source: 'link' };
+  }
   if (location.hash === '#dice') return { pattern: generatePattern(Date.now() & 0xffffffff), source: 'dice' };
   const presetMatch = /#preset=([\w-]+)/.exec(location.hash);
   if (presetMatch) {
     const preset = presetById(presetMatch[1]!);
-    if (preset) return { pattern: clonePattern(preset.pattern), source: 'shared' };
+    if (preset) return { pattern: clonePattern(preset.pattern), source: 'link' };
   }
   const resumed = lastLoop.get() ? patternFromHash(`#l=${lastLoop.get()}`) : null;
   if (resumed) return { pattern: resumed, source: 'resume' };
@@ -41,6 +91,8 @@ let engine: RondoEngine | null = null;
 const undoStack: string[] = [];
 const redoStack: string[] = [];
 let editsThisSession = 0;
+/** Notes this visitor placed themselves (the "loop of your own" star needs six). */
+let userNotes = 0;
 let playStartedAt = 0;
 let nudged = false;
 
@@ -145,9 +197,12 @@ function syncHistoryButtons() {
 function handleEdit(e: EditEvent) {
   editsThisSession++;
   hideHint();
-  if (e.type === 'add') earn('note');
+  if (e.type === 'add') {
+    userNotes++;
+    earn('note');
+  }
   if (e.type === 'rotate') earn('spin');
-  if (noteCount(current()) >= 8 && editsThisSession >= 3) earn('loop');
+  if (userNotes >= 6) earn('loop');
   syncControls();
   scheduleUrl();
   maybeNudge();
@@ -171,7 +226,7 @@ function maybeNudge() {
     toast('This is a loop worth keeping. Share it, or hear it on the real thing.', {
       icon: 'sparkles',
       duration: 9000,
-      action: { label: 'Share', onClick: () => void share() },
+      action: { label: 'Share', onClick: share },
     });
   }
 }
@@ -237,7 +292,7 @@ function bindControls() {
   $('[data-dice]').addEventListener('click', roll);
   $('[data-undo]').addEventListener('click', undo);
   $('[data-redo]').addEventListener('click', redo);
-  $('[data-share]').addEventListener('click', () => void share());
+  $('[data-share]').addEventListener('click', share);
   $('[data-export]').addEventListener('click', () => void exportWav());
 
   $<HTMLInputElement>('[data-loop-name]').addEventListener('change', (e) => {
@@ -285,21 +340,13 @@ function bindControls() {
 
   // Tabs
   const tabs = $$<HTMLButtonElement>('[role="tab"]');
-  const select = (tab: HTMLButtonElement) => {
-    tabs.forEach((t) => {
-      const on = t === tab;
-      t.setAttribute('aria-selected', String(on));
-      t.tabIndex = on ? 0 : -1;
-      $(`#${t.getAttribute('aria-controls')}`).hidden = !on;
-    });
-  };
   tabs.forEach((t, idx) => {
-    t.addEventListener('click', () => select(t));
+    t.addEventListener('click', () => selectTab(t.id));
     t.addEventListener('keydown', (e) => {
       const dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
       if (!dir) return;
       const next = tabs[(idx + dir + tabs.length) % tabs.length]!;
-      select(next);
+      selectTab(next.id);
       next.focus();
     });
   });
@@ -349,10 +396,19 @@ function bindControls() {
   });
 }
 
+function selectTab(id: string) {
+  $$<HTMLButtonElement>('[role="tab"]').forEach((t) => {
+    const on = t.id === id;
+    t.setAttribute('aria-selected', String(on));
+    t.tabIndex = on ? 0 : -1;
+    $(`#${t.getAttribute('aria-controls')}`).hidden = !on;
+  });
+}
+
 function roll() {
   const next = generatePattern((Math.random() * 2 ** 32) >>> 0);
   setPattern(next);
-  toast(`Rolled a ${scaleById(next.scale).name.toLowerCase()} loop at ${next.bpm} bpm`, { icon: 'dices' });
+  toast(`Rolled “${next.name}”: ${scaleById(next.scale).name}, ${next.bpm} bpm`, { icon: 'dices' });
   if (!engine?.playing) void togglePlay();
 }
 
@@ -367,17 +423,117 @@ function compose(text: string) {
   if (!engine?.playing) void togglePlay();
 }
 
-async function share() {
+/** Share opens a small sheet first: signing the loop is what makes it arrive as a message. */
+function share() {
   window.clearTimeout(urlTimer);
+  const sheet = $<HTMLDialogElement>('[data-share-sheet]');
+  const to = replyTo.get();
+  const name = current().name;
+  $('[data-share-title]').textContent = to ? `Send “${name}” to ${to}` : `Send “${name}”`;
+  $<HTMLInputElement>('[data-share-from]').value = shareFrom.get();
+  sheet.showModal();
+}
+
+async function sendLink() {
+  const from = cleanName($<HTMLInputElement>('[data-share-from]').value);
+  shareFrom.set(from);
   const code = encodePattern(current());
   history.replaceState(null, '', `#l=${code}`);
-  const shareUrl = `${location.origin}${location.pathname}#l=${code}`;
+  lastLoop.set(code);
+  const now = new Date();
+  const q = new URLSearchParams({ l: code });
+  if (from) q.set('f', from);
+  q.set('t', `${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`);
+  // /l/ carries the link preview ("Someone made you a loop") and forwards to this page.
+  const shareUrl = `${location.origin}${url('/l/')}#${q.toString()}`;
+  const to = replyTo.get();
+  const name = current().name;
   const result = await shareLink({
-    title: `${current().name} — made on Rondo`,
-    text: `I made a loop called “${current().name}”. Tap to play it:`,
+    title: `“${name}”, a loop made on Rondo`,
+    text: to ? `${to}, I made you one back: “${name}”. Hear it:` : `I made “${name}” on Rondo. Hear it, then make me one back:`,
     url: shareUrl,
   });
   if (result !== 'cancelled') earn('share');
+}
+
+/* ── Arrival: a loop someone made for you ────────────────────────── */
+let arrivalFrom = '';
+
+function showArrival(a: Arrival) {
+  arrivalFrom = a.from;
+  const dlg = $<HTMLDialogElement>('[data-arrival]');
+  const p = current();
+  $('[data-arrival-title]').textContent = a.from ? `${a.from} made you a loop.` : 'Someone made you a loop.';
+  $('[data-arrival-loop]').textContent = `“${p.name}”`;
+  $('[data-arrival-meta]').textContent = `· ${scaleById(p.scale).name} · ${p.bpm} bpm`;
+  const when = $('[data-arrival-when]');
+  if (a.time) {
+    const sky = skyForTime(a.time);
+    dlg.style.setProperty('--arr-a', cssOklch(sky.top));
+    dlg.style.setProperty('--arr-b', cssOklch(sky.bottom));
+    dlg.dataset.dark = String(sky.dark > 0.5);
+    when.textContent = `Made at ${a.time} their time, ${sky.label.toLowerCase() === 'noon' ? 'around noon' : `in their ${sky.label.toLowerCase()}`}`;
+    when.hidden = false;
+  } else {
+    when.hidden = true;
+  }
+  const strip = $('[data-arrival-strip]');
+  $('[data-strip-from]').textContent = a.from ? `From ${a.from}` : 'A loop for you';
+  $('[data-strip-when]').textContent = a.time ? `· made at ${a.time} their time` : '';
+  dlg.addEventListener(
+    'close',
+    () => {
+      strip.hidden = false;
+      // Drop the arrival details from the address bar: a reload is now just this loop.
+      history.replaceState(null, '', `#l=${encodePattern(current())}`);
+    },
+    { once: true },
+  );
+  if (!dlg.open) dlg.showModal();
+}
+
+function bindArrival() {
+  const dlg = $<HTMLDialogElement>('[data-arrival]');
+  $('[data-arrival-play]').addEventListener('click', () => {
+    dlg.close();
+    if (!engine?.playing) void togglePlay();
+  });
+  $('[data-arrival-close]').addEventListener('click', () => dlg.close());
+  $('[data-make-back]').addEventListener('click', () => {
+    if (arrivalFrom) replyTo.set(arrivalFrom);
+    $('[data-arrival-strip]').hidden = true;
+    selectTab('tab-mood');
+    const ta = $<HTMLTextAreaElement>('[data-mood-text]');
+    ta.placeholder = arrivalFrom ? `A moment for ${arrivalFrom}, in a few words` : 'A moment, in a few words';
+    ta.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    ta.focus({ preventScroll: true });
+    toast(arrivalFrom ? `Make one for ${arrivalFrom}, then tap Share loop.` : 'Make one back, then tap Share loop.', { icon: 'wand' });
+  });
+  const sheet = $<HTMLDialogElement>('[data-share-sheet]');
+  $<HTMLFormElement>('[data-share-form]').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const go = (e.submitter as HTMLButtonElement | null)?.value === 'share';
+    sheet.close();
+    if (go) void sendLink();
+  });
+}
+
+/** Links opened while already here: the palette's dice, presets, or a pasted loop. */
+function onHashChange() {
+  const h = location.hash;
+  if (h === '#dice') return roll();
+  const presetMatch = /#preset=([\w-]+)/.exec(h);
+  if (presetMatch) {
+    const preset = presetById(presetMatch[1]!);
+    if (preset) setPattern(clonePattern(preset.pattern));
+    return;
+  }
+  const next = patternFromHash(h);
+  if (!next || codeIn(h) === encodePattern(current())) return;
+  setPattern(next);
+  const a = readArrival(h);
+  if (a) showArrival(a);
+  else toast(`Loaded “${next.name}”. Tap the sun to hear it.`, { icon: 'headphones' });
 }
 
 async function exportWav() {
@@ -386,6 +542,7 @@ async function exportWav() {
   const dismiss = toast('Rendering four bars…', { icon: 'download', duration: 20000 });
   try {
     const buffer = await renderLoop(current(), 4);
+    masterBuffer(buffer);
     const name = current().name.replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-').toLowerCase() || 'rondo-loop';
     downloadBlob(audioBufferToWav(buffer), `${name}.wav`);
     dismiss();
@@ -406,10 +563,18 @@ syncControls();
 syncHistoryButtons();
 face.draw();
 
+bindArrival();
+window.addEventListener('hashchange', onHashChange);
+
 if (start.source === 'shared') {
-  toast(`Someone shared “${pattern.name}” with you. Tap the sun to hear it.`, { icon: 'headphones', duration: 7000 });
+  showArrival(readArrival(location.hash)!);
+} else if (start.source === 'link') {
+  toast(`Here's “${pattern.name}”. Tap the sun to hear it.`, { icon: 'headphones', duration: 7000 });
 } else if (start.source === 'resume') {
   toast(`Welcome back. “${pattern.name}” is where you left it.`, { icon: 'undo' });
+} else if (start.source === 'default') {
+  // First visit: words are the gentlest way in.
+  selectTab('tab-mood');
 }
 if (soundPref.get()) {
   // Preference remembered: build the engine on the first gesture anywhere.

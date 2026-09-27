@@ -18,6 +18,7 @@ import {
   CylinderGeometry,
   DoubleSide,
   Group,
+  InstancedMesh,
   LatheGeometry,
   Mesh,
   MeshBasicMaterial,
@@ -28,6 +29,7 @@ import {
   SRGBColorSpace,
   ShaderMaterial,
   SphereGeometry,
+  TorusGeometry,
   Vector2,
   Vector3,
   type Intersection,
@@ -266,46 +268,162 @@ function glowTexture(): CanvasTexture {
   return tex;
 }
 
-/** A plausible PCB: dark solder mask, gold pads and traces. */
+/** The main board as a technician would see it: solder mask, an LED footprint under every ring,
+ * 45°-routed traces from the processor, vias, mounting holes and silkscreen. */
 function pcbTexture(): CanvasTexture {
   const S = 1024;
+  const C = S / 2;
+  const px = (u: number) => (u / 0.92) * C; // device units → pixels from the centre
   const c = document.createElement('canvas');
   c.width = c.height = S;
   const g = c.getContext('2d')!;
-  g.fillStyle = '#0d1a14';
+  let seed = 11;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+
+  // Solder mask, a touch lighter over the copper pours.
+  g.fillStyle = '#0a1a14';
   g.fillRect(0, 0, S, S);
-  const rnd = (() => {
-    let s = 7;
-    return () => ((s = (s * 16807) % 2147483647) / 2147483647);
-  })();
-  g.strokeStyle = 'rgba(214,176,90,0.55)';
-  g.lineCap = 'round';
-  for (let i = 0; i < 180; i++) {
-    let x = rnd() * S;
-    let y = rnd() * S;
-    g.lineWidth = rnd() > 0.8 ? 5 : 2;
-    g.beginPath();
-    g.moveTo(x, y);
-    for (let k = 0; k < 4; k++) {
-      const len = 20 + rnd() * 120;
-      const dir = Math.floor(rnd() * 8) * (Math.PI / 4);
-      x += Math.cos(dir) * len;
-      y += Math.sin(dir) * len;
-      g.lineTo(x, y);
+  const pour = g.createRadialGradient(C, C, px(0.1), C, C, px(0.92));
+  pour.addColorStop(0, 'rgba(40, 84, 62, 0.35)');
+  pour.addColorStop(1, 'rgba(40, 84, 62, 0.05)');
+  g.fillStyle = pour;
+  g.fillRect(0, 0, S, S);
+
+  const copper = 'rgba(206, 166, 88, 0.62)';
+  const pad = 'rgba(228, 204, 150, 0.95)';
+
+  // LED footprints: one ring of 96 two-pad parts under each light ring.
+  g.fillStyle = pad;
+  RING_BANDS.forEach(([outer, inner]) => {
+    const r = px((outer + inner) / 2);
+    for (let k = 0; k < 96; k++) {
+      const a = (k / 96) * Math.PI * 2;
+      g.save();
+      g.translate(C + Math.cos(a) * r, C + Math.sin(a) * r);
+      g.rotate(a);
+      g.fillRect(-7, -3.5, 4.5, 7);
+      g.fillRect(2.5, -3.5, 4.5, 7);
+      g.restore();
     }
+  });
+
+  // Traces: bundles leave the processor and fan out to the rings, routed straight then at 45°.
+  const route = (x0: number, y0: number, x1: number, y1: number) => {
+    const dx = x1 - x0;
+    const dy = y1 - y0;
+    g.beginPath();
+    g.moveTo(x0, y0);
+    if (Math.abs(dx) > Math.abs(dy)) g.lineTo(x1 - Math.sign(dx) * Math.abs(dy), y0);
+    else g.lineTo(x0, y1 - Math.sign(dy) * Math.abs(dx));
+    g.lineTo(x1, y1);
     g.stroke();
+  };
+  const via = (x: number, y: number) => {
+    g.fillStyle = pad;
+    g.beginPath();
+    g.arc(x, y, 5, 0, Math.PI * 2);
+    g.fill();
+    g.fillStyle = '#07110d';
+    g.beginPath();
+    g.arc(x, y, 2, 0, Math.PI * 2);
+    g.fill();
+  };
+  g.strokeStyle = copper;
+  g.lineCap = 'round';
+  g.lineJoin = 'round';
+  const soc = { x: C - 36, y: C + 26, h: 76 };
+  for (let b = 0; b < 12; b++) {
+    const dir = (b / 12) * Math.PI * 2 + rnd() * 0.2;
+    const ring = RING_BANDS[b % 4]!;
+    const r = px((ring[0] + ring[1]) / 2);
+    const n = 4 + Math.floor(rnd() * 4);
+    g.lineWidth = b % 3 === 0 ? 4 : 2.5;
+    for (let t = 0; t < n; t++) {
+      const off = (t - n / 2) * 10;
+      const nx = -Math.sin(dir);
+      const ny = Math.cos(dir);
+      const x0 = soc.x + Math.cos(dir) * 50 + nx * off;
+      const y0 = soc.y + Math.sin(dir) * 50 + ny * off;
+      const a = dir + (t - n / 2) * 0.035;
+      const x1 = C + Math.cos(a) * (r - 14);
+      const y1 = C + Math.sin(a) * (r - 14);
+      route(x0, y0, x1, y1);
+      via(x1, y1);
+    }
   }
-  for (let i = 0; i < 90; i++) {
-    g.fillStyle = 'rgba(230,196,110,0.9)';
-    g.fillRect(rnd() * S, rnd() * S, 10 + rnd() * 16, 6 + rnd() * 10);
+  // Power rails: two wide arcs between the rings.
+  g.lineWidth = 9;
+  g.strokeStyle = 'rgba(206, 166, 88, 0.4)';
+  [0.76, 0.595].forEach((u) => {
+    g.beginPath();
+    g.arc(C, C, px(u), 0.3, Math.PI * 1.7);
+    g.stroke();
+  });
+
+  // Mounting holes for the four T5 screws.
+  for (let k = 0; k < 4; k++) {
+    const a = Math.PI / 4 + (k * Math.PI) / 2;
+    const x = C + Math.cos(a) * px(0.83);
+    const y = C + Math.sin(a) * px(0.83);
+    g.fillStyle = pad;
+    g.beginPath();
+    g.arc(x, y, 17, 0, Math.PI * 2);
+    g.fill();
+    g.fillStyle = '#050907';
+    g.beginPath();
+    g.arc(x, y, 9, 0, Math.PI * 2);
+    g.fill();
   }
-  // chips
-  g.fillStyle = '#050807';
-  [
-    [380, 380, 260, 260],
-    [690, 470, 120, 90],
-    [210, 640, 140, 70],
-  ].forEach(([x, y, w, h]) => g.fillRect(x!, y!, w!, h!));
+
+  // Silkscreen.
+  g.fillStyle = 'rgba(232, 240, 234, 0.82)';
+  g.strokeStyle = 'rgba(232, 240, 234, 0.7)';
+  g.lineWidth = 2;
+  g.strokeRect(soc.x - soc.h / 2 - 8, soc.y - soc.h / 2 - 8, soc.h + 16, soc.h + 16);
+  g.textAlign = 'center';
+  g.font = '700 22px Archivo, system-ui, sans-serif';
+  g.fillText('U1', soc.x, soc.y - soc.h / 2 - 16);
+  g.font = '700 20px Archivo, system-ui, sans-serif';
+  g.fillText('RONDO MB-01  REV C', C, C + px(0.285));
+  g.font = '600 15px Archivo, system-ui, sans-serif';
+  g.fillText('LISBON 2026 · 384 × LED', C, C + px(0.285) + 22);
+  // Canvas → board: canvas x runs along world +Z, canvas up is world +X (the port side).
+  g.fillText('J1 USB-C', C, C - px(0.7));
+  g.fillText('BT1 +', C + 110, C + 70);
+  g.save();
+  g.translate(C + Math.cos(Math.PI * 0.25) * px(0.72), C + Math.sin(Math.PI * 0.25) * px(0.72));
+  g.rotate(-Math.PI / 4);
+  g.font = '600 13px Archivo, system-ui, sans-serif';
+  g.fillText('HELLO, FUTURE REPAIRER', 0, 0);
+  g.restore();
+
+  const tex = new CanvasTexture(c);
+  tex.colorSpace = SRGBColorSpace;
+  tex.anisotropy = 4;
+  return tex;
+}
+
+/** The battery's printed wrap: what a repair guide would tell you to check. */
+function batteryLabel(): CanvasTexture {
+  const c = document.createElement('canvas');
+  c.width = 1024;
+  c.height = 540;
+  const g = c.getContext('2d')!;
+  g.fillStyle = '#1d3566';
+  g.fillRect(0, 0, 1024, 540);
+  g.fillStyle = '#f3efe4';
+  g.fillRect(0, 360, 1024, 180);
+  g.fillStyle = '#f3efe4';
+  g.font = '800 92px Archivo, system-ui, sans-serif';
+  g.fillText('RONDO', 60, 150);
+  g.font = '600 38px Archivo, system-ui, sans-serif';
+  g.fillText('Li-ion polymer · 3.7 V · 2 400 mAh · 8.88 Wh', 60, 230);
+  g.fillText('Replaceable: four T5 screws, no glue', 60, 290);
+  g.fillStyle = '#1d3566';
+  g.font = '700 34px Archivo, system-ui, sans-serif';
+  g.fillText('BT-01  ·  MADE TO BE OPENED', 60, 435);
+  g.font = '500 26px Archivo, system-ui, sans-serif';
+  g.fillText('Do not puncture or heat. Recycle with care.', 60, 485);
   const tex = new CanvasTexture(c);
   tex.colorSpace = SRGBColorSpace;
   return tex;
@@ -322,6 +440,8 @@ export class RondoDevice {
   /** Parts that move in the exploded view, with their exploded Y offset. */
   private explodeParts: { obj: Object3D; y: number }[] = [];
   private internals = new Group();
+  private races: Mesh[] = [];
+  private raceMat = new MeshStandardMaterial({ color: 0xd5d9df, roughness: 0.22, metalness: 1 });
   readonly rings: Mesh<LatheGeometry, MeshPhysicalMaterial>[] = [];
   readonly leds: LedRing[] = [];
   private bodyMat: MeshPhysicalMaterial;
@@ -458,8 +578,16 @@ export class RondoDevice {
       ringGroup.add(led);
       this.leds.push({ mesh: led, notes, flash });
 
+      // Stainless bearing race under the ring: only seen when the instrument comes apart.
+      const race = new Mesh(new TorusGeometry((inner + outer) / 2, 0.009, 12, SEG), this.raceMat);
+      race.rotation.x = Math.PI / 2;
+      race.position.y = -0.045;
+      race.visible = false;
+      ringGroup.add(race);
+      this.races.push(race);
+
       this.group.add(ringGroup);
-      this.explodeParts.push({ obj: ringGroup, y: 0.62 + (3 - i) * 0.16 });
+      this.explodeParts.push({ obj: ringGroup, y: 0.76 + (3 - i) * 0.15 });
     });
 
     // Sun: well, core and sapphire dome
@@ -492,7 +620,7 @@ export class RondoDevice {
     dome.position.y = 0.04 + 0.075 - capR;
     this.sunGroup.add(well, core, accentRing, dome);
     this.group.add(this.sunGroup);
-    this.explodeParts.push({ obj: this.sunGroup, y: 1.42 });
+    this.explodeParts.push({ obj: this.sunGroup, y: 1.52 });
 
     this.buildInternals();
     this.setFinish(finish);
@@ -516,19 +644,53 @@ export class RondoDevice {
   }
 
   private buildInternals() {
+    // Main board with its parts on top; everything on it travels with it in the exploded view.
+    const board = new Group();
     const pcb = new Mesh(
       new CylinderGeometry(0.92, 0.92, 0.014, 96),
       [
-        new MeshStandardMaterial({ color: 0x0d1a14, roughness: 0.6 }),
-        new MeshStandardMaterial({ map: pcbTexture(), roughness: 0.45, metalness: 0.3 }),
-        new MeshStandardMaterial({ color: 0x0d1a14, roughness: 0.6 }),
+        new MeshStandardMaterial({ color: 0x0a1a14, roughness: 0.6 }),
+        new MeshStandardMaterial({ map: pcbTexture(), roughness: 0.42, metalness: 0.25 }),
+        new MeshStandardMaterial({ color: 0x0a1a14, roughness: 0.6 }),
       ],
     );
-    pcb.position.y = 0;
-    const battery = new Mesh(
-      new BoxGeometry(0.95, 0.045, 0.5),
-      new MeshPhysicalMaterial({ color: 0xc9ced6, metalness: 0.9, roughness: 0.35, clearcoat: 0.6 }),
-    );
+    board.add(pcb);
+    const chip = new MeshStandardMaterial({ color: 0x16181c, roughness: 0.5, metalness: 0.2 });
+    const steel = new MeshStandardMaterial({ color: 0xc9ced6, roughness: 0.28, metalness: 1 });
+    const part = (w: number, h: number, d: number, x: number, z: number, mat: MeshStandardMaterial) => {
+      const m = new Mesh(new BoxGeometry(w, h, d), mat);
+      m.position.set(x, 0.007 + h / 2, z);
+      board.add(m);
+      return m;
+    };
+    // Positions match the board texture (canvas x → world +Z, canvas up → world +X, the port side).
+    part(0.14, 0.02, 0.14, -0.047, -0.065, chip); // U1, processor
+    part(0.1, 0.014, 0.07, 0.16, 0.08, chip); // flash
+    part(0.08, 0.014, 0.08, -0.2, 0.19, chip); // audio codec
+    part(0.06, 0.012, 0.035, 0.12, -0.16, steel); // crystal
+    part(0.09, 0.03, 0.075, 0.845, 0, steel); // J1, USB-C receptacle
+    // Passives: small tan and black parts clustered round the chips.
+    const passive = new InstancedMesh(new BoxGeometry(0.022, 0.011, 0.012), new MeshStandardMaterial({ roughness: 0.6 }), 72);
+    const dummy = new Object3D();
+    const tan = new Color(0xb89868);
+    const black = new Color(0x1b1d20);
+    let seed = 5;
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < 72; i++) {
+      const a = rnd() * Math.PI * 2;
+      const r = 0.12 + rnd() * 0.16;
+      dummy.position.set(-0.047 + Math.cos(a) * r, 0.0125, -0.065 + Math.sin(a) * r);
+      dummy.rotation.set(0, Math.round(rnd() * 2) * (Math.PI / 2), 0);
+      dummy.updateMatrix();
+      passive.setMatrixAt(i, dummy.matrix);
+      passive.setColorAt(i, rnd() > 0.35 ? tan : black);
+    }
+    board.add(passive);
+
+    // Pouch cell with its printed wrap on top, and the speaker beside it.
+    const laminate = new MeshStandardMaterial({ color: 0xb9bec6, roughness: 0.42, metalness: 0.7 });
+    const label = new MeshStandardMaterial({ map: batteryLabel(), roughness: 0.55, metalness: 0 });
+    const battery = new Mesh(new BoxGeometry(0.95, 0.045, 0.5), [laminate, laminate, label, laminate, laminate, laminate]);
     battery.position.set(-0.05, 0, 0.18);
     const speaker = new Group();
     const can = new Mesh(new CylinderGeometry(0.2, 0.2, 0.07, 64), new MeshStandardMaterial({ color: 0x1b1f27, roughness: 0.5, metalness: 0.6 }));
@@ -542,14 +704,34 @@ export class RondoDevice {
     speaker.add(can, cone, trim);
     speaker.position.set(0.45, 0, -0.35);
 
+    // Four T5 screws, floating between the base and the cell.
+    const screws = new Group();
+    const screwMat = new MeshStandardMaterial({ color: 0x3a4048, roughness: 0.32, metalness: 1 });
+    const recessMat = new MeshStandardMaterial({ color: 0x0b0d10, roughness: 0.7 });
+    const headGeo = new CylinderGeometry(0.034, 0.03, 0.016, 32);
+    const shaftGeo = new CylinderGeometry(0.012, 0.012, 0.09, 16);
+    const recessGeo = new CylinderGeometry(0.013, 0.013, 0.004, 6);
+    for (let k = 0; k < 4; k++) {
+      const a = Math.PI / 4 + (k * Math.PI) / 2;
+      const screw = new Group();
+      const head = new Mesh(headGeo, screwMat);
+      const shaft = new Mesh(shaftGeo, screwMat);
+      shaft.position.y = -0.053;
+      const recess = new Mesh(recessGeo, recessMat);
+      recess.position.y = 0.007;
+      screw.add(head, shaft, recess);
+      screw.position.set(Math.cos(a) * 0.83, 0, Math.sin(a) * 0.83);
+      screws.add(screw);
+    }
+
     const pcbHolder = new Group();
-    pcbHolder.add(pcb);
+    pcbHolder.add(board);
     const batHolder = new Group();
     batHolder.add(battery, speaker);
-    this.internals.add(pcbHolder, batHolder);
+    this.internals.add(pcbHolder, batHolder, screws);
     this.internals.visible = false;
     this.group.add(this.internals);
-    this.explodeParts.push({ obj: batHolder, y: 0.16 }, { obj: pcbHolder, y: 0.4 });
+    this.explodeParts.push({ obj: screws, y: 0.1 }, { obj: batHolder, y: 0.27 }, { obj: pcbHolder, y: 0.52 });
   }
 
   setFinish(f: Finish) {
@@ -578,6 +760,7 @@ export class RondoDevice {
   setExplode(t: number) {
     const e = t < 0.001 ? 0 : t;
     this.internals.visible = e > 0.02;
+    for (const race of this.races) race.visible = e > 0.02;
     for (const part of this.explodeParts) part.obj.position.y = part.y * e;
   }
 

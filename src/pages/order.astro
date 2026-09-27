@@ -44,6 +44,11 @@ import { url } from '@/lib/url';
           <input class="input" id="refer-link" readonly data-refer />
           <button class="btn btn--sun" type="button" data-share-refer><Fragment set:html={ICONS.share} /> Share</button>
         </div>
+        <div class="founder-card" data-founder-card hidden>
+          <h2 class="title">Your number, to share</h2>
+          <canvas width="1080" height="1080" data-founder-canvas aria-label="Your Founders number card"></canvas>
+          <button class="btn btn--sun" type="button" data-founder-save><Fragment set:html={ICONS.download} /> Save the card</button>
+        </div>
         <h2 class="title" style="margin-top: var(--s-6)">While you wait</h2>
         <p class="soft">Everything you make in Rondo Web will play on your Rondo when it arrives.</p>
         <a class="btn btn--ghost" href={url('/play/')}>Make your first loop <Fragment set:html={ICONS.arrowRight} /></a>
@@ -140,6 +145,17 @@ import { url } from '@/lib/url';
       background: var(--night-800);
       color: var(--starlight);
       border-color: var(--border);
+    }
+    .founder-card {
+      display: grid;
+      gap: var(--s-3);
+      justify-items: start;
+      margin-top: var(--s-6);
+    }
+    .founder-card canvas {
+      width: min(100%, 18rem);
+      height: auto;
+      border-radius: var(--r-panel);
     }
     .empty__actions {
       display: flex;

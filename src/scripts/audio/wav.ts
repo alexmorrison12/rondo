@@ -1,3 +1,26 @@
+/**
+ * Master a rendered loop in place: a gentle tanh limiter for stray peaks, then normalise the
+ * result to −1 dBFS so exports sit at a sensible level next to other tracks.
+ */
+export function masterBuffer(buffer: AudioBuffer, ceilingDb = -1): void {
+  const channels = Array.from({ length: buffer.numberOfChannels }, (_, c) => buffer.getChannelData(c));
+  const knee = 0.8;
+  let peak = 0;
+  for (const data of channels) {
+    for (let i = 0; i < data.length; i++) {
+      const x = data[i]!;
+      const a = Math.abs(x);
+      // Linear below the knee, smoothly saturating above it (continuous slope at the knee).
+      const y = a <= knee ? a : knee + (1 - knee) * Math.tanh((a - knee) / (1 - knee));
+      data[i] = Math.sign(x) * y;
+      if (y > peak) peak = y;
+    }
+  }
+  if (peak <= 0) return;
+  const gain = Math.pow(10, ceilingDb / 20) / peak;
+  for (const data of channels) for (let i = 0; i < data.length; i++) data[i]! *= gain;
+}
+
 /** Encode an AudioBuffer as a 16-bit PCM WAV Blob. */
 export function audioBufferToWav(buffer: AudioBuffer): Blob {
   const channels = Math.min(2, buffer.numberOfChannels);

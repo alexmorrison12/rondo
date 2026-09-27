@@ -20,7 +20,7 @@ const year = 2026;
             <p class="soft measure">
               One email with a new loop, a behind-the-scenes photo and nothing else. Unsubscribe with one tap.
             </p>
-            <form class="inline-form" data-newsletter style="margin-top: var(--s-5)">
+            <form class="inline-form" data-newsletter method="post" style="margin-top: var(--s-5)">
               <label class="visually-hidden" for="nl-email">Email address</label>
               <input
                 class="input"
@@ -51,7 +51,6 @@ const year = 2026;
               <li><a href={url('/story/')}>Story</a></li>
               <li><a href={url('/story/#promise')}>Ten-year promise</a></li>
               <li><a href={url('/support/')}>Support</a></li>
-              <li><a href={url('/launch-plan/')}>Launch plan</a></li>
             </ul>
           </div>
           <div>

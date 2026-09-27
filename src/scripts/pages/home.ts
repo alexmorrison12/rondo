@@ -17,7 +17,7 @@ import { SKIES, SKY_ORDER } from '../lib/skies';
 import { url } from '@/lib/url';
 import { ICONS } from '@/lib/icons';
 import { COLORWAYS, PHASES, type ColorwayId } from '@/data/site';
-import { currentPhase } from '../core/phase';
+import { currentPhase, phaseStore } from '../core/phase';
 import { encodePattern } from '../seq/codec';
 import { morningOrbit } from '../seq/generate';
 import { clonePattern, lcm, notesFrom, drumsFrom, type EngineId, type Pattern } from '../seq/model';
@@ -108,11 +108,11 @@ function poseFor(scene: string, narrow: boolean): Pose {
       case 'manual':
         return P({ y: 0.95, rx: 1.5, s: 0.74, spin: 0 });
       case 'rings':
-        return P({ y: 2.6, rx: 1.2, s: 0.5, explode: 0.3 });
+        return P({ y: -3.4, rx: 1.2, s: 0.5, explode: 0.3 });
       case 'voices':
         return P({ y: 2.4, rx: 0.4, ry: 0.4, s: 0.55 });
       case 'craft':
-        return P({ y: 0.12, rx: 0.42, ry: -0.4, s: 0.46, explode: 1, spin: 0.03 });
+        return P({ y: 0.02, rx: 0.42, ry: -0.4, s: 0.5, explode: 1, spin: 0.03 });
       case 'promise':
         return P({ y: 2.6, rx: 1.2, s: 0.5, spin: 0.25 });
       case 'loops':
@@ -127,9 +127,10 @@ function poseFor(scene: string, narrow: boolean): Pose {
     case 'hero':
       return P({ x: 1.3, y: 0.02, rx: 0.95, ry: -0.2, rz: 0.2, s: 1.28 });
     case 'manual':
-      return P({ x: 1.25, y: -0.05, rx: 1.5, s: 1.42, spin: 0 });
+      return P({ x: 1.4, y: -0.05, rx: 1.5, s: 1.34, spin: 0 });
     case 'rings':
-      return P({ x: 2.45, y: 1.05, rx: 1.15, ry: -0.3, s: 0.46, explode: 0.35, spin: 0.2 });
+      // The SVG diagram carries this scene; the object steps out of the way.
+      return P({ x: 1.6, y: -3.6, rx: 1.15, ry: -0.3, s: 0.6, explode: 0.35, spin: 0.2 });
     case 'voices':
       return P({ x: -1.75, y: -0.15, rx: 0.32, ry: 0.55, rz: -0.18, s: 1.12, spin: 0.05 });
     case 'craft':
@@ -239,6 +240,8 @@ function initStage() {
   const pose = P({});
   const target = P({});
   let spinAngle = 0;
+  // First-load moment: the object descends into the morning and its rings light one by one.
+  let intro = reduceMotion ? 1 : 0;
   const pointer = { x: 0, y: 0, tx: 0, ty: 0 };
   const narrowQuery = matchMedia('(max-width: 860px), (max-aspect-ratio: 1/1)');
   let first = true;
@@ -259,11 +262,18 @@ function initStage() {
     const pb = poseFor(b.name, narrow);
     (Object.keys(target) as (keyof Pose)[]).forEach((k) => (target[k] = pa[k] + (pb[k] - pa[k]) * t));
 
+    if (a.name === 'manual' && b.name === 'manual') followScroll(progressIn('manual'));
+    pinned = t === 0 && a.name === b.name && (a.name === 'manual' || a.name === 'craft');
+
     // Craft: explode follows progress through the pinned scene
     if (a.name === 'craft' && b.name === 'craft') {
       const p = progressIn('craft');
       target.explode = Math.min(1, p * 1.8);
-      $$('[data-callout]').forEach((li, i) => (li.dataset.on = String(p * 6.2 > i)));
+      const on = Math.min(5, Math.floor(p * 6.2));
+      $$('[data-callout]').forEach((li, i) => {
+        li.dataset.on = String(i <= on);
+        li.dataset.current = String(i === on);
+      });
     }
 
     // Critically damped follow (instant with reduced motion or on first frame)
@@ -274,14 +284,18 @@ function initStage() {
     pointer.y += (pointer.ty - pointer.y) * (reduceMotion ? 1 : 0.06);
 
     if (!reduceMotion) spinAngle += pose.spin * delta;
+    intro = Math.min(1, intro + delta / 1.8);
+    const ie = 1 - Math.pow(1 - intro, 3);
     const g = device.group;
-    g.position.set(pose.x, pose.y + (reduceMotion ? 0 : Math.sin(time * 0.6) * 0.03), 0);
-    g.scale.setScalar(pose.s);
+    g.position.set(pose.x, pose.y + (reduceMotion ? 0 : Math.sin(time * 0.6) * 0.03) + (1 - ie) * 1.4, 0);
+    g.scale.setScalar(pose.s * (0.86 + 0.14 * ie));
     g.rotation.set(pose.rx + pointer.y * 0.08 + tiltVisual * 0.35, pose.ry + pointer.x * 0.12, pose.rz, 'XYZ');
     g.rotateY(spinAngle);
     device.setExplode(pose.explode);
     // LEDs compete with daylight: push them a little harder under a bright sky.
-    device.setLedIntensity(pose.leds * (1.35 - stage.sky.dark * 0.35));
+    const led = pose.leds * (1.35 - stage.sky.dark * 0.35);
+    if (intro < 1) device.leds.forEach((l, i) => (l.mesh.material.uniforms.uIntensity!.value = led * Math.min(1, Math.max(0, (intro - 0.35 - (3 - i) * 0.1) / 0.18))));
+    else device.setLedIntensity(led);
 
     // Playback → LEDs and sun
     const e = engine;
@@ -289,7 +303,8 @@ function initStage() {
     const hits = e?.playing ? e.recentHits(0.35).map((h) => ({ ring: h.ring, slot: h.slot, age: now - h.time })) : [];
     device.syncPlayback(e?.stepFloat() ?? 0, Boolean(e?.playing), hits, current());
     const level = e?.playing ? e.level() : 0;
-    device.setSunGlow(e?.playing ? 0.45 + level * 0.55 : stage.sky.dark * 0.22);
+    // The sun always glows a little, so "tap the sun" has something to point at.
+    device.setSunGlow(e?.playing ? 0.45 + level * 0.55 : 0.22 + Math.sin(time * 1.7) * 0.07 + stage.sky.dark * 0.08);
     breathe(level);
 
     // Sky
@@ -372,6 +387,9 @@ function initDeviceInteraction(ctx: { stage: Stage; device: RondoDevice }) {
   canvas.addEventListener('pointerdown', (e) => {
     const hit = pick(e);
     if (!hit) return;
+    const hint = $('[data-device-hint]');
+    if (hint) hint.hidden = true;
+    hintShown = true;
     if (e.pointerType === 'touch' && manual.step === 2) void enableOrientationTilt();
     if (!soundPref.get()) void ensureSound().then(() => earn('sound'));
     if (hit === 'sun') {
@@ -404,6 +422,10 @@ function initDeviceInteraction(ctx: { stage: Stage; device: RondoDevice }) {
   canvas.addEventListener('pointerup', end);
   canvas.addEventListener('pointercancel', () => (drag = null));
 
+  $$<HTMLButtonElement>('[data-show-move]').forEach((b) =>
+    b.addEventListener('click', () => showMove(Number(b.dataset.showMove), device)),
+  );
+
   // Show the hint once the hero has settled
   window.setTimeout(() => {
     const hint = $('[data-device-hint]');
@@ -433,6 +455,8 @@ function initDeviceInteraction(ctx: { stage: Stage; device: RondoDevice }) {
 
 let tiltStart: number | null = null;
 let tiltTravel = 0;
+/** True while a pinned (sticky) scene fills the screen: the buy bar steps aside. */
+let pinned = false;
 
 /** On phones, the phone is the Rondo: tilting it opens the filter (move three). */
 let orientationOn = false;
@@ -458,7 +482,17 @@ async function enableOrientationTilt() {
 }
 
 /* ── The three moves ────────────────────────────────────────────── */
+let userNotes = 0;
+
 function onEdit(kind: 'add' | 'remove' | 'rotate') {
+  if (kind === 'add') userNotes++;
+  if (userNotes > 0) {
+    const lead = $('[data-proof-played]');
+    const text = $('[data-proof-played-text]');
+    if (lead) lead.textContent = 'You just played it.';
+    if (text)
+      text.textContent = `You placed ${userNotes} note${userNotes === 1 ? '' : 's'} on this page. That was the real sound engine, and the instrument plays it exactly the same.`;
+  }
   if (kind === 'add') {
     earn('note');
     completeMove(0);
@@ -469,19 +503,90 @@ function onEdit(kind: 'add' | 'remove' | 'rotate') {
   }
   const keep = $<HTMLAnchorElement>('[data-keep-loop]');
   if (keep) keep.href = `${url('/play/')}#l=${encodePattern(current())}`;
-  const notes = current().rings.reduce((n, r) => n + r.notes.slice(0, r.steps).filter((x) => x >= 0).length, 0);
-  if (notes >= 8 && kind === 'add') earn('loop');
+  if (userNotes >= 6 && kind === 'add') earn('loop');
+}
+
+/** Which move the scroll position points at; finished moves stay finished either way. */
+let scrollStep = 0;
+
+/** The active move: the first unfinished one at or after the scroll position, else any unfinished one. */
+function pickStep() {
+  const after = manual.done.findIndex((d, i) => !d && i >= scrollStep);
+  const any = manual.done.findIndex((d) => !d);
+  manual.step = after !== -1 ? after : any === -1 ? 3 : any;
+}
+
+function renderMoves() {
+  $$('[data-move]').forEach((li, i) => li.setAttribute('data-state', manual.done[i] ? 'done' : i === manual.step ? 'active' : ''));
+}
+
+/** Scrolling through the pinned section moves the lesson on, even without touching anything. */
+function followScroll(progress: number) {
+  const byScroll = Math.min(2, Math.floor(progress * 3));
+  if (byScroll === scrollStep) return;
+  scrollStep = byScroll;
+  pickStep();
+  renderMoves();
+}
+
+/** "Show me": perform the move on the instrument (also the keyboard path through the lesson). */
+function showMove(i: number, device: RondoDevice | null) {
+  const p = current();
+  if (i === 0) {
+    const ring = p.rings[0]!;
+    const empty = [...Array(ring.steps).keys()].find((s) => ring.notes[s]! < 0 && s % 2 === 1);
+    if (empty !== undefined) {
+      ring.notes[empty] = 3;
+      engine?.update();
+      device?.syncPattern(p);
+      device?.setHover(0, empty);
+      window.setTimeout(() => device?.setHover(-1, -1), 900);
+      if (soundPref.get()) {
+        ensureEngine();
+        engine?.audition(0, 3);
+      }
+      onEdit('add');
+    }
+    completeMove(0);
+  } else if (i === 1) {
+    const ring = p.rings[3]!;
+    let n = 0;
+    const tick = () => {
+      ring.offset = (ring.offset + ring.steps - 1) % ring.steps;
+      engine?.update();
+      device?.syncPattern(p);
+      uiTick(1.45);
+      if (++n < 3) window.setTimeout(tick, 160);
+    };
+    tick();
+    onEdit('rotate');
+    completeMove(1);
+  } else {
+    const t0 = performance.now();
+    const sweep = (now: number) => {
+      const k = Math.min(1, (now - t0) / 1400);
+      const y = Math.sin(k * Math.PI * 2) * (1 - k * 0.3);
+      tiltVisual = -y * 0.8;
+      engine?.setTilt(0, y);
+      if (k < 1) requestAnimationFrame(sweep);
+      else {
+        tiltVisual = 0;
+        engine?.setTilt(0, 1);
+        completeMove(2);
+      }
+    };
+    requestAnimationFrame(sweep);
+  }
 }
 
 function completeMove(i: number) {
   if (manual.done[i]) return;
   manual.done[i] = true;
-  const moves = $$('[data-move]');
-  moves[i]?.setAttribute('data-state', 'done');
   const next = manual.done.findIndex((d) => !d);
-  manual.step = next === -1 ? 3 : next;
-  if (next !== -1) moves[next]?.setAttribute('data-state', 'active');
-  if (next === 2 && matchMedia('(pointer: coarse)').matches) {
+  pickStep();
+  renderMoves();
+  const moves = $$('[data-move]');
+  if (manual.step === 2 && matchMedia('(pointer: coarse)').matches) {
     const tryEl = moves[2]?.querySelector('[data-try]');
     if (tryEl) tryEl.textContent = 'Tap the Rondo, then tilt your phone →';
   }
@@ -695,14 +800,15 @@ function initOffer(device: RondoDevice | null) {
   let finish: ColorwayId = 'noon';
   const swatches = $$<HTMLButtonElement>('[data-finish]');
   const label = $('[data-add-label]');
-  const phaseLabel = () => (currentPhase() === 'orbit' ? 'Buy' : currentPhase() === 'launch' ? 'Pre-order' : 'Reserve');
   const sync = () => {
     const cw = COLORWAYS.find((c) => c.id === finish)!;
     const name = $('[data-finish-name]');
     if (name) name.textContent = `${cw.name} · ${cw.note}`;
-    if (label) label.textContent = `${phaseLabel()} ${cw.name}`;
+    const phase = currentPhase();
+    // Before launch the offer can't be bought: say what it actually does.
+    if (label) label.textContent = phase === 'signal' || phase === 'founders' ? PHASES[phase].cta.label : `${phase === 'orbit' ? 'Buy' : 'Pre-order'} ${cw.name} ${cw.word}`;
     const bf = $('[data-buybar-finish]');
-    if (bf) bf.textContent = cw.name;
+    if (bf) bf.textContent = `${cw.name} ${cw.word}`;
     const sw = $('[data-buybar-swatch]');
     if (sw) sw.style.background = cw.swatch;
   };
@@ -721,11 +827,13 @@ function initOffer(device: RondoDevice | null) {
       location.href = url(PHASES[phase].cta.href);
       return;
     }
+    const cw = COLORWAYS.find((c) => c.id === finish)!;
     addToCart(rondoItem({ colorway: finish }));
-    toast(`Rondo in ${COLORWAYS.find((c) => c.id === finish)!.name} added`, { icon: 'bag' });
+    toast(`Rondo in ${cw.name} ${cw.word} added`, { icon: 'bag' });
     openBag();
   });
   sync();
+  phaseStore.subscribe(sync, false);
 
   // Buy bar: after the hero CTA leaves, until the offer card arrives.
   const bar = $('[data-buybar]');
@@ -734,7 +842,13 @@ function initOffer(device: RondoDevice | null) {
   if (bar && heroCta && offer) {
     let heroGone = false;
     let offerIn = false;
-    const apply = () => (bar.dataset.visible = String(heroGone && !offerIn));
+    const apply = () => {
+      const visible = heroGone && !offerIn && !pinned;
+      bar.dataset.visible = String(visible);
+      // Off-screen, it shouldn't be reachable by Tab either.
+      bar.inert = !visible;
+    };
+    window.addEventListener('scroll', () => requestAnimationFrame(apply), { passive: true });
     new IntersectionObserver(([e]) => {
       heroGone = !e!.isIntersecting && e!.boundingClientRect.top < 0;
       apply();
@@ -742,8 +856,12 @@ function initOffer(device: RondoDevice | null) {
     new IntersectionObserver(([e]) => {
       offerIn = e!.isIntersecting || e!.boundingClientRect.top < 0;
       apply();
-      if (e!.isIntersecting) earn('night');
     }).observe(offer);
+    const faq = $('.faq-section');
+    if (faq)
+      new IntersectionObserver(([e]) => {
+        if (e!.isIntersecting) earn('night');
+      }).observe(faq);
   }
 }
 

@@ -3,13 +3,15 @@
  * Each subsystem is independent and fails soft.
  */
 import { stripBase } from '@/lib/url';
-import { earn, initAchievements } from './achievements';
+import { earn, initAchievements, setPlayingProbe } from './achievements';
 import { initBag } from './bag';
+import { REFERRAL_CREDIT, referral } from './cart';
 import { initHeader } from './header';
 import { initPalette } from './palette';
 import { initPhase } from './phase';
-import { initSound, onSoundState, setSound, soundPref } from './sound';
+import { initSound, isMusicPlaying, onSoundState, setSound, soundPref } from './sound';
 import { persisted } from './store';
+import { toast } from './toast';
 
 function initSoundToggles() {
   const toggles = document.querySelectorAll<HTMLButtonElement>('[data-sound-toggle]');
@@ -26,6 +28,26 @@ function initSoundToggles() {
       const next = !soundPref.get();
       await setSound(next);
       if (next) earn('sound');
+    }),
+  );
+}
+
+/** Footer newsletter: validate in place, never put the address in the URL. */
+function initNewsletter() {
+  document.querySelectorAll<HTMLFormElement>('[data-newsletter]').forEach((form) =>
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const input = form.querySelector<HTMLInputElement>('input[type="email"]');
+      const v = input?.value.trim() ?? '';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) {
+        input?.setAttribute('aria-invalid', 'true');
+        input?.focus();
+        toast(v ? 'That email looks incomplete, e.g. you@example.com.' : 'Add your email to subscribe.', { icon: 'mail' });
+        return;
+      }
+      input?.setAttribute('aria-invalid', 'false');
+      form.reset();
+      toast("You're subscribed. The first Field notes arrive with a loop. (Prototype: nothing was sent.)", { icon: 'check' });
     }),
   );
 }
@@ -50,9 +72,26 @@ safely('sound', initSound);
 safely('header', initHeader);
 safely('sound toggles', initSoundToggles);
 safely('bag', initBag);
-safely('achievements', initAchievements);
+safely('achievements', () => {
+  initAchievements();
+  setPlayingProbe(isMusicPlaying);
+});
+safely('newsletter', initNewsletter);
 safely('palette', initPalette);
 safely('visits', trackVisit);
+safely('referral', () => {
+  // A friend's link (?ref=CODE) carries $25 off through to checkout.
+  const code = new URLSearchParams(location.search).get('ref');
+  if (!code || !/^[\w-]{3,32}$/.test(code)) return;
+  const had = referral.get();
+  referral.set({ code, at: Date.now() });
+  if (!had) {
+    window.setTimeout(
+      () => toast(`A friend sent you $${REFERRAL_CREDIT} off a Rondo. It's applied at checkout.`, { icon: 'gift', duration: 7000 }),
+      900,
+    );
+  }
+});
 safely('shortcut hints', () => {
   const mac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
   if (!mac) document.querySelectorAll('kbd').forEach((k) => k.textContent === '⌘' && (k.textContent = 'Ctrl'));

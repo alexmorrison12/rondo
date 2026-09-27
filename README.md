@@ -2,7 +2,7 @@
 
 A concept launch for **Rondo**, a palm-sized aluminium instrument with four turning rings. The site is the demo: visitors can play the instrument, in 3D and in the browser, before they are asked to buy it, and every loop they make is a shareable link.
 
-**Live:** https://alexmorrison12.github.io/rondo/ · **Launch plan:** [/launch-plan/](https://alexmorrison12.github.io/rondo/launch-plan/) · [docs/LAUNCH_PLAN.md](docs/LAUNCH_PLAN.md)
+**Live:** https://alexmorrison12.github.io/rondo/ · **Launch plan:** [/launch-plan/](https://alexmorrison12.github.io/rondo/launch-plan/) · [docs/LAUNCH_PLAN.md](docs/LAUNCH_PLAN.md) · **Design review:** [docs/DESIGN_REVIEW.md](docs/DESIGN_REVIEW.md)
 
 > Rondo is a concept product and this site is a design prototype. No orders are taken and no payment details are collected. People and quotes are illustrative.
 
@@ -22,9 +22,10 @@ A concept launch for **Rondo**, a palm-sized aluminium instrument with four turn
 | | [`/lp/launch/`](https://alexmorrison12.github.io/rondo/lp/launch/) | Launch-day page for paid, press and Product Hunt traffic |
 | | [`/lp/gift/`](https://alexmorrison12.github.io/rondo/lp/gift/) | Give a loop now, a Rondo in spring |
 | | [`/lp/creators/`](https://alexmorrison12.github.io/rondo/lp/creators/) | Creator and affiliate program |
+| | `/l/#l=…` | Shared-loop hop: gives link previews a "someone made you a loop" card, then opens the loop in `/play/` |
 | Ops | [`/launch-plan/`](https://alexmorrison12.github.io/rondo/launch-plan/) | Mission Control: preview the whole site in any launch phase |
 
-Quality-of-life layer on every page: cross-document view transitions, speculation-rules prerendering, ⌘K command palette, persistent opt-in sound, bag drawer with undo, the Orbit log (seven discoverable stars that unlock a reward), phase-aware CTAs, and a footer easter egg.
+Quality-of-life layer on every page: cross-document view transitions, speculation-rules prerendering, ⌘K command palette, persistent opt-in sound, bag drawer with undo, the Orbit log (seven discoverable stars; five unlock a free walnut dock), phase-aware CTAs and copy, signed shared loops that arrive as "Alex made you a loop" with a "Make one back" reply, still-image fallbacks without WebGL, and a footer easter egg.
 
 ## How it's built
 
@@ -33,7 +34,7 @@ Quality-of-life layer on every page: cross-document view transitions, speculatio
 - **Sound** is synthesised in code, with no samples: Karplus–Strong strings, FM bells, a tape pad, a sub bass and an analogue-modelled kit (`src/scripts/audio/`). A lookahead scheduler keeps timing on the audio clock.
 - **The instrument model** (`src/scripts/seq/`): four polymetric rings, twelve scales, Euclidean and mood-driven generators, and a compact codec that turns a loop into a ~90-character URL.
 - **3D** (`src/scripts/three/`): a procedural product model (lathe-turned body, anisotropic rings, LED shaders driven by the live sequencer), a painted sky shader, environment reflections re-baked from the time of day, generated cloud sprites, adaptive resolution and visibility-aware rendering.
-- **Launch phases** (`src/data/site.ts`): one switch moves every CTA, status line and delivery promise across the site between Signal, Founders, Launch and Orbit.
+- **Launch phases** (`src/data/site.ts`): one switch moves every CTA, trust line, status line and delivery promise across the site between Signal, Founders, Launch and Orbit. With `SITE_MODE = 'live'` the phase follows the calendar (`phaseForDate`); this prototype pins the launch phase and says so in a corner chip. Previews (`?phase=signal`) last for the tab only.
 
 ```
 src/

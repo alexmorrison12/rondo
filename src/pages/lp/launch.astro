@@ -62,7 +62,7 @@ const moods = ['Rainy Sunday', 'Night drive', 'First day of spring', 'Deadline a
     <article class="reason">
       <canvas class="reason__face" data-reason-face="noon" aria-hidden="true"></canvas>
       <div>
-        <h3 class="display-m">Instantly musical.</h3>
+        <h3 class="display-m">Three taps sound like a band.</h3>
         <p class="lead">
           Every ring is locked to a scale, so there are no wrong notes. Four loops of different lengths drift against each
           other, so even three taps sound like an arrangement.
@@ -72,7 +72,7 @@ const moods = ['Rainy Sunday', 'Night drive', 'First day of spring', 'Deadline a
     <article class="reason reason--flip">
       <canvas class="reason__face" data-reason-face="ember" aria-hidden="true"></canvas>
       <div>
-        <h3 class="display-m">Deep enough for years.</h3>
+        <h3 class="display-m">Still surprising in year ten.</h3>
         <p class="lead">
           Five synthesised voices, twelve scales, MIDI in and out, Bluetooth and USB audio. Musicians use it as a pocket
           sketchbook; everyone else just keeps finding new songs.
@@ -82,19 +82,29 @@ const moods = ['Rainy Sunday', 'Night drive', 'First day of spring', 'Deadline a
     <article class="reason">
       <canvas class="reason__face" data-reason-face="moon" aria-hidden="true"></canvas>
       <div>
-        <h3 class="display-m">Built to be kept.</h3>
+        <h3 class="display-m">Four screws, not glue.</h3>
         <p class="lead">
-          Aluminium, steel and sapphire. A battery you can replace. Open firmware and updates until 2036. That's {perMonth} a
+          Aluminium, steel and sapphire. A battery you can replace. Open firmware and updates until 2037. That's {perMonth} a
           month over ten years, and no subscription, ever.
         </p>
       </div>
     </article>
   </section>
 
-  <section class="lquotes" aria-label="What testers said">
-    <div class="wrap lquotes__inner">
-      <blockquote>“I'm not musical. I made my first loop on the bus and missed my stop.” <cite>Maya, beta tester</cite></blockquote>
-      <blockquote>“The first instrument my daughter and I both actually play.” <cite>Tom, beta tester</cite></blockquote>
+  <section class="lproof" aria-labelledby="lproof-title">
+    <div class="wrap lproof__inner">
+      <div class="lproof__copy">
+        <h2 id="lproof-title" class="display-m">Proof you can check.</h2>
+        <ol class="lproof__list" role="list">
+          <li><strong>You played it.</strong> The instrument above is the real sound engine, not a recording.</li>
+          <li><strong>Read every line.</strong> This site's code is public, and Rondo OS will be open source (MIT). <a href="https://github.com/alexmorrison12/rondo">Source</a></li>
+          <li><strong>In writing.</strong> Updates until {PRODUCT.updatesUntil}, parts at cost, a battery you can change. <a href={url('/story/#promise')}>The promise</a></li>
+        </ol>
+      </div>
+      <figure class="lproof__film">
+        <video controls playsinline muted preload="none" poster={url('/film/rondo-teaser-poster.jpg')} src={url('/film/rondo-teaser.webm')} aria-label="Twelve-second teaser: night to morning, the rings light up one by one."></video>
+        <figcaption>12 seconds, rendered from the same scene you can play.</figcaption>
+      </figure>
     </div>
   </section>
 
@@ -274,29 +284,48 @@ const moods = ['Rainy Sunday', 'Night drive', 'First day of spring', 'Deadline a
       width: 100%;
       aspect-ratio: 1;
     }
-    .lquotes {
+    .lproof {
       background: var(--night-900);
       color: var(--starlight);
       padding-block: var(--section-tight);
+      --fg-soft: var(--star-soft);
     }
-    .lquotes__inner {
+    .lproof__inner {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr minmax(12rem, 16rem);
       gap: var(--s-8);
+      align-items: center;
     }
-    .lquotes blockquote {
+    .lproof__copy {
+      display: grid;
+      gap: var(--s-5);
+    }
+    .lproof__list {
+      display: grid;
+      gap: var(--s-4);
+      font-size: var(--text-lead);
+      color: var(--star-soft);
+      max-width: 40rem;
+    }
+    .lproof__list strong {
+      color: var(--starlight);
+    }
+    .lproof__list a {
+      color: var(--starlight);
+    }
+    .lproof__film {
       margin: 0;
-      font-size: clamp(1.4rem, 1.1rem + 1vw, 2rem);
-      font-weight: 600;
-      font-stretch: 106%;
-      line-height: 1.25;
+      display: grid;
+      gap: var(--s-2);
     }
-    .lquotes cite {
-      display: block;
-      margin-top: var(--s-3);
-      font-style: normal;
+    .lproof__film video {
+      width: 100%;
+      aspect-ratio: 9 / 16;
+      border-radius: var(--r-panel);
+      background: var(--night-800);
+    }
+    .lproof__film figcaption {
       font-size: var(--text-small);
-      font-weight: 450;
       color: var(--star-soft);
     }
     .loffer {
@@ -367,7 +396,7 @@ const moods = ['Rainy Sunday', 'Night drive', 'First day of spring', 'Deadline a
       .try,
       .reason,
       .reason--flip,
-      .lquotes__inner,
+      .lproof__inner,
       .loffer {
         grid-template-columns: 1fr;
       }

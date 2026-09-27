@@ -41,7 +41,7 @@ const FAQS: Faq[] = [
     id: 'shipping-cost',
     topic: 'orders',
     q: 'How much is shipping, and where do you ship?',
-    a: `<p>Shipping is free. We ship to the US, Canada, the UK, the EU, Norway, Switzerland, Australia, New Zealand and Japan, with more countries after launch. Prices include import duties; sales tax or VAT is added at checkout where it applies.</p>`,
+    a: `<p>Shipping is free. At launch we ship to the US and Canada, priced in US and Canadian dollars; sales tax is calculated at checkout. The UK, the EU and Japan follow in 2027 with local prices that include VAT.</p>`,
     keys: 'postage delivery cost price countries international customs duties tax vat',
   },
   {
@@ -76,7 +76,7 @@ const FAQS: Faq[] = [
     id: 'refund-time',
     topic: 'returns',
     q: 'When will I get my refund?',
-    a: `<p>Within five working days of your return reaching us, to the card or account you paid with. Pre-order cancellations are refunded the same day.</p>`,
+    a: `<p>Within five working days of your return reaching us, to the card or account you paid with. Pre-orders aren’t charged until they ship, so cancelling one costs nothing; a Founders deposit comes back in full within five working days.</p>`,
     keys: 'money back refund how long timing days',
   },
   {
@@ -97,7 +97,7 @@ const FAQS: Faq[] = [
     id: 'share-loop',
     topic: 'using',
     q: 'How do I save or share a loop?',
-    a: `<p>Rondo keeps your loops on the device. In Rondo Web, press Share loop and send the link: the whole loop is written into the link itself, so anyone can play it, no account needed, and it will still work in 2036. You can also download four bars as a WAV file.</p>`,
+    a: `<p>Rondo keeps your loops on the device. In Rondo Web, press Share loop and send the link: the whole loop is written into the link itself, so anyone can play it, no account needed, and it will still work in 2037. You can also download four bars as a WAV file.</p>`,
     keys: 'save share link export wav download song audio recording',
   },
   {
@@ -132,7 +132,7 @@ const FAQS: Faq[] = [
     id: 'spare-parts',
     topic: 'repair',
     q: 'Can I get spare parts after the warranty?',
-    a: `<p>Yes. We stock every part until 2036 and sell them at cost, each with a free, published repair guide: rings, sun, speaker, base and battery. <a href="${promise}">Read the ten-year promise</a>.</p>`,
+    a: `<p>Yes. We stock every part until 2037 and sell them at cost, each with a free, published repair guide: rings, sun, speaker, base and battery. <a href="${promise}">Read the ten-year promise</a>.</p>`,
     keys: 'spare parts repair fix broken ring sun speaker guide',
   },
   {
@@ -164,10 +164,9 @@ const byTopic = TOPICS.map((t) => ({ ...t, items: FAQS.filter((f) => f.topic ===
           </p>
         </div>
         <p class="status">
-          <span class="status__dot" aria-hidden="true"></span>
-          <span>All systems normal</span>
+          <span>Replies within one working day</span>
           <span class="status__sep" aria-hidden="true">·</span>
-          <span class="num">Firmware 1.4.2</span>
+          <span data-phase-shipping>Ships spring 2027</span>
         </p>
       </div>
 
@@ -280,7 +279,7 @@ const byTopic = TOPICS.map((t) => ({ ...t, items: FAQS.filter((f) => f.topic ===
           <div class="pane__intro">
             <h3 class="title">Where’s my Rondo?</h3>
             <p class="soft">
-              Your order number starts with RO and sits at the top of your confirmation email. Pre-orders ship in the order
+              Your order number starts with RDO and sits at the top of your confirmation email. Pre-orders ship in the order
               they were placed.
             </p>
           </div>
@@ -289,7 +288,7 @@ const byTopic = TOPICS.map((t) => ({ ...t, items: FAQS.filter((f) => f.topic ===
               <div class="form__row">
                 <div class="field">
                   <label for="track-order">Order number</label>
-                  <input class="input" id="track-order" name="order" placeholder="e.g. RO-10427" autocomplete="off" autocapitalize="characters" spellcheck="false" required aria-describedby="track-order-err" data-validate="order" />
+                  <input class="input" id="track-order" name="order" placeholder="e.g. RDO-2026-10427" autocomplete="off" autocapitalize="characters" spellcheck="false" required aria-describedby="track-order-err" data-validate="order" />
                   <p class="field__error" id="track-order-err" hidden></p>
                 </div>
                 <div class="field">
@@ -321,7 +320,7 @@ const byTopic = TOPICS.map((t) => ({ ...t, items: FAQS.filter((f) => f.topic ===
               <div class="form__row">
                 <div class="field">
                   <label for="return-order">Order number</label>
-                  <input class="input" id="return-order" name="order" placeholder="e.g. RO-10427" autocomplete="off" autocapitalize="characters" spellcheck="false" required aria-describedby="return-order-err" data-validate="order" />
+                  <input class="input" id="return-order" name="order" placeholder="e.g. RDO-2026-10427" autocomplete="off" autocapitalize="characters" spellcheck="false" required aria-describedby="return-order-err" data-validate="order" />
                   <p class="field__error" id="return-order-err" hidden></p>
                 </div>
                 <div class="field">
@@ -391,7 +390,7 @@ const byTopic = TOPICS.map((t) => ({ ...t, items: FAQS.filter((f) => f.topic ===
                 </div>
                 <div class="field">
                   <label for="contact-order">Order number <span class="optional">Optional</span></label>
-                  <input class="input" id="contact-order" name="order" placeholder="e.g. RO-10427" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="contact-order-err" data-validate="order-optional" />
+                  <input class="input" id="contact-order" name="order" placeholder="e.g. RDO-2026-10427" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="contact-order-err" data-validate="order-optional" />
                   <p class="field__error" id="contact-order-err" hidden></p>
                 </div>
               </div>
@@ -417,7 +416,7 @@ const byTopic = TOPICS.map((t) => ({ ...t, items: FAQS.filter((f) => f.topic ===
     <div class="wrap elsewhere__inner">
       <a class="elsewhere__link" href={promise}>
         <span class="soft">Repairs are part of the ten-year promise.</span>
-        <span class="elsewhere__title">How we keep it until 2036 <Icon name="arrowRight" /></span>
+        <span class="elsewhere__title">How we keep it until 2037 <Icon name="arrowRight" /></span>
       </a>
       <a class="elsewhere__link" href={url('/play/')}>
         <span class="soft">Not sure yet? Try before you buy.</span>
@@ -456,23 +455,13 @@ const byTopic = TOPICS.map((t) => ({ ...t, items: FAQS.filter((f) => f.topic ===
       color: var(--ink);
     }
     .status {
-      display: inline-flex;
+      display: flex;
+      flex-wrap: wrap;
       align-items: center;
-      gap: var(--s-2);
-      padding: 0.5rem 0.9rem;
-      border-radius: var(--r-pill);
-      background: var(--white);
-      box-shadow: inset 0 0 0 1px var(--line);
+      gap: var(--s-1) var(--s-2);
       font-size: var(--text-small);
       font-weight: 560;
-      white-space: nowrap;
-    }
-    .status__dot {
-      width: 0.5rem;
-      height: 0.5rem;
-      border-radius: 50%;
-      background: var(--success);
-      box-shadow: 0 0 0 3px oklch(0.52 0.13 155 / 0.18);
+      color: var(--ink-soft);
     }
     .status__sep {
       color: var(--ink-mute);

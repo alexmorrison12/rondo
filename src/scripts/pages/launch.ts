@@ -5,13 +5,14 @@ import { ensureSound } from '../core/sound';
 import { toast } from '../core/toast';
 import { InstrumentFace } from '../instrument/face';
 import { generatePattern, moodToPattern, morningOrbit } from '../seq/generate';
-import { clonePattern, noteCount, type Pattern } from '../seq/model';
+import { clonePattern, type Pattern } from '../seq/model';
+import { patternFromHash } from '../seq/codec';
 import { PRESETS } from '../seq/presets';
 import { scaleById } from '../seq/scales';
 import { CloudField } from '../three/clouds';
 import { RondoDevice } from '../three/device';
 import { skyAt } from '../three/sky';
-import { Stage, webglAvailable } from '../three/stage';
+import { Stage, paintStill, webglAvailable } from '../three/stage';
 
 const $ = <T extends Element = HTMLElement>(sel: string) => document.querySelector<T>(sel);
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -19,7 +20,8 @@ const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 /* ── Hero stage ─────────────────────────────────────────────────── */
 function initHero() {
   const canvas = $<HTMLCanvasElement>('[data-lstage]');
-  if (!canvas || !webglAvailable()) return;
+  if (!canvas) return;
+  if (!webglAvailable()) return paintStill(canvas, 'noon');
   const stage = new Stage(canvas);
   const device = new RondoDevice('noon');
   const pattern = morningOrbit();
@@ -37,7 +39,7 @@ function initHero() {
     const narrow = canvas.clientWidth < 860;
     if (!reduceMotion) spin += delta * 0.1;
     const g = device.group;
-    g.position.set(narrow ? 0 : 1.62, narrow ? 0.95 : 0.15 + Math.sin(time * 0.6) * 0.03, 0);
+    g.position.set(narrow ? 0 : 1.62, narrow ? 0.95 : 0.15 + (reduceMotion ? 0 : Math.sin(time * 0.6) * 0.03), 0);
     g.scale.setScalar(narrow ? 0.72 : 1.1);
     g.rotation.set(0.98 + pointer.y * 0.06, pointer.x * 0.1 - 0.2, 0.18, 'XYZ');
     g.rotateY(spin);
@@ -54,8 +56,11 @@ function initHero() {
 
 /* ── Playable face ──────────────────────────────────────────────── */
 let engine: RondoEngine | null = null;
-let pattern: Pattern = morningOrbit();
+// Ads and posts can land here with a loop already loaded: /lp/launch/#l=<loop>.
+const linked = patternFromHash(location.hash);
+let pattern: Pattern = linked ?? morningOrbit();
 let edits = 0;
+let userNotes = 0;
 const canvas = $<HTMLCanvasElement>('[data-try-face]')!;
 
 const face = new InstrumentFace(canvas, {
@@ -67,17 +72,16 @@ const face = new InstrumentFace(canvas, {
   },
   onEdit: (e) => {
     edits++;
-    if (e.type === 'add') earn('note');
+    if (e.type === 'add') {
+      userNotes++;
+      earn('note');
+    }
     if (e.type === 'rotate') earn('spin');
-    if (noteCount(current()) >= 8 && edits > 2) earn('loop');
+    if (userNotes >= 6) earn('loop');
     if (edits >= 3) nudge();
   },
   onToggle: () => void toggle(),
 });
-
-function current() {
-  return engine?.pattern ?? pattern;
-}
 
 function ensure(): RondoEngine {
   if (!engine) {
@@ -105,6 +109,8 @@ async function load(p: Pattern, label: string) {
   toast(label, { icon: 'wand' });
   window.setTimeout(nudge, 8000);
 }
+
+if (linked) toast(`“${linked.name}” is loaded. Tap the sun to hear it.`, { icon: 'headphones', duration: 7000 });
 
 function nudge() {
   const n = $('[data-nudge]');

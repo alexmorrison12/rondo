@@ -1,0 +1,60 @@
+---
+/**
+ * Short hop for shared loops: /l/#l=<loop>&f=<name>&t=<HHMM>.
+ * Link previews (Messages, Slack, WhatsApp) never see the #fragment, so they read this page's
+ * "someone made you a loop" card; people are forwarded to Rondo Web with the fragment intact.
+ */
+import { PRODUCT } from '@/data/site';
+import { url } from '@/lib/url';
+
+const site = Astro.site ?? new URL('https://alexmorrison12.github.io');
+const target = url('/play/');
+const title = 'Someone made you a loop';
+const description = `Tap to hear it, then make one back. It plays in your browser, on ${PRODUCT.name} Web.`;
+const ogImage = new URL(url('/og/loop.png'), site).toString();
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title} · {PRODUCT.name}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#1a2036" />
+    <link rel="canonical" href={new URL(target, site).toString()} />
+    <link rel="icon" href={url('/favicon.svg')} type="image/svg+xml" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={PRODUCT.name} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script is:inline define:vars={{ target }}>
+      location.replace(target + location.hash);
+    </script>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: grid;
+        place-items: center;
+        background: oklch(0.2 0.045 262);
+        color: oklch(0.93 0.025 250);
+        font: 500 1rem/1.5 system-ui, sans-serif;
+      }
+      a {
+        color: oklch(0.88 0.15 92);
+      }
+    </style>
+  </head>
+  <body>
+    <p>Opening your loop… <a href={target} id="go">Open Rondo Web</a></p>
+    <script is:inline>
+      document.getElementById('go').href += location.hash;
+    </script>
+  </body>
+</html>

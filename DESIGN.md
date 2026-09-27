@@ -64,7 +64,7 @@ Engraved labels are used only on things that are *part of the instrument* (ring 
 - **Buttons**: pill. `btn--sun` (sun fill, ink text, for sky/night), `btn--ink` (ink fill, white text, sun dot, for light), `btn--ghost` (1px current-colour border). Press = 2px sink, 120ms.
 - **Phase CTA**: every primary CTA carries `data-cta`; its label and destination come from the launch phase (`src/scripts/core/phase.ts`).
 - **Sound toggle**: always in the header; animated bars while audio plays.
-- **Orbit log**: header star counter plus a popover of seven discoverable "stars" (achievements). Completing five unlocks free engraving at checkout.
+- **Orbit log**: header star counter plus a popover of seven discoverable "stars" (achievements). Collecting five unlocks a walnut dock, free, with your Rondo.
 - **Bag**: native `<dialog>` drawer with free-shipping line, quantity steppers, and undo on remove.
 - **Command palette**: ⌘K / Ctrl-K, native `<dialog>`, pages plus actions.
 - **Toasts**: polite live region, 4s, with optional action.

@@ -21,6 +21,10 @@ const moods = ['Rainy Sunday coffee', 'Night bus home', 'First warm day of sprin
   <div class="play-sky" aria-hidden="true"></div>
   <section class="play" aria-labelledby="play-title">
     <div class="play__stage">
+      <div class="arrival-strip" data-arrival-strip hidden>
+        <p><strong data-strip-from>A loop for you</strong> <span data-strip-when></span></p>
+        <button class="btn btn--ink btn--sm" type="button" data-make-back>Make one back</button>
+      </div>
       <div class="play__titlebar">
         <h1 id="play-title" class="visually-hidden">Rondo Web</h1>
         <label class="loop-name">
@@ -40,7 +44,7 @@ const moods = ['Rainy Sunday coffee', 'Night bus home', 'First warm day of sprin
           aria-label="Rondo instrument. Tap a ring to place a note, drag outward to raise it, drag around to turn the ring. Keyboard: arrows move, Enter toggles, plus and minus change pitch, brackets turn, space plays."
         ></canvas>
         <p class="face-hint" data-hint>
-          <span>Tap the sun to play.</span> Tap a ring to add notes · drag out to raise · drag around to turn.
+          <span>Tap the sun to play.</span> <span class="face-hint__more">Tap a ring to add notes · drag out to raise · drag around to turn.</span>
         </p>
       </div>
 
@@ -201,6 +205,41 @@ const moods = ['Rainy Sunday coffee', 'Night bus home', 'First warm day of sprin
     </dl>
   </section>
   <p class="visually-hidden" aria-live="polite" data-announce></p>
+
+  <dialog class="modal arrival" data-arrival aria-labelledby="arrival-title">
+    <div class="arrival__inner">
+      <p class="arrival__when" data-arrival-when></p>
+      <h2 id="arrival-title" class="arrival__title" data-arrival-title>Someone made you a loop.</h2>
+      <p class="arrival__loop"><span data-arrival-loop>“Morning Orbit”</span> <span class="arrival__meta" data-arrival-meta></span></p>
+      <div class="arrival__actions">
+        <button class="btn btn--sun btn--lg" type="button" data-arrival-play><Fragment set:html={ICONS.play} /> Hear it</button>
+        <button class="btn btn--quiet" type="button" data-arrival-close>Just look</button>
+      </div>
+      <div class="arrival__foot">
+        <img src={url('/renders/rondo-top.webp')} alt="" width="64" height="64" loading="lazy" decoding="async" />
+        <p>
+          It plays right here, in your browser. The same loop runs on{' '}
+          <a href={url('/instrument/')}>the real Rondo</a>, whose aluminium rings click when you turn them. {formatPrice(PRODUCT.price)}.
+        </p>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="modal share-sheet" data-share-sheet aria-labelledby="share-title">
+    <form class="share-sheet__inner" method="dialog" data-share-form>
+      <h2 id="share-title" class="title" data-share-title>Send this loop</h2>
+      <p class="soft" data-share-lead>They hear it in their browser. No app, no account.</p>
+      <label class="field">
+        <span class="field__label">Sign it <span class="soft">(optional)</span></span>
+        <input class="input" type="text" maxlength="24" autocomplete="given-name" placeholder="Your first name" data-share-from />
+      </label>
+      <p class="share-sheet__note soft">Your first name and the time you made it travel with the link, so it arrives as yours.</p>
+      <div class="share-sheet__actions">
+        <button class="btn btn--sun" type="submit" value="share" data-share-go><Fragment set:html={ICONS.share} /> Share link</button>
+        <button class="btn btn--quiet" type="submit" value="cancel" formnovalidate>Not now</button>
+      </div>
+    </form>
+  </dialog>
 </Base>
 
 <style>
@@ -287,6 +326,10 @@ const moods = ['Rainy Sunday coffee', 'Night bus home', 'First warm day of sprin
       width: min(100%, 44rem, calc(100dvh - var(--header-h) - 15.5rem));
       aspect-ratio: 1;
     }
+    /* The arrival strip takes a row: give it back from the face so the transport stays on screen. */
+    .play__stage:has(.arrival-strip:not([hidden])) .face-wrap {
+      width: min(100%, 44rem, calc(100dvh - var(--header-h) - 19.5rem));
+    }
     .face {
       width: 100%;
       height: 100%;
@@ -305,7 +348,7 @@ const moods = ['Rainy Sunday coffee', 'Night bus home', 'First warm day of sprin
       color: var(--fg-soft);
       transition: opacity var(--t-panel) var(--ease-out);
     }
-    .face-hint span {
+    .face-hint > span:first-child {
       color: var(--fg);
       font-weight: 650;
     }
@@ -553,11 +596,134 @@ const moods = ['Rainy Sunday coffee', 'Night bus home', 'First warm day of sprin
       margin: 0;
     }
 
+    /* Shared-loop arrival */
+    .arrival-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--s-3);
+      width: min(100%, 44rem);
+      padding: 0.45rem 0.45rem 0.45rem 1.1rem;
+      border-radius: var(--r-pill);
+      background: var(--night-800);
+      color: var(--starlight);
+      font-size: var(--text-small);
+      animation: strip-in var(--t-enter) var(--ease-out) both;
+    }
+    .arrival-strip[hidden] {
+      display: none;
+    }
+    .arrival-strip :global(.btn) {
+      background: var(--sun);
+      color: var(--ink);
+    }
+    [data-strip-when] {
+      color: var(--star-soft);
+    }
+    @keyframes strip-in {
+      from {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+    }
+    .arrival {
+      width: min(34rem, calc(100vw - 2rem));
+      background: linear-gradient(to bottom, var(--arr-a, oklch(0.64 0.12 244)), var(--arr-b, oklch(0.93 0.03 215)));
+      color: var(--ink);
+    }
+    .arrival[data-dark='true'] {
+      color: var(--starlight);
+    }
+    .arrival::backdrop {
+      background: oklch(0.14 0.03 262 / 0.55);
+    }
+    .arrival__inner {
+      display: grid;
+      gap: var(--s-4);
+      padding: var(--s-7) var(--s-6) var(--s-5);
+      justify-items: start;
+    }
+    .arrival__when {
+      font-size: var(--text-small);
+      font-weight: 650;
+      opacity: 0.8;
+    }
+    .arrival__title {
+      font-size: var(--text-display-m);
+      font-weight: 800;
+      font-stretch: 116%;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      text-wrap: balance;
+    }
+    .arrival__loop {
+      font-size: var(--text-lead);
+      font-weight: 650;
+    }
+    .arrival__meta {
+      font-weight: 450;
+      opacity: 0.75;
+      font-size: var(--text-small);
+    }
+    .arrival__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s-2);
+      margin-top: var(--s-2);
+    }
+    .arrival[data-dark='true'] .arrival__actions .btn--quiet {
+      color: var(--starlight);
+    }
+    .arrival__foot {
+      display: grid;
+      grid-template-columns: 4rem 1fr;
+      gap: var(--s-3);
+      align-items: center;
+      margin-top: var(--s-4);
+      padding-top: var(--s-4);
+      border-top: 1px solid color-mix(in oklch, currentColor 18%, transparent);
+      font-size: var(--text-small);
+    }
+    .arrival__foot img {
+      width: 4rem;
+      height: 4rem;
+      object-fit: contain;
+    }
+    .arrival__foot a {
+      font-weight: 650;
+      text-decoration: underline;
+      text-underline-offset: 0.2em;
+    }
+    .share-sheet {
+      width: min(28rem, calc(100vw - 2rem));
+    }
+    .share-sheet__inner {
+      display: grid;
+      gap: var(--s-4);
+      padding: var(--s-6);
+    }
+    .share-sheet__note {
+      font-size: var(--text-small);
+      margin-top: calc(var(--s-2) * -1);
+    }
+    .share-sheet__actions {
+      display: flex;
+      gap: var(--s-2);
+      flex-wrap: wrap;
+    }
+
     @media (max-width: 640px) {
       .play__titlebar {
         flex-direction: column;
         align-items: flex-start;
         gap: var(--s-1);
+      }
+      /* One line on phones, so the hint never slides under the transport. */
+      .face-hint__more {
+        display: none;
+      }
+      .arrival__inner {
+        padding: var(--s-6) var(--s-5) var(--s-5);
       }
     }
     @media (max-width: 1024px) {

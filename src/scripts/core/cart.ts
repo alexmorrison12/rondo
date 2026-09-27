@@ -7,6 +7,14 @@ import { persisted } from './store';
 
 export type Sku = 'rondo' | 'founders' | 'dock' | 'sleeve' | 'midi' | 'gift-card';
 
+export interface GiftDetails {
+  to: string;
+  from: string;
+  message: string;
+  /** Encoded loop (the #l= code) printed on the gift card as a QR code. */
+  loop?: string;
+}
+
 export interface CartItem {
   key: string;
   sku: Sku;
@@ -17,6 +25,7 @@ export interface CartItem {
   colorway?: ColorwayId;
   engraving?: string;
   founderNumber?: number;
+  gift?: GiftDetails;
 }
 
 export const cart = persisted<CartItem[]>('cart', [], 2);
@@ -24,8 +33,12 @@ export const cart = persisted<CartItem[]>('cart', [], 2);
 /** Set when the Orbit log reward (five stars) is unlocked. */
 export const rewardUnlocked = persisted<boolean>('reward', false);
 
-export function lineKey(item: Pick<CartItem, 'sku' | 'colorway' | 'engraving' | 'founderNumber'>): string {
-  return [item.sku, item.colorway ?? '', item.engraving ?? '', item.founderNumber ?? ''].join('|');
+/** A friend's referral (?ref=CODE): $25 off an instrument. */
+export const REFERRAL_CREDIT = 25;
+export const referral = persisted<{ code: string; at: number } | null>('referral', null);
+
+export function lineKey(item: Pick<CartItem, 'sku' | 'colorway' | 'engraving' | 'founderNumber' | 'gift'>): string {
+  return [item.sku, item.colorway ?? '', item.engraving ?? '', item.founderNumber ?? '', item.gift ? `gift:${item.gift.to}` : ''].join('|');
 }
 
 export function rondoItem(opts: {
@@ -33,6 +46,7 @@ export function rondoItem(opts: {
   founders?: boolean;
   engraving?: string;
   founderNumber?: number;
+  gift?: GiftDetails;
 }): Omit<CartItem, 'qty'> {
   const cw = COLORWAYS.find((c) => c.id === opts.colorway) ?? COLORWAYS[0]!;
   const founders = Boolean(opts.founders);
@@ -40,6 +54,7 @@ export function rondoItem(opts: {
   const parts = [cw.name];
   if (founders && opts.founderNumber) parts.push(`No. ${String(opts.founderNumber).padStart(4, '0')}`);
   if (engraving) parts.push(`engraved “${engraving}”`);
+  if (opts.gift?.to) parts.push(`gift for ${opts.gift.to}`);
   const base = {
     sku: (founders ? 'founders' : 'rondo') as Sku,
     name: founders ? 'Rondo Founders Edition' : 'Rondo',
@@ -48,6 +63,7 @@ export function rondoItem(opts: {
     colorway: cw.id,
     engraving,
     founderNumber: opts.founderNumber,
+    gift: opts.gift,
   };
   return { ...base, key: lineKey(base) };
 }
@@ -101,12 +117,16 @@ export interface Totals {
   subtotal: number;
   reward: number;
   rewardLabel: string | null;
+  referral: number;
   shipping: number;
   total: number;
   hasInstrument: boolean;
+  /** Paid today: Founders deposits only (pre-orders are charged when they ship). */
+  dueToday: number;
+  founders: boolean;
 }
 
-export function totals(items: CartItem[] = cart.get(), reward = rewardUnlocked.get()): Totals {
+export function totals(items: CartItem[] = cart.get(), reward = rewardUnlocked.get(), ref = referral.get()): Totals {
   const count = items.reduce((n, i) => n + i.qty, 0);
   const subtotal = items.reduce((n, i) => n + i.qty * i.price, 0);
   const hasInstrument = items.some((i) => i.sku === 'rondo' || i.sku === 'founders');
@@ -118,13 +138,19 @@ export function totals(items: CartItem[] = cart.get(), reward = rewardUnlocked.g
     rewardValue = dockInBag ? dock.price : 0;
     rewardLabel = dockInBag ? 'Orbit log reward: walnut dock on us' : 'Orbit log reward: a walnut dock ships free with your Rondo';
   }
+  const referralValue = ref && hasInstrument ? REFERRAL_CREDIT : 0;
+  const founders = items.some((i) => i.sku === 'founders');
+  const dueToday = items.filter((i) => i.sku === 'founders').reduce((n, i) => n + i.qty * PRODUCT.foundersDeposit, 0);
   return {
     count,
     subtotal,
     reward: rewardValue,
     rewardLabel,
+    referral: referralValue,
     shipping: 0,
-    total: Math.max(0, subtotal - rewardValue),
+    total: Math.max(0, subtotal - rewardValue - referralValue),
     hasInstrument,
+    dueToday,
+    founders,
   };
 }

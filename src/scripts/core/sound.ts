@@ -4,6 +4,7 @@
  * later visit the context resumes on the first tap/keypress (browsers require a gesture).
  */
 import { persisted } from './store';
+import { toast } from './toast';
 
 export const soundPref = persisted<boolean>('sound', false);
 
@@ -27,8 +28,21 @@ export function onSoundState(fn: SoundListener): () => void {
   return () => listeners.delete(fn);
 }
 
+type AudioSessionNavigator = Navigator & { audioSession?: { type: string } };
+
+const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
 export function audioContext(): AudioContext {
   if (!ctx) {
+    // iOS mutes Web Audio in silent mode unless the page declares itself a player (Safari 17+).
+    const nav = navigator as AudioSessionNavigator;
+    if (nav.audioSession) {
+      try {
+        nav.audioSession.type = 'playback';
+      } catch {
+        /* older engines: fall back to the ringer hint */
+      }
+    }
     ctx = new AudioContext({ latencyHint: 'interactive' });
     master = ctx.createGain();
     master.gain.value = 0.9;
@@ -57,11 +71,17 @@ export function isSoundReady(): boolean {
   return soundPref.get() && ctx?.state === 'running';
 }
 
+let ringerHintShown = false;
+
 export async function setSound(on: boolean): Promise<void> {
   soundPref.set(on);
   if (on) {
     const c = audioContext();
     if (c.state !== 'running') await c.resume().catch(() => undefined);
+    if (isIOS() && !(navigator as AudioSessionNavigator).audioSession && !ringerHintShown) {
+      ringerHintShown = true;
+      toast('No sound? Flip the ringer switch on the side of your phone.', { icon: 'volume', duration: 6000 });
+    }
   } else if (ctx && ctx.state === 'running') {
     await ctx.suspend().catch(() => undefined);
   }
@@ -73,6 +93,8 @@ export async function ensureSound(): Promise<AudioContext> {
   await setSound(true);
   return audioContext();
 }
+
+export const isMusicPlaying = () => playing > 0;
 
 /** Something started/stopped making music (drives the header bars). */
 export function markPlaying(isPlaying: boolean): void {

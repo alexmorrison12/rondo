@@ -36,6 +36,20 @@ export function webglAvailable(): boolean {
   }
 }
 
+const STILLS: Record<string, string> = { noon: 'rondo-hero', ember: 'rondo-ember', moon: 'rondo-moon', eclipse: 'rondo-eclipse' };
+
+/**
+ * Without WebGL (or with Save-Data on), paint a still render into the canvas's own box so the
+ * layout, and the object, stay where the page expects them.
+ */
+export function paintStill(canvas: HTMLCanvasElement, finishOrRender: string, label = 'Rondo'): void {
+  const name = STILLS[finishOrRender] ?? finishOrRender;
+  canvas.style.background = `url("${import.meta.env.BASE_URL}renders/${name}.webp") center / contain no-repeat`;
+  canvas.setAttribute('role', 'img');
+  canvas.setAttribute('aria-label', label);
+  canvas.dataset.still = 'true';
+}
+
 export class Stage {
   readonly renderer: WebGLRenderer;
   readonly scene = new Scene();

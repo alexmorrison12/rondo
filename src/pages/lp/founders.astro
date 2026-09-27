@@ -42,7 +42,7 @@ import { ICONS } from '@/lib/icons';
         <button class="chip" type="button" data-quick="lucky">Lucky sevens</button>
         <button class="chip" type="button" data-quick="today">Today's date</button>
       </div>
-      <p class="picker__count"><span class="num" data-free>0</span> of 2,000 still free</p>
+      <p class="picker__count"><span class="num" data-free>0</span> of 2,000 still free <span class="picker__sample">· sample availability in this prototype</span></p>
       <div class="reserve" data-reserve hidden>
         <p class="reserve__num num" data-reserve-num>No. 0427</p>
         <button class="btn btn--sun btn--lg btn--block" type="button" data-claim>
@@ -66,21 +66,20 @@ import { ICONS } from '@/lib/icons';
       <div><dt>Your number</dt><dd>Laser-engraved on the base: No. 0001 to 2000, never repeated.</dd></div>
       <div><dt>Walnut dock</dt><dd>Solid walnut, charges through the base. Included.</dd></div>
       <div><dt>Ships first</dt><dd>Founders leave the line in March 2027, before everyone else.</dd></div>
-      <div><dt>In the credits</dt><dd>Your name, compiled into the firmware's credits screen, forever.</dd></div>
+      <div><dt>In the credits</dt><dd>Your name in the open-source firmware's credits, and on a card in the box.</dd></div>
       <div><dt>Same promise</dt><dd>{PRODUCT.trialNights}-night trial, {PRODUCT.warrantyYears}-year warranty, no subscription, ever.</dd></div>
     </dl>
   </section>
 
   <dialog class="modal claimed" data-claimed aria-labelledby="claimed-title">
     <div class="claimed__inner">
-      <canvas class="claimed__card" data-card width="1080" height="1080" aria-label="Your shareable Founders card"></canvas>
+      <p class="claimed__num num" data-claimed-num>No. 0427</p>
       <div class="claimed__copy">
-        <h2 id="claimed-title" class="title" data-claimed-title>No. 0427 is yours.</h2>
-        <p class="soft">It's in your bag. Check out to lock it in with the refundable deposit.</p>
+        <h2 id="claimed-title" class="title" data-claimed-title>No. 0427 is held for 15 minutes.</h2>
+        <p class="soft">Pay the {formatPrice(PRODUCT.foundersDeposit)} deposit and it's yours. The remaining {formatPrice(PRODUCT.foundersPrice - PRODUCT.foundersDeposit)} is charged the day it ships, and the deposit comes back in full if you cancel before then.</p>
         <div class="claimed__actions">
-          <a class="btn btn--ink" href="#" data-checkout>Check out</a>
-          <button class="btn btn--ghost" type="button" data-download><Fragment set:html={ICONS.download} /> Save card</button>
-          <button class="btn btn--quiet" type="button" data-close>Close</button>
+          <a class="btn btn--sun btn--lg" href="#" data-checkout><Fragment set:html={ICONS.lock} /> Pay {formatPrice(PRODUCT.foundersDeposit)} deposit</a>
+          <button class="btn btn--quiet" type="button" data-close>Choose another number</button>
         </div>
       </div>
     </div>
@@ -171,9 +170,12 @@ import { ICONS } from '@/lib/icons';
       font-size: var(--text-small);
       color: var(--star-soft);
     }
-    .picker__count span {
+    .picker__count .num {
       color: var(--starlight);
       font-weight: 700;
+    }
+    .picker__sample {
+      font-size: var(--text-label);
     }
     .reserve {
       display: grid;
@@ -255,10 +257,13 @@ import { ICONS } from '@/lib/icons';
       padding: var(--s-6);
       align-items: center;
     }
-    .claimed__card {
-      width: 100%;
-      height: auto;
-      border-radius: var(--r-panel);
+    .claimed__num {
+      font-size: clamp(3rem, 2rem + 4vw, 5rem);
+      font-weight: 800;
+      font-stretch: 120%;
+      color: oklch(0.82 0.11 80);
+      line-height: 1;
+      text-align: center;
     }
     .claimed__copy {
       display: grid;

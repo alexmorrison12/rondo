@@ -51,6 +51,18 @@ export interface GenOptions {
   name?: string;
 }
 
+const NAME_BRIGHT = ['Paper', 'Sunlit', 'Easy', 'Open', 'Golden', 'Kite', 'Early', 'Lemon', 'Tin', 'Clear'];
+const NAME_MIDDLE = ['Small', 'Round', 'Loose', 'Silver', 'Soft', 'Tidal', 'Warm', 'Far', 'Wandering', 'Second'];
+const NAME_DARK = ['Late', 'Slow', 'Blue', 'Hollow', 'Midnight', 'Quiet', 'Velvet', 'Low', 'Rain', 'Last'];
+const NAME_NOUN = ['Orbit', 'Ferry', 'Lantern', 'Comet', 'Harbour', 'Engine', 'Garden', 'Signal', 'Window', 'Carousel', 'Tram', 'Tide', 'Radio', 'Meadow', 'Satellite', 'Bicycle', 'Moth', 'Planet', 'Fountain', 'Ladder'];
+
+/** A two-word name that matches the loop's mood, from its own seed (so the same roll, the same name). */
+export function loopName(seed: number, valence: number): string {
+  const rnd = mulberry32((seed ^ 0x5bd1e995) >>> 0);
+  const adjectives = valence > 0.35 ? NAME_BRIGHT : valence < -0.35 ? NAME_DARK : NAME_MIDDLE;
+  return `${pick(rnd, adjectives)} ${pick(rnd, NAME_NOUN)}`;
+}
+
 /** Roll a new, musical loop. */
 export function generatePattern(seed: number, opts: GenOptions = {}): Pattern {
   const rnd = mulberry32(seed);
@@ -66,7 +78,7 @@ export function generatePattern(seed: number, opts: GenOptions = {}): Pattern {
   p.bpm = Math.round(64 + energy * 76 + (rnd() - 0.5) * 8);
   p.swing = energy < 0.5 ? 0.08 + rnd() * 0.18 : rnd() * 0.12;
   p.space = 0.55 - energy * 0.35 + rnd() * 0.1;
-  p.name = opts.name ?? 'Rolled loop';
+  p.name = opts.name ?? loopName(seed, valence);
 
   // Pulse (drums)
   const pulse = p.rings[0];

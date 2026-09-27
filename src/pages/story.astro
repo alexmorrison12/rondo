@@ -145,7 +145,7 @@ const parts = [
 ];
 const totalGrams = parts.reduce((n, p) => n + p.g, 0);
 
-/* ── The ten-year dial: 2026 at the top, one year every 36°, longest promise outermost
+/* ── The ten-year dial: 2027 (the year Rondo ships) at the top, one year every 36°, longest promise outermost
    (like the rings on the instrument: the outer ring is the longest loop). ── */
 const TAU = Math.PI * 2;
 const polar = (r: number, turn: number) => {
@@ -162,7 +162,7 @@ const arcPath = (r: number, from: number, to: number) => {
 const circlePath = (r: number) => `M 0 ${-r} A ${r} ${r} 0 1 1 0 ${r} A ${r} ${r} 0 1 1 0 ${-r}`;
 /** Full circle drawn clockwise from 6 o'clock, so 50% of its length is 12 o'clock (for centred labels). */
 const labelPath = (r: number) => `M 0 ${r} A ${r} ${r} 0 1 1 0 ${-r} A ${r} ${r} 0 1 1 0 ${r}`;
-const delivery = 0.125; // spring 2027: 1.25 of the 10 years
+const delivery = 0.03; // spring 2027: a few months into the first year
 const trialTurns = PRODUCT.trialNights / 365.25 / PRODUCT.updateYears;
 const warrantyTurns = PRODUCT.warrantyYears / PRODUCT.updateYears;
 const dial = {
@@ -174,11 +174,11 @@ const dial = {
   }),
   years: Array.from({ length: 9 }, (_, i) => {
     const [x, y] = polar(170, (i + 1) / 10);
-    return { x, y, label: String(2027 + i) };
+    return { x, y, label: String(2028 + i) };
   }),
   rings: [
     { id: 'firmware', r: 142, d: circlePath(142), label: 'Open firmware · no end date', forever: true },
-    { id: 'updates', r: 110, d: arcPath(110, 0.004, 0.996), label: 'Updates and parts · until 2036' },
+    { id: 'updates', r: 110, d: arcPath(110, 0.004, 0.996), label: 'Updates and parts · until 2037' },
     { id: 'warranty', r: 78, d: arcPath(78, delivery, delivery + warrantyTurns), label: `${PRODUCT.warrantyYears}-year warranty` },
     { id: 'trial', r: 46, d: arcPath(46, delivery, delivery + trialTurns), label: `${PRODUCT.trialNights}-night trial` },
   ],
@@ -187,7 +187,7 @@ const dial = {
 
 <Base
   title="Our story and the ten-year promise"
-  description="Rondo started with a broken music box. How two people spent four years turning it into an instrument built to last until 2036, and exactly how we keep each promise."
+  description="Rondo started with a broken music box. How two people spent four years turning it into an instrument built to last until 2037, and exactly how we keep each promise."
   og="story"
   surface="sky"
   bodyClass="page-story"
@@ -258,7 +258,7 @@ const dial = {
           <p>
             There was a second reason, harder to say out loud. Almost everything we owned came with an app, an account
             and a quiet countdown to its own retirement. We wanted to make one object that would still be on the shelf in
-            2036: still working, still worth picking up, needing nobody’s permission.
+            2037: still working, still worth picking up, needing nobody’s permission.
           </p>
           <p>
             We called it Rondo, after the musical form in which the main tune keeps coming back, a little different each
@@ -415,7 +415,7 @@ const dial = {
               class="dial__svg"
             >
               <desc id="dial-desc">
-                A dial from 2026 to 2036. Open firmware has no end date. Updates and spare parts at cost run until 2036. The
+                A dial from 2027 to 2037. Open firmware has no end date. Updates and spare parts at cost run until 2037. The
                 {PRODUCT.warrantyYears}-year warranty and the {PRODUCT.trialNights}-night trial start on delivery in spring 2027.
               </desc>
               <defs>
@@ -426,8 +426,8 @@ const dial = {
               </g>
               <g class="dial__years">
                 {dial.years.map((y) => <text x={y.x} y={y.y}>{y.label}</text>)}
-                <text x="-5" y="-170" class="is-end">2036</text>
-                <text x="5" y="-170" class="is-start">2026</text>
+                <text x="-5" y="-170" class="is-end">2037</text>
+                <text x="5" y="-170" class="is-start">2027</text>
               </g>
               <g class="dial__tracks">
                 {dial.rings.map((r) => <circle r={r.r} />)}
@@ -453,7 +453,7 @@ const dial = {
               <circle class="dial__sun" r="17" />
             </svg>
             <figcaption class="dial__caption">
-              Every promise on one dial, 2026 at the top. The warranty and trial start when Rondo reaches you.
+              Every promise on one dial, 2027 at the top. The warranty and trial start when Rondo reaches you.
             </figcaption>
           </figure>
         </div>
@@ -474,7 +474,7 @@ const dial = {
               <dd>
                 <p>
                   Rondo does all its thinking on the device. A loop travels as a link with the whole song written into it,
-                  so sharing needs no server and will still work in 2036. It connects through standard ports that will
+                  so sharing needs no server and will still work in 2037. It connects through standard ports that will
                   outlive all of us: USB-C, 3.5 mm TRS MIDI in and out, and Bluetooth MIDI.
                 </p>
                 <ul class="tags" role="list"><li>USB-C</li><li>TRS MIDI</li><li>Bluetooth MIDI</li></ul>
@@ -496,20 +496,20 @@ const dial = {
               <dd>
                 <p>
                   Four T5 screws hold the base on. Behind it sits a 2,400 mAh battery on a connector, not glue, that you
-                  can swap in five minutes. We stock every part until 2036, sell them at cost, and publish a free repair
+                  can swap in five minutes. We stock every part until 2037, sell them at cost, and publish a free repair
                   guide for each one.
                 </p>
                 <ul class="tags" role="list"><li>T5 × 4</li><li>2,400 mAh</li><li>Parts at cost</li></ul>
               </dd>
             </div>
             <div class="ledger__row" data-arc="updates">
-              <dt>Updates until 2036.</dt>
+              <dt>Updates until 2037.</dt>
               <dd>
                 <p>
                   Written on your receipt. An update is a plain file you install over USB-C, with no account involved, and
                   none of them will ever take away a feature you already have.
                 </p>
-                <ul class="tags" role="list"><li>Until 2036</li></ul>
+                <ul class="tags" role="list"><li>Until 2037</li></ul>
               </dd>
             </div>
             <div class="ledger__row" data-arc="warranty">
@@ -585,7 +585,7 @@ const dial = {
       <div class="wrap close__inner">
         <h2 id="close-title" class="close__title">
           <span>See you</span>
-          <span>in 2036.</span>
+          <span>in 2037.</span>
         </h2>
         <p class="lead close__lead">
           That’s the plan: one small instrument, a long time, no strings attached. Try it in your browser first. It’s the

@@ -40,19 +40,20 @@ if (q.get('serial')) device.setEngraving(q.get('engrave') ?? '', Number(q.get('s
 scene.add(device.group);
 
 const g = device.group;
+// Scales leave a margin round the whole object: cards and pages crop, the render never should.
 switch (pose) {
   case 'top':
     g.rotation.set(Math.PI / 2, 0, 0);
-    g.scale.setScalar(1.55);
+    g.scale.setScalar(1.24);
     break;
   case 'side':
     g.rotation.set(0.22, 0, 0);
     g.rotateY(-0.9);
-    g.scale.setScalar(1.45);
+    g.scale.setScalar(1.22);
     break;
   case 'base':
     g.rotation.set(-1.3, 0, 0);
-    g.scale.setScalar(1.45);
+    g.scale.setScalar(1.22);
     break;
   case 'exploded':
     g.rotation.set(0.4, 0, 0.05);
@@ -64,7 +65,7 @@ switch (pose) {
   default:
     g.rotation.set(0.95, 0, 0.18, 'XYZ');
     g.rotateY(-0.35);
-    g.scale.setScalar(1.45);
+    g.scale.setScalar(1.22);
 }
 
 async function go() {

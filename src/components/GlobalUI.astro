@@ -1,5 +1,5 @@
 ---
-import { NAV } from '@/data/site';
+import { NAV, PHASES, PHASE_ORDER, SITE_MODE } from '@/data/site';
 import { STARS } from '@/data/stars';
 import { ICONS } from '@/lib/icons';
 import { url } from '@/lib/url';
@@ -74,6 +74,38 @@ import Logo from './Logo.astro';
   <p class="soft" style="margin-top: var(--s-5); font-size: var(--text-small)">
     <span data-phase-status>Pre-orders open</span> · <span data-phase-shipping>Ships spring 2027</span>
   </p>
+  <div class="menu-phase" role="group" aria-label="Preview a launch phase">
+    <p class="engrave">Prototype · preview a launch phase</p>
+    <div class="chip-row">
+      {PHASE_ORDER.map((p) => <button class="chip" type="button" data-phase-pick={p} aria-pressed="false">{PHASES[p].name}</button>)}
+    </div>
+    <a href={url('/launch-plan/')}>Open the launch plan</a>
+  </div>
 </dialog>
+
+<!-- Phase chip: which launch phase is the site presenting? (prototype / preview) -->
+<div class="phase-chip" data-phase-chip data-previewing="false" data-mode={SITE_MODE} hidden={SITE_MODE === 'live'}>
+  <button class="phase-chip__btn" type="button" popovertarget="phase-pop" aria-label="Launch phase preview">
+    <span data-phase-chip-label>Prototype · Launch phase</span>
+  </button>
+</div>
+<div id="phase-pop" class="phase-pop" popover aria-labelledby="phase-pop-title">
+  <p id="phase-pop-title" class="title" style="font-size: 1.125rem; color: var(--starlight)">Launch phase</p>
+  <p>This concept previews how the whole site changes as the launch moves forward. Previews last for this tab only.</p>
+  <div class="phase-pop__list" role="group" aria-label="Preview a phase">
+    {
+      PHASE_ORDER.map((p) => (
+        <button type="button" data-phase-pick={p} aria-pressed="false">
+          <span>{PHASES[p].name}</span>
+          <small>{PHASES[p].window}</small>
+        </button>
+      ))
+    }
+  </div>
+  <div class="phase-pop__foot">
+    <a href={url('/launch-plan/')}>Open the launch plan</a>
+    <button type="button" data-phase-reset>Reset</button>
+  </div>
+</div>
 
 <div class="toasts" data-toasts role="status" aria-live="polite"></div>

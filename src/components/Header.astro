@@ -54,6 +54,7 @@ const current = stripBase(Astro.url.pathname);
         <span class="badge" data-bag-count data-count="0"></span>
       </button>
       {!minimal && <Cta size="sm" class="site-header__cta" />}
+      {!minimal && <Cta size="sm" short class="site-header__cta-mobile" />}
       {
         !minimal && (
           <button class="icon-btn menu-btn" type="button" data-menu-open aria-label="Open menu">

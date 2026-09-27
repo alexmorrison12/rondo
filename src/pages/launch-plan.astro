@@ -1,10 +1,12 @@
 ---
 import Base from '@/layouts/Base.astro';
-import { PHASES, formatPrice } from '@/data/site';
+import { DATES, PHASES, formatPrice } from '@/data/site';
 import {
   ASSETS,
+  ATTRIBUTION_NOTE,
   BUDGET,
   CHANNELS,
+  CRITICAL_PATH,
   EVENTS,
   EXPERIMENTS,
   FUNNEL,
@@ -22,24 +24,26 @@ const nf = new Intl.NumberFormat('en-US');
 const maxFunnel = FUNNEL[0]!.value;
 const budgetTotal = BUDGET.reduce((n, b) => n + b.amount, 0);
 const maxBudget = Math.max(...BUDGET.map((b) => b.amount));
-// Timeline: 1 Oct 2026 → 31 Mar 2027
+// Timeline: 1 Oct 2026 → 31 May 2027, drawn from the same dates the site switches on.
 const T0 = Date.UTC(2026, 9, 1);
-const T1 = Date.UTC(2027, 3, 1);
+const T1 = Date.UTC(2027, 5, 1);
+const at = (iso: string) => Date.parse(iso);
 const pct = (d: number) => ((d - T0) / (T1 - T0)) * 100;
 const bands = [
-  { id: 'signal', from: Date.UTC(2026, 9, 6), to: Date.UTC(2026, 10, 3) },
-  { id: 'founders', from: Date.UTC(2026, 10, 3), to: Date.UTC(2026, 10, 17) },
-  { id: 'launch', from: Date.UTC(2026, 10, 17), to: Date.UTC(2027, 2, 1) },
-  { id: 'orbit', from: Date.UTC(2027, 2, 1), to: T1 },
+  { id: 'signal', from: at(DATES.signalStart), to: at(DATES.foundersStart) },
+  { id: 'founders', from: at(DATES.foundersStart), to: at(DATES.launch) },
+  { id: 'launch', from: at(DATES.launch), to: at(DATES.orbitStart) },
+  { id: 'orbit', from: at(DATES.orbitStart), to: T1 },
 ];
 const milestones = [
-  { at: Date.UTC(2026, 9, 6), label: 'Teaser live' },
-  { at: Date.UTC(2026, 10, 3), label: 'Founders open' },
-  { at: Date.UTC(2026, 10, 17), label: 'Launch day' },
-  { at: Date.UTC(2026, 11, 18), label: 'Gift cut-off' },
-  { at: Date.UTC(2027, 2, 15), label: 'First units ship' },
+  { at: at(DATES.signalStart), label: 'Teaser live' },
+  { at: at(DATES.foundersStart), label: 'Founders open' },
+  { at: at(DATES.launch), label: 'Launch day' },
+  { at: at(DATES.giftCutoff), label: 'Gift cut-off' },
+  { at: at(DATES.shipStart), label: 'First units ship' },
+  { at: at(DATES.orbitStart), label: 'In stock' },
 ];
-const months = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
+const months = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May'];
 ---
 
 <Base
@@ -126,7 +130,7 @@ const months = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
 
   <section class="timeline-section wrap" aria-labelledby="timeline-title">
     <h2 id="timeline-title" class="display-m">Timeline</h2>
-    <div class="tl" role="img" aria-label="Signal from 6 October, Founders from 3 November, Launch on 17 November, Orbit from 1 March, first units ship 15 March.">
+    <div class="tl" role="img" aria-label="Signal from 6 October, Founders from 3 November, launch on 17 November, gift cut-off 18 December, first units ship 15 March, in stock (Orbit) from 3 May.">
       <div class="tl__months" aria-hidden="true">{months.map((m) => <span>{m}</span>)}</div>
       <div class="tl__track">
         {
@@ -147,6 +151,24 @@ const months = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
         }
       </div>
     </div>
+  </section>
+
+  <section class="gates wrap" aria-labelledby="gates-title">
+    <div class="gates__head">
+      <h2 id="gates-title" class="display-m">Critical path</h2>
+      <p class="soft">Dated gates. If one slips, the phase after it slips with it: nothing launches on a promise the backend can't keep.</p>
+    </div>
+    <ol class="gates__list" role="list">
+      {
+        CRITICAL_PATH.map((g) => (
+          <li>
+            <span class="gates__date engrave">{g.date}</span>
+            <span class="gates__gate">{g.gate}</span>
+            <span class="gates__owner">{g.owner}</span>
+          </li>
+        ))
+      }
+    </ol>
   </section>
 
   <section class="phases wrap" aria-labelledby="phases-title">
@@ -259,6 +281,7 @@ const months = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
         </tbody>
       </table>
     </div>
+    <p class="plan-note soft">{ATTRIBUTION_NOTE}</p>
     <div class="budget">
       <h3 class="plan-h3">Budget · {formatPrice(budgetTotal)} total</h3>
       <ul role="list">
@@ -432,7 +455,12 @@ const months = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
       padding-block: var(--section-tight);
       border-top: 1px solid var(--border);
       display: grid;
+      grid-template-columns: minmax(0, 1fr);
       gap: var(--s-6);
+    }
+    .control__links .btn {
+      white-space: normal;
+      text-align: left;
     }
     .control__head {
       display: grid;
@@ -511,6 +539,55 @@ const months = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
       flex-wrap: wrap;
     }
 
+    .gates {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+      gap: var(--s-7);
+      padding-block: var(--section-tight);
+      border-top: 1px solid var(--border);
+    }
+    .gates__head {
+      display: grid;
+      gap: var(--s-4);
+      align-content: start;
+    }
+    .gates__list {
+      display: grid;
+    }
+    .gates__list li {
+      display: grid;
+      grid-template-columns: 7.5rem minmax(0, 1fr) 7rem;
+      gap: var(--s-4);
+      padding-block: var(--s-4);
+      border-bottom: 1px solid var(--border);
+      align-items: baseline;
+    }
+    .gates__date {
+      color: var(--sun);
+    }
+    .gates__owner {
+      color: var(--star-soft);
+      font-size: var(--text-small);
+      text-align: right;
+    }
+    .plan-note {
+      max-width: 60rem;
+      font-size: var(--text-small);
+      margin-top: var(--s-4);
+    }
+    @media (max-width: 860px) {
+      .gates {
+        grid-template-columns: 1fr;
+        gap: var(--s-5);
+      }
+      .gates__list li {
+        grid-template-columns: 1fr;
+        gap: var(--s-1);
+      }
+      .gates__owner {
+        text-align: left;
+      }
+    }
     .timeline-section {
       padding-block: var(--section-tight);
       display: grid;
@@ -561,6 +638,13 @@ const months = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
     .tl__marks {
       position: relative;
       height: 3.5rem;
+    }
+    .tl__mark:last-child {
+      translate: -100% 0;
+      padding-left: 0;
+      padding-right: 0.5rem;
+      border-left: 0;
+      border-right: 1px solid var(--starlight);
     }
     .tl__mark {
       position: absolute;

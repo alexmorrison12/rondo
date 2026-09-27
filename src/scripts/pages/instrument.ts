@@ -4,7 +4,7 @@ import { uiTick } from '../core/sound';
 import { morningOrbit } from '../seq/generate';
 import { RondoDevice } from '../three/device';
 import { skyAt } from '../three/sky';
-import { Stage, webglAvailable } from '../three/stage';
+import { Stage, paintStill, webglAvailable } from '../three/stage';
 
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -19,7 +19,8 @@ const ANCHORS: Record<string, { local: Vector3; rx: number; ry: number; explode:
 
 function init() {
   const canvas = document.querySelector<HTMLCanvasElement>('[data-turntable]');
-  if (!canvas || !webglAvailable()) return;
+  if (!canvas) return;
+  if (!webglAvailable()) return paintStill(canvas, 'rondo-side', 'Rondo, seen from the side');
   const stage = new Stage(canvas, { fov: 24 });
   stage.camera.position.set(0, 0, 7.2);
   const device = new RondoDevice('noon');

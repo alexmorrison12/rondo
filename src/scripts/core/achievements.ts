@@ -17,16 +17,47 @@ export const earnedCount = () => Object.keys(earned.get()).length;
 
 let opener: (() => void) | null = null;
 
+let pending: StarId[] = [];
+let flushTimer = 0;
+
+function pulseCounter() {
+  document.querySelectorAll<HTMLElement>('[data-orbit-open]').forEach((b) => {
+    b.dataset.pulse = 'false';
+    void b.offsetWidth;
+    b.dataset.pulse = 'true';
+  });
+}
+
+/** Stars earned together become one quiet note; while music plays they only pulse the counter. */
+function flush() {
+  const ids = pending;
+  pending = [];
+  if (!ids.length) return;
+  const count = earnedCount();
+  const titles = ids.map((i) => STARS.find((s) => s.id === i)!.title);
+  if (isPlaying()) return;
+  toast(ids.length === 1 ? `Star ${count} of ${STARS.length}: ${titles[0]}` : `${ids.length} stars: ${titles.join(', ')} (${count} of ${STARS.length})`, {
+    icon: 'star',
+    duration: 3500,
+    action: opener ? { label: 'Orbit log', onClick: opener } : undefined,
+  });
+}
+
+let isPlaying: () => boolean = () => false;
+/** Let the page tell us when music is playing (stars stay quiet then). */
+export function setPlayingProbe(fn: () => boolean) {
+  isPlaying = fn;
+}
+
 export function earn(id: StarId): void {
   if (earned.get()[id]) return;
   earned.set((prev) => ({ ...prev, [id]: Date.now() }));
-  const star = STARS.find((s) => s.id === id)!;
   const count = earnedCount();
   uiChime();
-  toast(`Star ${count} of ${STARS.length}: ${star.title}`, {
-    icon: 'star',
-    action: opener ? { label: 'Orbit log', onClick: opener } : undefined,
-  });
+  pulseCounter();
+  pending.push(id);
+  window.clearTimeout(flushTimer);
+  flushTimer = window.setTimeout(flush, 1600);
   if (count === REWARD_AT && !rewardUnlocked.get()) {
     rewardUnlocked.set(true);
     window.setTimeout(

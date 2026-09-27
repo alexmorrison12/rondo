@@ -56,6 +56,7 @@ const OG = [
   { slug: 'launch', title: 'Ten seconds to your first song.', sub: 'Pre-order Rondo for $449.', sky: 'noon', render: 'rondo-hero' },
   { slug: 'gift', title: 'Give someone a song.', sub: 'A loop now. A Rondo in spring.', sky: 'golden', render: 'rondo-ember' },
   { slug: 'creators', title: 'Your next sound is a circle.', sub: 'The Rondo creator program.', sky: 'noon', render: 'rondo-moon' },
+  { slug: 'loop', title: 'Someone made you a loop.', sub: 'Tap to hear it. Then make one back.', sky: 'dusk', render: 'rondo-top' },
 ];
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -119,7 +120,7 @@ async function main() {
       ? `<img class="cloud" src="${cloud(1)}" style="left:420px;top:-70px;width:520px;opacity:.9"><img class="cloud" src="${cloud(4)}" style="right:-120px;bottom:-40px;width:640px;opacity:.85">`
       : '';
     const ring = card.render
-      ? `<img class="product" src="${render}">`
+      ? `<img class="product${card.render === 'rondo-top' ? ' product--top' : ''}" src="${render}">`
       : `<svg class="ringart" viewBox="-100 -100 200 200"><circle r="80" fill="none" stroke="rgba(208,224,242,.3)" stroke-width="1.6"/>${[0, 3, 6, 8, 11, 13]
           .map((s) => {
             const a = -Math.PI / 2 + (s / 16) * Math.PI * 2;
@@ -137,6 +138,7 @@ async function main() {
       .stars i{position:absolute;width:2px;height:2px;border-radius:50%;background:#e8f0ff}
       .cloud{position:absolute;filter:brightness(1.12)}
       .product{position:absolute;right:-70px;top:50%;width:640px;transform:translateY(-50%)}
+      .product--top{right:44px;width:470px}
       .ringart{position:absolute;right:80px;top:50%;width:440px;transform:translateY(-50%)}
       .copy{position:absolute;left:72px;top:64px;bottom:64px;width:620px;display:flex;flex-direction:column;justify-content:space-between}
       h1{font-size:${card.title.length > 28 ? 64 : 76}px;font-weight:800;font-stretch:120%;letter-spacing:-0.02em;line-height:.98}

@@ -47,6 +47,8 @@ const domeFragment = /* glsl */ `
   }
 `;
 
+const COOL_GROUND = new Vector3(0.03, 0.036, 0.048);
+
 /** Feathered white card: bright centre, soft falloff (no hard-edged reflections). */
 function softTexture(): CanvasTexture {
   const c = document.createElement('canvas');
@@ -112,7 +114,8 @@ export class SkyEnvironment {
     (u.uTop!.value as Vector3).copy(sky.top);
     (u.uMid!.value as Vector3).copy(sky.mid);
     (u.uBottom!.value as Vector3).copy(sky.bottom);
-    (u.uGround!.value as Vector3).copy(sky.bottom).multiplyScalar(0.18);
+    // A cool, near-neutral floor: a warm horizon reflected in blue anodising reads as olive.
+    (u.uGround!.value as Vector3).copy(sky.bottom).multiplyScalar(0.18).lerp(COOL_GROUND, 0.6);
     (u.uSun!.value as Vector3).copy(sky.sun);
     const e = sky.sunElevation;
     (u.uSunDir!.value as Vector3).set(-0.55, Math.max(-0.2, e), 0.55).normalize();

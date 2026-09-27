@@ -12,7 +12,7 @@ import { toast } from '../core/toast';
 import { morningOrbit } from '../seq/generate';
 import { RondoDevice, type Finish } from '../three/device';
 import { skyAt } from '../three/sky';
-import { Stage, webglAvailable } from '../three/stage';
+import { Stage, paintStill, webglAvailable } from '../three/stage';
 
 const $ = <T extends Element = HTMLElement>(sel: string) => document.querySelector<T>(sel);
 const $$ = <T extends Element = HTMLElement>(sel: string) => [...document.querySelectorAll<T>(sel)];
@@ -37,11 +37,17 @@ if (state.edition === 'standard' && state.finish === 'eclipse') state.finish = '
 
 /* ── 3D viewer ──────────────────────────────────────────────────── */
 let device: RondoDevice | null = null;
+/** Set when WebGL isn't available: the viewer shows a still render of the chosen finish instead. */
+let stillCanvas: HTMLCanvasElement | null = null;
 const view = { rx: 1.05, ry: -0.35, targetRx: 1.05, targetRy: -0.35, auto: true };
 
 function initViewer() {
   const canvas = $<HTMLCanvasElement>('[data-viewer-canvas]');
-  if (!canvas || !webglAvailable()) return;
+  if (!canvas) return;
+  if (!webglAvailable()) {
+    stillCanvas = canvas;
+    return paintStill(canvas, state.finish, 'Rondo in your chosen finish');
+  }
   const stage = new Stage(canvas, { fov: 24 });
   stage.camera.position.set(0, 0, 6.2);
   device = new RondoDevice(state.finish as Finish);
@@ -173,13 +179,17 @@ function render() {
       link.href = url(PHASES[phase].cta.href);
       link.textContent = PHASES[phase].cta.label;
     }
-    label.textContent = phase === 'orbit' ? 'Add to bag' : 'Pre-order';
+    label.textContent =
+      state.edition === 'founders' ? 'Choose your Founders number' : phase === 'orbit' ? 'Add to bag' : 'Pre-order';
+    const totalEl = $('[data-add-total]');
+    if (totalEl) totalEl.hidden = state.edition === 'founders';
   }
 
   if (device) {
     device.setFinish(state.finish as Finish);
     device.setEngraving(state.engraving, state.edition === 'founders' ? 427 : undefined);
   }
+  if (stillCanvas) paintStill(stillCanvas, state.finish, 'Rondo in your chosen finish');
   syncUrl();
 }
 
@@ -226,6 +236,11 @@ function bind() {
   );
   $('[data-add]')?.addEventListener('click', () => {
     const founders = state.edition === 'founders';
+    // Founders are numbered: there's one way to buy one, and it starts with choosing the number.
+    if (founders) {
+      location.href = url('/lp/founders/');
+      return;
+    }
     addToCart(rondoItem({ colorway: state.finish, founders, engraving: state.engraving }));
     for (const id of state.addons) {
       if (id === 'dock' && founders) continue;

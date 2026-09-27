@@ -3,7 +3,7 @@
  * shareable links to single answers, and three self-serve desks (track, return, write).
  * Everything is local: the forms are demos and nothing leaves the page.
  */
-import { COLORWAYS, DATES, PHASES, PRODUCT } from '@/data/site';
+import { COLORWAYS, DATES, ORDER_NUMBER, PHASES, PRODUCT } from '@/data/site';
 import { ICONS } from '@/lib/icons';
 import { currentPhase } from '../core/phase';
 import { copyText } from '../core/share';
@@ -391,7 +391,7 @@ document.addEventListener('click', (e) => {
 });
 
 /* ── Forms ───────────────────────────────────────────────────────── */
-const ORDER_RE = /^RO-?\d{5}$/i;
+const ORDER_RE = ORDER_NUMBER.pattern;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 function startOfDay(d: Date) {
@@ -414,10 +414,10 @@ function check(el: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement): 
       if (!v) return 'We need an email to reply to.';
       return EMAIL_RE.test(v) ? null : 'That email looks incomplete. It needs an @ and a domain, like you@example.com.';
     case 'order':
-      if (!v) return 'Add your order number. It starts with RO.';
-      return ORDER_RE.test(v) ? null : 'Order numbers look like RO-10427: RO and five digits.';
+      if (!v) return 'Add your order number. It starts with RDO.';
+      return ORDER_RE.test(v) ? null : `Order numbers look like ${ORDER_NUMBER.example}.`;
     case 'order-optional':
-      return !v || ORDER_RE.test(v) ? null : 'Order numbers look like RO-10427: RO and five digits.';
+      return !v || ORDER_RE.test(v) ? null : `Order numbers look like ${ORDER_NUMBER.example}.`;
     case 'topic':
       return v ? null : 'Pick a topic so the right person reads it.';
     case 'message':
@@ -483,7 +483,7 @@ const esc = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 const orderNo = (v: string) => {
   const digits = v.replace(/\D/g, '');
-  return `RO-${digits}`;
+  return ORDER_NUMBER.make(2026, Number(digits.slice(-5)));
 };
 
 async function submit(form: HTMLFormElement) {

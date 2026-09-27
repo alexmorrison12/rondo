@@ -1,8 +1,8 @@
 /** Checkout: validation, promo codes, order creation (stored in session), confirmation hand-off. */
-import { ADDONS, PHASES, PRODUCT, formatPrice } from '@/data/site';
+import { ADDONS, ORDER_NUMBER, PAYMENT, PHASES, formatPrice } from '@/data/site';
 import { ICONS } from '@/lib/icons';
 import { url } from '@/lib/url';
-import { cart, clearCart, rewardUnlocked, totals, type CartItem } from '../core/cart';
+import { cart, clearCart, referral, rewardUnlocked, totals, type CartItem } from '../core/cart';
 import { currentPhase } from '../core/phase';
 import { sessionValue } from '../core/store';
 import { toast } from '../core/toast';
@@ -62,7 +62,7 @@ function render() {
   $<HTMLButtonElement>('[data-place]').disabled = false;
   const { t, promoValue } = discount(items);
   const total = Math.max(0, t.total - promoValue);
-  const deposit = items.filter((i) => i.sku === 'founders').reduce((n, i) => n + i.qty * PRODUCT.foundersDeposit, 0);
+  const deposit = t.dueToday;
   lines.innerHTML = items
     .map(
       (i) => `<li>${thumbFor(i)}<span><span class="line-name">${esc(i.name)}${i.qty > 1 ? ` × ${i.qty}` : ''}</span><br><span class="line-variant">${esc(i.variant)}</span></span><span class="num">${formatPrice(i.price * i.qty)}</span></li>`,
@@ -72,15 +72,33 @@ function render() {
     <div><dt>Subtotal</dt><dd class="num">${formatPrice(t.subtotal)}</dd></div>
     ${t.reward ? `<div><dt>Orbit reward</dt><dd class="num">−${formatPrice(t.reward)}</dd></div>` : ''}
     ${t.rewardLabel && !t.reward ? `<div><dt>Orbit reward</dt><dd>Walnut dock, free</dd></div>` : ''}
+    ${t.referral ? `<div><dt>Friend's referral</dt><dd class="num">−${formatPrice(t.referral)}</dd></div>` : ''}
     ${promoValue ? `<div><dt>${esc(PROMOS[promo!]!.label)}</dt><dd class="num">−${formatPrice(promoValue, { cents: true })}</dd></div>` : ''}
     <div><dt>Shipping</dt><dd>Free</dd></div>
-    <div><dt>Tax</dt><dd>Calculated at shipping</dd></div>
+    <div><dt>Sales tax</dt><dd>From your address</dd></div>
     <div class="total"><dt>Total</dt><dd class="num">${formatPrice(total, { cents: total % 1 !== 0 })}</dd></div>
     ${deposit ? `<div><dt>Due today</dt><dd class="num">${formatPrice(deposit)} refundable deposit</dd></div><div><dt>When it ships</dt><dd class="num">${formatPrice(total - deposit)}</dd></div>` : ''}`;
-  $('[data-plan-full]').textContent = formatPrice(total, { cents: total % 1 !== 0 });
-  $('[data-plan-four]').textContent = `${formatPrice(total / 4, { cents: true })} × 4`;
+  // One story about money, told the same way everywhere (data/site.ts PAYMENT).
   const phase = currentPhase();
-  $('[data-place-label]').textContent = phase === 'orbit' ? `Place order · ${formatPrice(total)}` : `Place pre-order · ${formatPrice(total)}`;
+  const inStock = phase === 'orbit';
+  const remainder = total - deposit;
+  $('[data-plan-full]').textContent = formatPrice(total, { cents: total % 1 !== 0 });
+  $('[data-plan-four]').textContent = `${formatPrice(remainder / 4, { cents: true })} × 4`;
+  $('[data-plan-full-note]').textContent = inStock
+    ? `${formatPrice(total)} today.`
+    : deposit
+      ? `${formatPrice(deposit)} refundable deposit today · ${formatPrice(remainder)} the day it ships`
+      : `${formatPrice(0)} today · ${formatPrice(total)} the day it ships`;
+  $('[data-plan-four-note]').textContent = deposit
+    ? `${formatPrice(deposit)} deposit today, then ${PAYMENT.payInFourLine(remainder).toLowerCase()}`
+    : inStock
+      ? `4 interest-free payments of ${formatPrice(total / 4, { cents: true })}, the first today`
+      : PAYMENT.payInFourLine(total);
+  $('[data-place-label]').textContent = inStock
+    ? `Pay ${formatPrice(total)}`
+    : deposit
+      ? `Pay ${formatPrice(deposit)} deposit`
+      : `Place pre-order · ${formatPrice(0)} today`;
 }
 
 /* ── Validation ─────────────────────────────────────────────────── */
@@ -120,6 +138,14 @@ function init() {
 
   const gift = $<HTMLInputElement>('[data-gift-toggle]');
   gift.addEventListener('change', () => ($('[data-gift-note]').hidden = !gift.checked));
+  // Gifts from /lp/gift/ arrive with their card details: honour them.
+  const giftItem = cart.get().find((i) => i.gift);
+  if (giftItem?.gift) {
+    gift.checked = true;
+    $('[data-gift-note]').hidden = false;
+    const note = $<HTMLTextAreaElement>('#co-gift');
+    if (!note.value) note.value = [giftItem.gift.message, giftItem.gift.from ? `— ${giftItem.gift.from}` : ''].filter(Boolean).join('\n');
+  }
 
   $<HTMLFormElement>('[data-promo]').addEventListener('submit', (e) => {
     e.preventDefault();
@@ -159,7 +185,7 @@ function init() {
     const data = new FormData(form);
     const n = String(Math.floor(10000 + Math.random() * 89999));
     const order: PlacedOrder = {
-      number: `RDO-${new Date().getFullYear()}-${n}`,
+      number: ORDER_NUMBER.make(new Date().getFullYear(), Number(n)),
       firstName: String(data.get('first') ?? '').trim(),
       email: String(data.get('email') ?? '').trim(),
       items,
@@ -183,6 +209,7 @@ function init() {
 
   cart.subscribe(render);
   rewardUnlocked.subscribe(render, false);
+  referral.subscribe(render, false);
 }
 
 init();

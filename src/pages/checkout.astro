@@ -1,5 +1,6 @@
 ---
 import Base from '@/layouts/Base.astro';
+import { PAYMENT, PRODUCT } from '@/data/site';
 import { ICONS } from '@/lib/icons';
 import { url } from '@/lib/url';
 
@@ -12,6 +13,7 @@ const countries = ['United States', 'Canada', 'United Kingdom', 'Ireland', 'Port
   og="shop"
   surface="haze"
   bodyClass="page-checkout"
+  minimal
   noindex
 >
   <div class="checkout wrap">
@@ -96,18 +98,17 @@ const countries = ['United States', 'Canada', 'United Kingdom', 'Ireland', 'Port
           <div class="pay-options" role="radiogroup" aria-label="Payment plan">
             <label class="pay-option">
               <input type="radio" name="plan" value="full" checked />
-              <span><strong>Pay in full</strong><span class="soft">Charged when your Rondo ships.</span></span>
+              <span><strong>Pay in full</strong><span class="soft" data-plan-full-note>{PAYMENT.standardLine()}</span></span>
               <span class="num" data-plan-full></span>
             </label>
             <label class="pay-option">
               <input type="radio" name="plan" value="four" />
-              <span><strong>Pay in 4, interest-free</strong><span class="soft">Every two weeks, starting when it ships.</span></span>
+              <span><strong>Pay in 4, interest-free</strong><span class="soft" data-plan-four-note>{PAYMENT.payInFourLine(PRODUCT.price)}</span></span>
               <span class="num" data-plan-four></span>
             </label>
           </div>
           <p class="soft co-fine">
-            Pre-orders are charged only when your Rondo ships. Cancel any time before then for a full refund, and you have
-            100 nights to return it after it arrives.
+            {PAYMENT.cancel} You have {PRODUCT.trialNights} nights to return it after it arrives. {PAYMENT.tax}
           </p>
         </section>
 
@@ -120,11 +121,14 @@ const countries = ['United States', 'Canada', 'United Kingdom', 'Ireland', 'Port
     <aside class="summary" aria-labelledby="summary-title">
       <h2 id="summary-title" class="title">Your order</h2>
       <ul class="summary__lines" role="list" data-summary-lines></ul>
-      <form class="promo" data-promo>
-        <label class="visually-hidden" for="promo">Promo code</label>
-        <input class="input" id="promo" name="promo" placeholder="Promo code" autocomplete="off" />
-        <button class="btn btn--ghost" type="submit">Apply</button>
-      </form>
+      <details class="promo-wrap">
+        <summary>Have a code?</summary>
+        <form class="promo" data-promo>
+          <label class="visually-hidden" for="promo">Promo code</label>
+          <input class="input" id="promo" name="promo" placeholder="Promo code" autocomplete="off" />
+          <button class="btn btn--ghost" type="submit">Apply</button>
+        </form>
+      </details>
       <p class="promo__msg" data-promo-msg aria-live="polite"></p>
       <dl class="summary__totals" data-summary-totals></dl>
       <ul class="trust" role="list">
@@ -303,6 +307,21 @@ const countries = ['United States', 'Canada', 'United Kingdom', 'Ireland', 'Port
     }
     .summary__lines :global(.line-variant) {
       color: var(--ink-soft);
+    }
+    .promo-wrap summary {
+      cursor: pointer;
+      width: fit-content;
+      font-size: var(--text-small);
+      font-weight: 600;
+      text-decoration: underline;
+      text-underline-offset: 0.2em;
+      list-style: none;
+    }
+    .promo-wrap summary::-webkit-details-marker {
+      display: none;
+    }
+    .promo-wrap[open] summary {
+      margin-bottom: var(--s-3);
     }
     .promo {
       display: flex;

@@ -130,11 +130,15 @@ function initFaces() {
 let finderFace: InstrumentFace | null = null;
 let composerFace: InstrumentFace | null = null;
 
+let userNotes = 0;
 function handleEdit(e: EditEvent) {
   edits++;
-  if (e.type === 'add') earn('note');
+  if (e.type === 'add') {
+    userNotes++;
+    earn('note');
+  }
   if (e.type === 'rotate') earn('spin');
-  if (noteCount(state.pattern) >= 8 && edits >= 3) earn('loop');
+  if (userNotes >= 6) earn('loop');
   scheduleCard();
 }
 
@@ -233,8 +237,14 @@ function initComposer() {
   $('[data-copy]')?.addEventListener('click', () => void copyLoop());
 }
 
+/** The same signed link Rondo Web shares: it opens as "Alex made you a loop", with its own preview card. */
 function loopLink(): string {
-  return `${location.origin}${url('/play/')}#l=${encodePattern(state.pattern)}`;
+  const now = new Date();
+  const q = new URLSearchParams({ l: encodePattern(state.pattern) });
+  const from = state.from.replace(/[^\p{L}\p{N} .'’-]/gu, '').trim().slice(0, 24);
+  if (from) q.set('f', from);
+  q.set('t', `${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`);
+  return `${location.origin}${url('/l/')}#${q.toString()}`;
 }
 
 async function copyLoop() {
@@ -907,7 +917,14 @@ function initFinder() {
       return;
     }
     const engraving = $<HTMLInputElement>('[data-engrave]')?.value.trim() || undefined;
-    addToCart(rondoItem({ colorway: state.finish, engraving }));
+    // The card, message and loop travel with the order so checkout can honour the gift promises.
+    addToCart(
+      rondoItem({
+        colorway: state.finish,
+        engraving,
+        gift: { to: state.to.trim() || 'someone', from: state.from.trim(), message: state.message.trim(), loop: encodePattern(state.pattern) },
+      }),
+    );
     const extras = selectedExtras();
     extras.forEach((id) => {
       const item = addonItem(id);

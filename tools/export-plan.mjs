@@ -28,6 +28,10 @@ p('## Flight plan', '', '| Target | Value | By |', '|---|---|---|');
 plan.TARGETS.forEach((t) => p(`| ${t.metric} | ${t.target} | ${t.by} |`));
 p('');
 
+p('## Critical path', '', 'Dated gates. If one slips, the phase after it slips with it.', '', '| Date | Gate | Owner |', '|---|---|---|');
+plan.CRITICAL_PATH.forEach((g) => p(`| ${g.date} | ${g.gate} | ${g.owner} |`));
+p('');
+
 p('## Phases', '');
 for (const ph of plan.PHASE_PLANS) {
   p(`### ${ph.title} · ${ph.dates}`, '', `**Goal:** ${ph.goal}`, '');
@@ -52,6 +56,7 @@ p('');
 
 p('## Channels', '', '| Channel | Phase | Tactic | Budget | KPI |', '|---|---|---|---:|---|');
 plan.CHANNELS.forEach((c) => p(`| ${c.channel} | ${c.phase} | ${c.tactic} | ${money(c.budget)} | ${c.kpi} |`));
+p('', `_${plan.ATTRIBUTION_NOTE}_`);
 const total = plan.BUDGET.reduce((n, b) => n + b.amount, 0);
 p('', `## Budget · ${money(total)}`, '', '| Item | Amount |', '|---|---:|');
 plan.BUDGET.forEach((b) => p(`| ${b.item} | ${money(b.amount)} |`));

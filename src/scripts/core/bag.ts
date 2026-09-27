@@ -76,11 +76,12 @@ function render(items: CartItem[]) {
     <dl class="bag-sum">
       <div><dt>Subtotal</dt><dd class="num">${formatPrice(t.subtotal)}</dd></div>
       ${t.reward ? `<div><dt>Orbit reward</dt><dd class="num">−${formatPrice(t.reward)}</dd></div>` : ''}
+      ${t.referral ? `<div><dt>Friend's referral</dt><dd class="num">−${formatPrice(t.referral)}</dd></div>` : ''}
       <div><dt>Shipping</dt><dd>Free</dd></div>
       <div class="bag-sum__total"><dt>Total</dt><dd class="num">${formatPrice(t.total)}</dd></div>
     </dl>
     <a class="btn btn--ink btn--lg btn--block" href="${url('/checkout/')}">Checkout ${ICONS.arrowRight}</a>
-    <p class="bag-note">${ICONS.shield} 100-night trial · free returns · pay in 4</p>`;
+    <p class="bag-note">${ICONS.shield} ${t.founders ? `${formatPrice(t.dueToday)} deposit today` : 'Nothing charged until it ships'} · 100-night trial</p>`;
 }
 
 export function openBag(): void {

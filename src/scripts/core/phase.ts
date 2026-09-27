@@ -1,53 +1,109 @@
 /**
- * Launch phase state. The public site renders DEFAULT_PHASE on the server; Mission Control
- * (/launch-plan/) can switch the phase to preview how every CTA, status line and delivery
- * promise across the site changes as the launch moves forward.
+ * Launch phase state.
+ *
+ * - 'live' mode: the phase follows the calendar (phaseForDate in data/site.ts).
+ * - 'prototype' mode: the site previews DEFAULT_PHASE and says so in the phase chip.
+ * Previewing another phase (?phase=signal, the chip, ⌘K or Mission Control) lasts for this tab's
+ * session only, so no visitor is ever left in a preview by accident.
  */
-import { DEFAULT_PHASE, PHASES, type Phase } from '@/data/site';
+import { DEFAULT_PHASE, PHASES, PHASE_ORDER, SITE_MODE, phaseForDate, type Phase } from '@/data/site';
 import { url } from '@/lib/url';
-import { persisted } from './store';
 
-export const phaseStore = persisted<Phase>('phase', DEFAULT_PHASE);
+const KEY = 'rondo:phase-preview';
+const isPhase = (v: unknown): v is Phase => typeof v === 'string' && v in PHASES;
 
-export function currentPhase(): Phase {
-  const p = phaseStore.get();
-  return p in PHASES ? p : DEFAULT_PHASE;
+export function basePhase(): Phase {
+  return SITE_MODE === 'prototype' ? DEFAULT_PHASE : phaseForDate();
 }
 
-export function setPhase(phase: Phase): void {
-  phaseStore.set(phase);
+function readPreview(): Phase | null {
+  try {
+    const q = new URLSearchParams(location.search).get('phase');
+    if (isPhase(q)) {
+      sessionStorage.setItem(KEY, q);
+      return q;
+    }
+    const s = sessionStorage.getItem(KEY);
+    return isPhase(s) ? s : null;
+  } catch {
+    return null;
+  }
 }
+
+let current: Phase = readPreview() ?? basePhase();
+const listeners = new Set<(p: Phase) => void>();
+
+export const phaseStore = {
+  get: () => current,
+  set(next: Phase) {
+    current = next;
+    try {
+      if (next === basePhase()) sessionStorage.removeItem(KEY);
+      else sessionStorage.setItem(KEY, next);
+    } catch {
+      /* ignore */
+    }
+    listeners.forEach((l) => l(current));
+  },
+  subscribe(fn: (p: Phase) => void, immediate = true) {
+    listeners.add(fn);
+    if (immediate) fn(current);
+    return () => listeners.delete(fn);
+  },
+};
+
+export const currentPhase = () => current;
+export const setPhase = (p: Phase) => phaseStore.set(p);
+export const isPreviewing = () => current !== basePhase();
+export const exitPreview = () => phaseStore.set(basePhase());
 
 /**
  * Elements opt in with:
- *   data-cta            → link whose href + label follow the phase CTA
- *   data-cta-label      → text node for the label (inside data-cta)
- *   data-cta-price      → price / qualifier text
+ *   data-cta            → link whose href follows the phase (labels are CSS-switched per phase)
  *   data-phase-status   → status line ("Pre-orders open")
  *   data-phase-shipping → delivery promise
  *   data-phase-only="launch orbit" → shown only in those phases
  */
 export function applyPhase(root: ParentNode = document): void {
-  const phase = currentPhase();
+  const phase = current;
   const def = PHASES[phase];
   document.documentElement.dataset.phase = phase;
-
   root.querySelectorAll<HTMLAnchorElement>('a[data-cta]').forEach((a) => {
-    if (a.dataset.ctaFixed !== undefined) return;
-    a.href = url(def.cta.href);
-    const label = a.querySelector<HTMLElement>('[data-cta-label]');
-    if (label) label.textContent = def.cta.label;
-    const price = a.querySelector<HTMLElement>('[data-cta-price]');
-    if (price) price.textContent = def.cta.price;
+    if (a.dataset.ctaFixed === undefined) a.href = url(def.cta.href);
   });
   root.querySelectorAll<HTMLElement>('[data-phase-status]').forEach((el) => (el.textContent = def.status));
   root.querySelectorAll<HTMLElement>('[data-phase-shipping]').forEach((el) => (el.textContent = def.shipping));
   root.querySelectorAll<HTMLElement>('[data-phase-only]').forEach((el) => {
-    const phases = (el.dataset.phaseOnly ?? '').split(/\s+/);
-    el.hidden = !phases.includes(phase);
+    el.hidden = !(el.dataset.phaseOnly ?? '').split(/\s+/).includes(phase);
   });
+}
+
+/** The prototype chip: shows which phase the site is presenting and lets you switch or reset. */
+function initChip() {
+  const chip = document.querySelector<HTMLElement>('[data-phase-chip]');
+  if (!chip) return;
+  const label = chip.querySelector<HTMLElement>('[data-phase-chip-label]');
+  const buttons = [...document.querySelectorAll<HTMLButtonElement>('[data-phase-pick]')];
+  phaseStore.subscribe((p) => {
+    const base = basePhase();
+    chip.dataset.previewing = String(p !== base);
+    // Live sites only show the chip while someone is previewing another phase.
+    if (SITE_MODE === 'live') chip.hidden = p === base;
+    if (label) label.textContent = p === base && SITE_MODE === 'prototype' ? `Prototype · ${PHASES[p].name} phase` : `Previewing ${PHASES[p].name}`;
+    buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.phasePick === p)));
+  });
+  buttons.forEach((b) =>
+    b.addEventListener('click', () => {
+      const p = b.dataset.phasePick;
+      if (isPhase(p)) setPhase(p);
+    }),
+  );
+  document.querySelectorAll('[data-phase-reset]').forEach((b) => b.addEventListener('click', exitPreview));
 }
 
 export function initPhase(): void {
   phaseStore.subscribe(() => applyPhase());
+  initChip();
 }
+
+export { PHASE_ORDER };

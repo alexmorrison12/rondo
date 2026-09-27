@@ -134,15 +134,34 @@ function frame(now: number) {
     }
   }
   draw(now);
-  requestAnimationFrame(frame);
+  raf = 0;
+  // Keep animating while visible; with reduced motion, only until the ring settles and flashes fade.
+  const settling = Math.abs(d) > 1e-4 || [...flashes.values()].some((t) => now - t < 900);
+  if (visible && (!reduceMotion || settling)) raf = requestAnimationFrame(frame);
 }
-requestAnimationFrame(frame);
+
+let raf = 0;
+let visible = true;
+const wake = () => {
+  if (!raf && visible) raf = requestAnimationFrame(frame);
+};
+new IntersectionObserver(([e]) => {
+  visible = Boolean(e?.isIntersecting) && !document.hidden;
+  wake();
+}).observe(canvas);
+document.addEventListener('visibilitychange', () => {
+  visible = !document.hidden;
+  wake();
+});
+canvas.addEventListener('pointerdown', wake);
+wake();
 
 window.addEventListener(
   'pointermove',
   (e) => {
     const r = canvas.getBoundingClientRect();
     target = Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2));
+    wake();
   },
   { passive: true },
 );
@@ -177,16 +196,16 @@ const joined = persisted<Joined | null>('signal', null);
 function render(j: Joined) {
   $('[data-join]').hidden = true;
   $('[data-rank]').hidden = false;
-  const rank = Math.max(1, j.base - j.invites * 100);
-  $('[data-rank-number]').textContent = `#${rank.toLocaleString('en-US')}`;
+  // No invented queue positions: show real progress (friends who joined) until the backend provides a rank.
+  $('[data-rank-number]').textContent = `${j.invites} friend${j.invites === 1 ? '' : 's'} joined`;
   const link = `${location.origin}${url('/lp/signal/')}?ref=${j.code}`;
   $<HTMLInputElement>('[data-ref-link]').value = link;
   const text =
     j.invites >= 10
-      ? 'Ten friends. Your loop will ship on every Rondo. We\'ll be in touch.'
+      ? 'Ten friends. You\'re in the running for the top ten, whose loops ship on every Rondo.'
       : j.invites >= 3
         ? 'Founders window guaranteed. Keep going: at ten, your loop ships on every Rondo.'
-        : `Every friend who joins with your link pulls you 100 places closer to the sun. ${3 - j.invites} more for a guaranteed Founders window.`;
+        : `Every friend who joins with your link moves you 100 places closer to the sun. ${3 - j.invites} more for a guaranteed Founders window.`;
   $('[data-rank-text]').textContent = text;
   document.querySelectorAll<HTMLElement>('[data-tier]').forEach((li) => (li.dataset.reached = String(j.invites >= Number(li.dataset.tier))));
   // Planet moves inward as you climb

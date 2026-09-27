@@ -662,10 +662,12 @@
   }
 
   /* ── Toasts ──────────────────────────────────────────── */
+  /* Toasts sit where controls aren't: just under the header (top-right on wide screens), never over
+     the buttons in the lower half that a visitor is about to press. */
   .toasts {
     position: fixed;
     left: 50%;
-    bottom: calc(var(--s-5) + env(safe-area-inset-bottom));
+    top: calc(var(--header-h) + var(--s-3) + env(safe-area-inset-top));
     translate: -50% 0;
     z-index: var(--z-toast);
     display: grid;
@@ -710,13 +712,13 @@
   @keyframes toast-in {
     from {
       opacity: 0;
-      transform: translateY(12px) scale(0.98);
+      transform: translateY(-12px) scale(0.98);
     }
   }
   @keyframes toast-out {
     to {
       opacity: 0;
-      transform: translateY(8px);
+      transform: translateY(-8px);
     }
   }
 
@@ -912,13 +914,15 @@
     font-size: var(--text-small);
     font-weight: 560;
   }
+  /* A small sun in its orbit: the instrument's own mark, not a generic "live" dot. */
   .phase-note::before {
     content: '';
-    width: 0.5rem;
-    height: 0.5rem;
+    flex: none;
+    width: 0.8rem;
+    height: 0.8rem;
     border-radius: 50%;
-    background: var(--success-bright);
-    box-shadow: 0 0 0 3px oklch(0.78 0.16 155 / 0.25);
+    background: radial-gradient(circle, var(--sun) 0 36%, transparent 39%);
+    box-shadow: inset 0 0 0 1.5px currentColor;
   }
 
   /* ── Footer ──────────────────────────────────────────── */
@@ -1236,5 +1240,185 @@
   .stepper button:disabled {
     opacity: 0.35;
     cursor: default;
+  }
+}
+
+@layer components {
+  /* Phase-aware CTA labels: only the current phase's label is shown. */
+  .cta-label,
+  .cta-price {
+    display: none;
+  }
+  html[data-phase='signal'] :is(.cta-label, .cta-price)[data-for='signal'],
+  html[data-phase='founders'] :is(.cta-label, .cta-price)[data-for='founders'],
+  html[data-phase='launch'] :is(.cta-label, .cta-price)[data-for='launch'],
+  html[data-phase='orbit'] :is(.cta-label, .cta-price)[data-for='orbit'] {
+    display: inline;
+  }
+
+  /* Phase-true copy: [data-in-phase="launch orbit"] shows only in those phases (no flash: the phase
+     is on <html> before first paint). */
+  html[data-phase='signal'] [data-in-phase]:not([data-in-phase~='signal']),
+  html[data-phase='founders'] [data-in-phase]:not([data-in-phase~='founders']),
+  html[data-phase='launch'] [data-in-phase]:not([data-in-phase~='launch']),
+  html[data-phase='orbit'] [data-in-phase]:not([data-in-phase~='orbit']) {
+    display: none !important;
+  }
+
+  /* Mobile header CTA (replaces the Orbit counter on small screens) */
+  .site-header__cta-mobile {
+    display: none;
+  }
+  @media (max-width: 860px) {
+    .site-header__cta-mobile {
+      display: inline-flex;
+      min-height: 2.5rem;
+      padding: 0.55em 0.9em;
+      font-size: 0.875rem;
+    }
+    .site-header__cta-mobile .btn__glyph {
+      display: none;
+    }
+    .orbit-btn {
+      display: none;
+    }
+  }
+
+  /* Prototype / preview phase chip */
+  .phase-chip {
+    position: fixed;
+    right: var(--gutter);
+    bottom: calc(var(--s-4) + env(safe-area-inset-bottom));
+    z-index: var(--z-sticky);
+  }
+  .phase-chip__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.25rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: var(--r-pill);
+    background: var(--night-800);
+    color: var(--starlight);
+    font-size: var(--text-label);
+    font-weight: 620;
+    font-stretch: 92%;
+    box-shadow: 0 8px 24px -12px oklch(0.1 0.03 262 / 0.6);
+  }
+  .phase-chip__btn::before {
+    content: '';
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--star-soft);
+  }
+  .phase-chip[data-previewing='true'] .phase-chip__btn::before {
+    background: var(--sun);
+    box-shadow: 0 0 0 3px oklch(0.92 0.15 95 / 0.3);
+  }
+  .phase-pop {
+    position: fixed;
+    inset: auto;
+    right: var(--gutter);
+    bottom: calc(var(--s-8) + env(safe-area-inset-bottom));
+    width: min(22rem, calc(100vw - 2rem));
+    margin: 0;
+    padding: var(--s-5);
+    border-radius: var(--r-panel-l);
+    background: var(--night-800);
+    color: var(--starlight);
+    box-shadow: 0 24px 60px -16px oklch(0.1 0.03 262 / 0.6);
+    --fg-soft: var(--star-soft);
+  }
+  .phase-pop p {
+    font-size: var(--text-small);
+    color: var(--star-soft);
+  }
+  .phase-pop__list {
+    display: grid;
+    gap: var(--s-1);
+    margin-block: var(--s-4);
+  }
+  .phase-pop__list button {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--s-3);
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    border-radius: var(--r-input);
+    text-align: left;
+    font-size: var(--text-small);
+  }
+  .phase-pop__list button:hover {
+    background: var(--night-700);
+  }
+  .phase-pop__list button[aria-pressed='true'] {
+    background: var(--sun);
+    color: var(--ink);
+  }
+  .phase-pop__list small {
+    opacity: 0.75;
+  }
+  .phase-pop__foot {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--s-3);
+    font-size: var(--text-small);
+  }
+  .phase-pop__foot a,
+  .phase-pop__foot button {
+    color: var(--starlight);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  @media (max-width: 860px) {
+    .phase-chip {
+      display: none;
+    }
+  }
+}
+
+@layer components {
+  .menu-phase {
+    display: grid;
+    gap: var(--s-3);
+    margin-top: var(--s-6);
+    padding-top: var(--s-5);
+    border-top: 1px solid oklch(0.93 0.025 250 / 0.14);
+    font-size: var(--text-small);
+  }
+  .menu-phase .engrave {
+    color: var(--star-soft);
+  }
+  .menu-phase .chip {
+    --fg: var(--starlight);
+    --bg: var(--night-900);
+    --border: oklch(0.93 0.025 250 / 0.25);
+  }
+  .menu-phase .chip[aria-pressed='true'] {
+    background: var(--sun);
+    color: var(--ink);
+  }
+}
+
+@layer components {
+  @media (min-width: 768px) {
+    .toasts {
+      left: auto;
+      right: var(--gutter);
+      top: calc(var(--header-h) + var(--s-4));
+      translate: none;
+      width: min(24rem, calc(100vw - 2rem));
+    }
+  }
+  /* Earned stars pulse the header counter instead of interrupting */
+  .orbit-btn[data-pulse='true'] svg {
+    animation: star-pulse 900ms var(--ease-out);
+    color: var(--sun);
+  }
+  @keyframes star-pulse {
+    0% { transform: scale(1); }
+    35% { transform: scale(1.5) rotate(20deg); }
+    100% { transform: scale(1); }
   }
 }

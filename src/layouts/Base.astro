@@ -4,7 +4,7 @@ import fontLatin from '@/assets/fonts/archivo-latin.woff2?url';
 import Footer from '@/components/Footer.astro';
 import GlobalUI from '@/components/GlobalUI.astro';
 import Header from '@/components/Header.astro';
-import { PRODUCT } from '@/data/site';
+import { DEFAULT_PHASE, PHASE_ORDER, PRODUCT } from '@/data/site';
 import { url } from '@/lib/url';
 
 interface Props {
@@ -60,7 +60,7 @@ const speculation = {
 ---
 
 <!doctype html>
-<html lang="en" data-phase="launch">
+<html lang="en" data-phase={DEFAULT_PHASE}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -88,6 +88,14 @@ const speculation = {
     <meta name="twitter:card" content="summary_large_image" />
 
     <script type="speculationrules" is:inline set:html={JSON.stringify(speculation)} />
+    <!-- Apply a per-tab phase preview before first paint (no flash of the wrong CTA). -->
+    <script is:inline define:vars={{ phases: PHASE_ORDER }}>
+      try {
+        var q = new URLSearchParams(location.search).get('phase');
+        var s = q && phases.indexOf(q) > -1 ? q : sessionStorage.getItem('rondo:phase-preview');
+        if (s && phases.indexOf(s) > -1) document.documentElement.dataset.phase = s;
+      } catch (e) {}
+    </script>
     {jsonLd && <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />}
     <slot name="head" />
   </head>

@@ -1,7 +1,7 @@
 ---
 import Cta from '@/components/Cta.astro';
 import Base from '@/layouts/Base.astro';
-import { COLORWAYS, PRODUCT, formatPrice, perMonthOverTenYears } from '@/data/site';
+import { COLORWAYS, PHASES, PHASE_ORDER, PRODUCT, formatPrice, perMonthOverTenYears } from '@/data/site';
 import { ICONS } from '@/lib/icons';
 import { url } from '@/lib/url';
 import { ENGINES } from '@/scripts/seq/model';
@@ -54,8 +54,8 @@ const jsonLd = {
         <span class="hero__line">circles.</span>
       </h1>
       <p class="lead hero__lead">
-        Rondo is a palm-sized instrument with four turning rings. Tap a ring to place a note, turn it to shift the groove.
-        You'll make music in ten seconds, and still be finding new songs in ten years.
+        Rondo is a palm-sized instrument with four aluminium rings. Tap one to place a note, turn it to change the groove.
+        Your first song takes ten seconds. The rest take years.
       </p>
       <div class="hero__actions">
         <Cta size="lg" showPrice />
@@ -64,11 +64,15 @@ const jsonLd = {
           <span data-hear-label>Hear it</span>
         </button>
       </div>
-      <ul class="trust hero__trust" role="list">
-        <li>{PRODUCT.trialNights}-night trial</li>
-        <li>Free shipping</li>
-        <li>No subscription, ever</li>
-      </ul>
+      {
+        PHASE_ORDER.map((p) => (
+          <ul class="trust hero__trust" role="list" data-in-phase={p}>
+            {PHASES[p].trust.map((t) => (
+              <li>{t}</li>
+            ))}
+          </ul>
+        ))
+      }
     </div>
     <p class="device-hint" data-device-hint hidden>Tap the rings. Tap the sun to play.</p>
   </section>
@@ -84,7 +88,7 @@ const jsonLd = {
             <div>
               <h3 class="title">Tap a ring to place a note.</h3>
               <p>Each ring is a loop. Tap anywhere on it and a light appears; when the sweep passes, it plays.</p>
-              <p class="move__try" data-try>Try it on the Rondo →</p>
+              <p class="move__try"><span data-try>Tap a ring on the Rondo</span> <button class="move__show" type="button" data-show-move="0">Show me</button></p>
             </div>
           </li>
           <li class="move" data-move="1">
@@ -92,7 +96,7 @@ const jsonLd = {
             <div>
               <h3 class="title">Turn a ring to shift the groove.</h3>
               <p>Same notes, new rhythm. The rings turn on steel bearings and click into place like a watch bezel.</p>
-              <p class="move__try" data-try>Drag around a ring →</p>
+              <p class="move__try"><span data-try>Drag around a ring</span> <button class="move__show" type="button" data-show-move="1">Show me</button></p>
             </div>
           </li>
           <li class="move" data-move="2">
@@ -100,7 +104,7 @@ const jsonLd = {
             <div>
               <h3 class="title">Tilt to open the sound.</h3>
               <p>Rondo knows which way is up. Tip it towards you and the sound opens like a window.</p>
-              <p class="move__try" data-try>Move your pointer up and down →</p>
+              <p class="move__try"><span data-try>Move your pointer up and down</span> <button class="move__show" type="button" data-show-move="2">Show me</button></p>
             </div>
           </li>
         </ol>
@@ -136,7 +140,7 @@ const jsonLd = {
             }
           </div>
           <p class="lcm__result">
-            Together they repeat every <strong class="num" data-lcm>336</strong> steps, which is
+            Together they repeat every <strong class="num" data-lcm>336</strong> steps, which is{' '}
             <strong class="num" data-bars>21</strong> bars before the same moment comes round again.
           </p>
         </div>
@@ -211,19 +215,19 @@ const jsonLd = {
   </section>
 
   <!-- 6 · Promise ───────────────────────────────────────── -->
-  <section class="scene promise on-dark" data-scene="promise" data-sky="5.05" data-header-theme="night" aria-labelledby="promise-title">
+  <section class="scene promise on-dark" data-scene="promise" data-sky="5.45" data-header-theme="night" aria-labelledby="promise-title">
     <div class="wrap promise__inner">
       <h2 id="promise-title" class="display-l">Built for the next ten years, not the next upgrade.</h2>
       <ol class="promises" role="list">
         <li><span><strong>No subscription. Ever.</strong> Every sound and every update is included in the price.</span></li>
-        <li><span><strong>No account, no app, no cloud.</strong> It works on a mountain, on a plane, in 2036.</span></li>
+        <li><span><strong>No account, no app, no cloud.</strong> It works on a mountain, on a plane, in 2037.</span></li>
         <li><span><strong>Open firmware.</strong> If we disappear, Rondo doesn't. The code is yours to keep.</span></li>
         <li><span><strong>Made to be opened.</strong> Parts at cost, repair guides online, a battery you can swap in five minutes.</span></li>
-        <li><span><strong>Updates until 2036,</strong> promised in writing, on the receipt.</span></li>
+        <li><span><strong>Updates until 2037,</strong> promised in writing, on the receipt.</span></li>
       </ol>
       <p class="promise__math">
-        <span class="promise__big num">{perMonth}</span>
-        <span>a month, if Rondo lasts ten years. Less than the app you forgot you pay for.</span>
+        <span class="promise__big num">{formatPrice(PRODUCT.price)}, once.</span>
+        <span>No subscription, no expiry: {perMonth} a month over ten years, then still yours.</span>
       </p>
       <p class="promise__sign">— Ines &amp; Theo, who made it</p>
     </div>
@@ -252,19 +256,31 @@ const jsonLd = {
         ))
       }
     </ul>
-    <div class="wrap quotes">
-      <figure>
-        <blockquote>“I'm not musical. I made my first loop on the bus and missed my stop.”</blockquote>
-        <figcaption>Maya, beta tester, Lisbon</figcaption>
-      </figure>
-      <figure>
-        <blockquote>“The first instrument my daughter and I both actually play.”</blockquote>
-        <figcaption>Tom, beta tester, Leeds</figcaption>
-      </figure>
-      <figure>
-        <blockquote>“It replaced my phone at bedtime. Ten minutes of turning rings and I'm out.”</blockquote>
-        <figcaption>Priya, beta tester, Pune</figcaption>
-      </figure>
+    <div class="wrap proof" data-proof>
+      <h3 class="proof__title">Proof you can check</h3>
+      <ol class="proof__list" role="list">
+        <li>
+          <p class="proof__lead" data-proof-played>You can play it right now.</p>
+          <p data-proof-played-text>
+            Tap any ring on this page. That's the real sound engine, not a recording, and it plays the same on the
+            instrument.
+          </p>
+        </li>
+        <li>
+          <p class="proof__lead">Read every line.</p>
+          <p>
+            The code for this site and its instrument is public, and Rondo OS will be open source (MIT) from day one.
+            <a href="https://github.com/alexmorrison12/rondo">See the source</a>
+          </p>
+        </li>
+        <li>
+          <p class="proof__lead">Every promise, in writing.</p>
+          <p>
+            Updates until {PRODUCT.updatesUntil}, parts at cost, a battery you can change: it's printed on your receipt.
+            <a href={url('/story/#promise')}>Read the promise</a>
+          </p>
+        </li>
+      </ol>
     </div>
   </section>
 
@@ -275,7 +291,7 @@ const jsonLd = {
         <h2 id="offer-title" class="display-m">Rondo, for {formatPrice(PRODUCT.price)}.</h2>
         <p class="soft">or {quarter} × 4, interest-free · <span data-phase-shipping>Ships spring 2027</span></p>
         <fieldset class="offer__finish">
-          <legend class="field__label">Finish: <span data-finish-name>Noon</span></legend>
+          <legend class="field__label">Finish: <span data-finish-name>Noon · Anodised sky blue</span></legend>
           <div class="swatches" role="radiogroup" aria-label="Finish">
             {
               standard.map((c, i) => (
@@ -318,8 +334,8 @@ const jsonLd = {
           <div>
             <p>
               That's who we designed it for. Every ring is locked to a scale, so there are no wrong notes, and the
-              polymeter does the arranging for you. Most beta testers made something they liked within a minute. You can
-              find out right now on this page, before spending anything.
+              polymeter does the arranging for you. You can find out right now, before spending anything: the rings on
+              this page are the real sound engine.
             </p>
           </div>
         </details>
@@ -350,9 +366,21 @@ const jsonLd = {
         <details>
           <summary>When will it ship, and what if I change my mind?</summary>
           <div>
-            <p>
-              Pre-orders ship in spring 2027, in order. You can cancel for a full refund at any time before it ships, and
-              you have {PRODUCT.trialNights} nights to return it after it arrives.
+            <p data-in-phase="signal">
+              Rondo is revealed on 17 November and ships in spring 2027. Joining the list costs nothing and commits you to
+              nothing; when it ships you have {PRODUCT.trialNights} nights to return it.
+            </p>
+            <p data-in-phase="founders">
+              Founders Editions ship first, in March 2027. The {formatPrice(PRODUCT.foundersDeposit)} deposit is refundable in
+              full until yours ships, and you have {PRODUCT.trialNights} nights to return it after it arrives.
+            </p>
+            <p data-in-phase="launch">
+              Pre-orders ship in spring 2027, in order, and nothing is charged until yours ships. Cancel any time before then,
+              and you have {PRODUCT.trialNights} nights to return it after it arrives.
+            </p>
+            <p data-in-phase="orbit">
+              Orders ship within two working days. You have {PRODUCT.trialNights} nights to return it after it arrives, for a
+              full refund.
             </p>
           </div>
         </details>
@@ -363,9 +391,9 @@ const jsonLd = {
     </div>
   </section>
 
-  <aside class="buybar" data-buybar aria-label="Quick buy">
+  <aside class="buybar" data-buybar aria-label="Quick buy" inert>
     <span class="buybar__swatch" data-buybar-swatch aria-hidden="true"></span>
-    <span class="buybar__name">Rondo · <span data-buybar-finish>Noon</span></span>
+    <span class="buybar__name">Rondo · <span data-buybar-finish>Noon blue</span></span>
     <span class="buybar__price num">{formatPrice(PRODUCT.price)}</span>
     <Cta size="sm" />
   </aside>
@@ -408,7 +436,8 @@ const jsonLd = {
     .scene [class*='__sticky'] {
       pointer-events: none;
     }
-    .scene :is(h1, h2, h3, p, a, button, ol, ul, figure, dl, fieldset, form, details, blockquote, input, label, canvas, svg, .lcm, .offer__card, .loop-rail) {
+    /* :global() so elements rendered by child components (e.g. <Cta>) are reached too. */
+    .scene :global(:is(h1, h2, h3, p, a, button, ol, ul, figure, dl, fieldset, form, details, summary, blockquote, input, label, canvas, svg, .lcm, .offer__card, .loop-rail)) {
       pointer-events: auto;
     }
     .on-dark {
@@ -531,7 +560,7 @@ const jsonLd = {
 
     /* 2 · Manual */
     .manual {
-      height: 300vh;
+      height: 220vh;
     }
     .manual__sticky {
       position: sticky;
@@ -547,6 +576,10 @@ const jsonLd = {
     }
     .manual__inner > * {
       max-width: 34rem;
+    }
+    /* Two lines, so the lesson and its finish line fit a laptop screen. */
+    .manual__inner > h2 {
+      max-width: 44rem;
     }
     .moves {
       display: grid;
@@ -588,13 +621,28 @@ const jsonLd = {
       color: var(--ink-sky-soft);
     }
     .move__try {
-      margin-top: var(--s-2);
+      margin-top: var(--s-3);
       font-weight: 650;
       color: var(--ink) !important;
       display: none;
+      align-items: center;
+      gap: var(--s-3);
+      flex-wrap: wrap;
     }
     .move[data-state='active'] .move__try {
-      display: block;
+      display: flex;
+    }
+    .move__show {
+      min-height: 2.25rem;
+      padding: 0.4rem 0.9rem;
+      border-radius: var(--r-pill);
+      background: var(--ink);
+      color: var(--sun);
+      font-size: var(--text-small);
+      font-weight: 650;
+    }
+    .move__show:hover {
+      background: oklch(0.28 0.04 258);
     }
     .manual__done {
       display: grid;
@@ -609,8 +657,27 @@ const jsonLd = {
       .manual__inner h2 {
         font-size: var(--text-display-m);
       }
-      .move:not([data-state='active']) {
+      /* All three moves stay visible; only the active one shows its detail. */
+      .moves {
+        gap: var(--s-3);
+      }
+      .move:not([data-state='active']) p {
         display: none;
+      }
+      .move:not([data-state='active']) h3 {
+        font-size: 1.0625rem;
+        margin: 0;
+      }
+      .move {
+        grid-template-columns: 2rem 1fr;
+        align-items: center;
+      }
+      .move[data-state='active'] {
+        align-items: start;
+      }
+      .move__n {
+        width: 2rem;
+        height: 2rem;
       }
     }
 
@@ -791,7 +858,7 @@ const jsonLd = {
 
     /* 5 · Craft */
     .craft {
-      height: 260vh;
+      height: 200vh;
     }
     .craft__sticky {
       position: sticky;
@@ -806,7 +873,8 @@ const jsonLd = {
       grid-template-rows: auto 1fr auto;
       gap: var(--s-6);
       height: 100%;
-      padding-block: calc(var(--header-h) + var(--s-5)) var(--s-6);
+      /* Clear the sky clock and phase chip pinned to the bottom corners. */
+      padding-block: calc(var(--header-h) + var(--s-5)) calc(var(--s-6) + 3.25rem);
     }
     .craft__title {
       grid-column: 1 / -1;
@@ -832,6 +900,7 @@ const jsonLd = {
     .specs {
       grid-column: 1 / -1;
       display: flex;
+      justify-content: flex-end;
       flex-wrap: wrap;
       gap: var(--s-3) var(--s-6);
       font-size: 0.875rem;
@@ -853,11 +922,21 @@ const jsonLd = {
         grid-template-columns: 1fr;
         grid-template-rows: auto 1fr auto auto;
       }
+      /* One callout at a time, stacked in place: no layout jumps as they change. */
       .callouts {
         align-content: end;
+        display: grid;
       }
-      .callouts li:not([data-on='true']) {
-        display: none;
+      .callouts li,
+      .callouts li[data-on='true'] {
+        grid-area: 1 / 1;
+        opacity: 0;
+      }
+      .callouts li[data-current='true'] {
+        opacity: 1;
+      }
+      .specs {
+        justify-content: flex-start;
       }
     }
 
@@ -899,7 +978,8 @@ const jsonLd = {
       flex-wrap: wrap;
       padding-top: var(--s-5);
       border-top: 1px solid var(--border);
-      color: var(--star-soft);
+      color: var(--starlight);
+      font-weight: 520;
       max-width: 40rem;
     }
     .promise__big {
@@ -967,40 +1047,43 @@ const jsonLd = {
       font-size: var(--text-small);
       color: var(--star-soft);
     }
-    .quotes {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: var(--s-6);
+    .proof {
       margin-top: var(--s-8);
+      padding-top: var(--s-6);
+      border-top: 1px solid var(--border);
     }
-    .quotes figure {
-      margin: 0;
+    .proof__title {
+      font-size: var(--text-label);
+      font-stretch: 72%;
+      font-weight: 650;
+      letter-spacing: 0.04em;
+      color: var(--sun);
+      margin-bottom: var(--s-5);
+    }
+    .proof__list {
       display: grid;
-      gap: var(--s-3);
+      grid-template-columns: 1.3fr 1fr 1fr;
+      gap: var(--s-6);
     }
-    .quotes figure:nth-child(2) {
-      margin-top: var(--s-7);
-    }
-    .quotes figure:nth-child(3) {
-      margin-top: var(--s-4);
-    }
-    .quotes blockquote {
-      margin: 0;
-      font-size: clamp(1.25rem, 1.05rem + 0.8vw, 1.6rem);
-      font-weight: 560;
-      font-stretch: 104%;
-      line-height: 1.3;
-    }
-    .quotes figcaption {
+    .proof__list li {
+      display: grid;
+      gap: var(--s-2);
+      align-content: start;
       color: var(--star-soft);
-      font-size: var(--text-small);
+    }
+    .proof__lead {
+      font-size: clamp(1.25rem, 1.05rem + 0.8vw, 1.6rem);
+      font-weight: 650;
+      font-stretch: 106%;
+      line-height: 1.2;
+      color: var(--starlight);
+    }
+    .proof__list a {
+      color: var(--starlight);
     }
     @media (max-width: 860px) {
-      .quotes {
+      .proof__list {
         grid-template-columns: 1fr;
-      }
-      .quotes figure:nth-child(n) {
-        margin-top: 0;
       }
     }
 

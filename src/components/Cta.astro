@@ -1,9 +1,10 @@
 ---
 /**
- * The phase-aware primary CTA. Server-renders the default phase; the client swaps
- * label, price and destination if Mission Control is previewing another phase.
+ * The phase-aware primary CTA. Every phase's label is rendered and CSS shows the one matching
+ * <html data-phase>, which is set before first paint, so previews never flash the wrong label.
+ * The client updates the destination.
  */
-import { DEFAULT_PHASE, PHASES } from '@/data/site';
+import { DEFAULT_PHASE, PHASES, PHASE_ORDER } from '@/data/site';
 import { RING_GLYPH } from '@/lib/icons';
 import { url } from '@/lib/url';
 
@@ -11,10 +12,12 @@ interface Props {
   variant?: 'sun' | 'ink';
   size?: 'sm' | 'md' | 'lg';
   showPrice?: boolean;
+  /** Short labels ("Pre-order", "Join") for tight spaces such as the mobile header. */
+  short?: boolean;
   class?: string;
   block?: boolean;
 }
-const { variant = 'sun', size = 'md', showPrice = false, class: className, block = false } = Astro.props;
+const { variant = 'sun', size = 'md', showPrice = false, short = false, class: className, block = false } = Astro.props;
 const def = PHASES[DEFAULT_PHASE];
 ---
 
@@ -31,6 +34,6 @@ const def = PHASES[DEFAULT_PHASE];
   data-cta
 >
   <Fragment set:html={RING_GLYPH} />
-  <span data-cta-label>{def.cta.label}</span>
-  {showPrice && <span class="btn__meta" data-cta-price>{def.cta.price}</span>}
+  {PHASE_ORDER.map((p) => <span class="cta-label" data-for={p}>{short ? PHASES[p].cta.short : PHASES[p].cta.label}</span>)}
+  {showPrice && PHASE_ORDER.map((p) => <span class="btn__meta cta-price" data-for={p}>{PHASES[p].cta.price}</span>)}
 </a>

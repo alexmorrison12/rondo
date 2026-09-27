@@ -37,12 +37,12 @@ const reveals = [
         <input class="input" id="join-email" type="email" name="email" autocomplete="email" placeholder="you@example.com" required />
         <button class="btn btn--sun btn--lg" type="submit">Join the list</button>
         <p class="field__error" data-join-error hidden></p>
-        <p class="join__fine">One email when it's revealed, one when Founders numbers open. That's it.</p>
+        <p class="join__fine">One email a week at most until 17 November. Unsubscribe with one tap.</p>
       </form>
 
       <div class="rank" data-rank hidden aria-live="polite">
-        <p class="rank__label engrave">Your place in orbit</p>
-        <p class="rank__number num" data-rank-number>#4,113</p>
+        <p class="rank__label engrave">You're on the list</p>
+        <p class="rank__number num" data-rank-number>0 friends</p>
         <p class="rank__text" data-rank-text>Every friend who joins with your link pulls you 100 places closer to the sun.</p>
         <svg class="rank__orbit" viewBox="-100 -100 200 200" aria-hidden="true" data-rank-orbit>
           <circle r="92" fill="none" stroke="currentColor" stroke-opacity="0.2"></circle>
@@ -59,9 +59,9 @@ const reveals = [
         <ol class="tiers" role="list">
           <li data-tier="1"><span class="num">1</span> friend · jump 100 places</li>
           <li data-tier="3"><span class="num">3</span> friends · guaranteed Founders window</li>
-          <li data-tier="10"><span class="num">10</span> friends · your loop ships on every Rondo as a preset</li>
+          <li data-tier="10"><span class="num">10</span> friends · a shot at the top ten, whose loops ship on every Rondo</li>
         </ol>
-        <button class="demo-link" type="button" data-simulate>Preview: simulate a friend joining</button>
+        <button class="demo-link" type="button" data-simulate>Prototype only: simulate a friend joining</button>
       </div>
     </div>
   </section>

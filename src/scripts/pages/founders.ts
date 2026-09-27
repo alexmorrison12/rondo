@@ -5,16 +5,13 @@
  */
 import { PRODUCT } from '@/data/site';
 import { url } from '@/lib/url';
-import { earn } from '../core/achievements';
-import { addToCart, rondoItem } from '../core/cart';
-import { downloadBlob } from '../core/share';
+import { addToCart, cart, rondoItem } from '../core/cart';
 import { uiPop, uiTick } from '../core/sound';
 import { persisted } from '../core/store';
-import { toast } from '../core/toast';
 import { hashString, morningOrbit } from '../seq/generate';
 import { RondoDevice } from '../three/device';
 import { skyAt } from '../three/sky';
-import { Stage, webglAvailable } from '../three/stage';
+import { Stage, paintStill, webglAvailable } from '../three/stage';
 
 const $ = <T extends Element = HTMLElement>(sel: string) => document.querySelector<T>(sel)!;
 const TOTAL = PRODUCT.foundersTotal;
@@ -216,7 +213,8 @@ let device: RondoDevice | null = null;
 const view = { rx: 1.0, ry: 0, trx: 1.0, try: 0 };
 function initViewer() {
   const c = document.querySelector<HTMLCanvasElement>('[data-fviewer-canvas]');
-  if (!c || !webglAvailable()) return;
+  if (!c) return;
+  if (!webglAvailable()) return paintStill(c, 'eclipse', 'Rondo Founders Edition in black and brass');
   const stage = new Stage(c, { fov: 22 });
   stage.camera.position.set(0, 0, 6.4);
   device = new RondoDevice('eclipse');
@@ -250,64 +248,17 @@ function showNumber(n: number) {
 }
 
 /* ── Claim ──────────────────────────────────────────────────────── */
-function drawCard(n: number): HTMLCanvasElement {
-  const c = $<HTMLCanvasElement>('[data-card]');
-  const x = c.getContext('2d')!;
-  const S = c.width;
-  x.fillStyle = '#040b1a';
-  x.fillRect(0, 0, S, S);
-  const grad = x.createRadialGradient(S * 0.5, S * 0.42, 10, S * 0.5, S * 0.42, S * 0.6);
-  grad.addColorStop(0, 'rgba(214,168,74,0.35)');
-  grad.addColorStop(1, 'rgba(214,168,74,0)');
-  x.fillStyle = grad;
-  x.fillRect(0, 0, S, S);
-  x.save();
-  x.translate(S / 2, S * 0.4);
-  [300, 240, 180, 120].forEach((r, i) => {
-    x.strokeStyle = `rgba(208,224,242,${0.18 + i * 0.06})`;
-    x.lineWidth = 26;
-    x.beginPath();
-    x.arc(0, 0, r, 0, Math.PI * 2);
-    x.stroke();
-  });
-  x.fillStyle = '#d6a84a';
-  x.beginPath();
-  x.arc(0, 0, 62, 0, Math.PI * 2);
-  x.fill();
-  x.restore();
-  x.fillStyle = '#e9f0f8';
-  x.textAlign = 'center';
-  x.font = '800 150px Archivo, Arial, sans-serif';
-  x.fillText(`No. ${pad(n)}`, S / 2, S * 0.83);
-  x.font = '600 34px Archivo, Arial, sans-serif';
-  x.fillStyle = '#9eb4ca';
-  x.fillText('RONDO FOUNDERS EDITION · 1 OF 2,000', S / 2, S * 0.9);
-  return c;
-}
-
 $('[data-claim]').addEventListener('click', () => {
   if (selected === null || !isFree(selected)) return;
   const n = selected;
+  // One Founders flow: a number is held while you pay the deposit; the shareable card comes after.
+  cart.set((items) => items.filter((i) => i.sku !== 'founders'));
   addToCart(rondoItem({ colorway: 'eclipse', founders: true, founderNumber: n }));
-  mine.set((m) => [...m, n]);
   uiPop(true);
-  drawCard(n);
-  $('[data-claimed-title]').textContent = `No. ${pad(n)} is yours.`;
+  $('[data-claimed-num]').textContent = `No. ${pad(n)}`;
+  $('[data-claimed-title]').textContent = `No. ${pad(n)} is held for 15 minutes.`;
   $<HTMLAnchorElement>('[data-checkout]').href = url('/checkout/');
   $<HTMLDialogElement>('[data-claimed]').showModal();
-  $('[data-free]').textContent = freeCount().toLocaleString('en-US');
-  draw();
-});
-$('[data-download]').addEventListener('click', () => {
-  if (selected === null) return;
-  const c = $<HTMLCanvasElement>('[data-card]');
-  c.toBlob((b) => {
-    if (b) {
-      downloadBlob(b, `rondo-founders-${pad(selected!)}.png`);
-      earn('share');
-      toast('Card saved. Post it and tag #playincircles.', { icon: 'check' });
-    }
-  }, 'image/png');
 });
 $('[data-close]').addEventListener('click', () => $<HTMLDialogElement>('[data-claimed]').close());
 

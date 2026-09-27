@@ -19,6 +19,7 @@ function seeded(seed: number) {
 }
 
 export class CloudField {
+  static readonly reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
   readonly group = new Group();
   private clouds: Cloud[] = [];
   private tint = new Color();
@@ -60,13 +61,15 @@ export class CloudField {
     this.tint.lerp(ambient, 0.25 + sky.dark * 0.45);
     this.tint.multiplyScalar(1.3 - sky.dark * 0.8);
 
+    // Reduced motion: clouds hold still and keep one gentle, depth-free scroll offset.
+    const still = CloudField.reducedMotion;
     for (const c of this.clouds) {
-      const parallax = 1.4 - c.depth;
+      const parallax = still ? 0.5 : 1.4 - c.depth;
       const span = 26;
-      let x = c.base.x + time * c.speed + pointer.x * parallax * 0.6;
+      let x = c.base.x + (still ? 0 : time * c.speed + pointer.x * parallax * 0.6);
       x = ((x + span / 2) % span + span) % span - span / 2;
       // Scrolling the page flies the camera up through the day: near clouds move faster.
-      const y = c.base.y + scroll * (5 + parallax * 9) + pointer.y * parallax * 0.3;
+      const y = c.base.y + scroll * (5 + parallax * 9) + (still ? 0 : pointer.y * parallax * 0.3);
       const wrapped = ((y + 12) % 26 + 26) % 26 - 12;
       c.sprite.position.set(x, wrapped, c.base.z);
       const mat = c.sprite.material;

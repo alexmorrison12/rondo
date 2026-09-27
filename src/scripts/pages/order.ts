@@ -1,5 +1,6 @@
 /** Order confirmation: reads the placed order from session, offers calendar + referral. */
-import { DATES, formatPrice } from '@/data/site';
+import { DATES, PRODUCT, formatPrice } from '@/data/site';
+import { drawFoundersCard } from '../lib/founders-card';
 import { earn } from '../core/achievements';
 import { downloadBlob, shareLink } from '../core/share';
 import { sessionValue } from '../core/store';
@@ -13,10 +14,22 @@ if (!order) {
   $('[data-empty]').hidden = false;
 } else {
   const isPre = order.phase !== 'Orbit';
+  const founders = order.items.some((i) => i.sku === 'founders');
   $('[data-title]').textContent = order.firstName ? `You're in orbit, ${order.firstName}.` : "You're in orbit.";
-  $('[data-lead]').textContent = isPre
-    ? `Your pre-order is confirmed. A receipt is on its way to ${order.email}. Nothing is charged until it ships.`
-    : `Your order is confirmed and will ship within two working days. A receipt is on its way to ${order.email}.`;
+  $('[data-lead]').textContent = !isPre
+    ? `Your order is confirmed and will ship within two working days. A receipt is on its way to ${order.email}.`
+    : founders
+      ? `Your Founders number is yours: the ${formatPrice(PRODUCT.foundersDeposit)} deposit is paid, and the rest is charged the day it ships. A receipt is on its way to ${order.email}.`
+      : `Your pre-order is confirmed and nothing has been charged: you pay the day it ships. A receipt is on its way to ${order.email}.`;
+  if (founders && order.founderNumber) {
+    const card = $('[data-founder-card]');
+    const canvas = $<HTMLCanvasElement>('[data-founder-canvas]');
+    card.hidden = false;
+    document.fonts.ready.then(() => drawFoundersCard(canvas, order.founderNumber!));
+    $('[data-founder-save]').addEventListener('click', () =>
+      canvas.toBlob((b) => b && downloadBlob(b, `rondo-founders-${String(order.founderNumber).padStart(4, '0')}.png`), 'image/png'),
+    );
+  }
   const founder = order.founderNumber ? ` · Founders No. ${String(order.founderNumber).padStart(4, '0')}` : '';
   $('[data-number]').textContent = `Order ${order.number} · ${formatPrice(order.total)}${founder}`;
 

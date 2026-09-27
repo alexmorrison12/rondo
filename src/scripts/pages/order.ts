@@ -21,6 +21,19 @@ if (!order) {
     : founders
       ? `Your Founders number is yours: the ${formatPrice(PRODUCT.foundersDeposit)} deposit is paid, and the rest is charged the day it ships. A receipt is on its way to ${order.email}.`
       : `Your pre-order is confirmed and nothing has been charged: you pay the day it ships. A receipt is on its way to ${order.email}.`;
+  // The timeline tells the same payment story as the lead.
+  if (!isPre) {
+    $('[data-step-today]').textContent = 'Paid today. We pack it within two working days and email you tracking.';
+    $('[data-step-line]').hidden = true;
+    $('[data-ship-when]').textContent = 'This week';
+    $('[data-step-ship]').textContent = `It arrives. Your ${PRODUCT.trialNights}-night trial starts the day it does.`;
+    // Nothing to put in a calendar: tracking comes by email.
+    $('[data-ics]').hidden = true;
+  } else if (founders) {
+    $('[data-step-today]').textContent = `Your ${formatPrice(PRODUCT.foundersDeposit)} deposit is paid and your number is yours. It comes back in full if you cancel before it ships.`;
+    $('[data-ship-when]').textContent = 'March 2027';
+    $('[data-step-ship]').textContent = `Founders ship first. The remaining ${formatPrice(PRODUCT.foundersPrice - PRODUCT.foundersDeposit)} is charged the day yours leaves.`;
+  }
   if (founders && order.founderNumber) {
     const card = $('[data-founder-card]');
     const canvas = $<HTMLCanvasElement>('[data-founder-canvas]');

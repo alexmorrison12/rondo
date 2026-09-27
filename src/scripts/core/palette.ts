@@ -31,6 +31,11 @@ function commands(): Command[] {
     { label: 'Landing: Launch day', hint: 'Landing page', run: go('/lp/launch/') },
     { label: 'Landing: Gift a loop', hint: 'Landing page', run: go('/lp/gift/') },
     { label: 'Landing: Creators', hint: 'Landing page', run: go('/lp/creators/') },
+    { label: 'When will my Rondo ship?', hint: 'Support', keywords: 'delivery shipping date', run: go('/support/#when-ship') },
+    { label: 'Returns and the 100-night trial', hint: 'Support', keywords: 'refund return money back', run: go('/support/#trial') },
+    { label: 'Warranty and repairs', hint: 'Support', keywords: 'broken fix guarantee', run: go('/support/#warranty') },
+    { label: 'Does it work with my music software?', hint: 'Support', keywords: 'midi daw ableton logic usb', run: go('/support/#music-software') },
+    { label: 'How do I replace the battery?', hint: 'Support', keywords: 'battery screws repair', run: go('/support/#battery-swap') },
     { label: 'Roll a random loop', hint: 'Action', keywords: 'dice generate', run: go('/play/#dice') },
     {
       label: soundPref.get() ? 'Turn sound off' : 'Turn sound on',

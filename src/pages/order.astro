@@ -30,9 +30,9 @@ import { url } from '@/lib/url';
       <section aria-labelledby="next-title">
         <h2 id="next-title" class="title">What happens next</h2>
         <ol class="timeline" role="list">
-          <li><span class="num">Today</span><p>You get a confirmation email. Nothing is charged yet.</p></li>
-          <li><span class="num">Feb 2027</span><p>We send a photo from the line and one last chance to change your finish or engraving.</p></li>
-          <li><span class="num" data-ship-when>Spring 2027</span><p>Your Rondo ships, in order of pre-order. Payment is taken on the day it leaves.</p></li>
+          <li><span class="num">Today</span><p data-step-today>You get a confirmation email. Nothing is charged yet.</p></li>
+          <li data-step-line><span class="num">Feb 2027</span><p>We send a photo from the line and one last chance to change your finish or engraving.</p></li>
+          <li><span class="num" data-ship-when>Spring 2027</span><p data-step-ship>Your Rondo ships, in order of pre-order. Payment is taken on the day it leaves.</p></li>
         </ol>
         <button class="btn btn--ghost" type="button" data-ics><Fragment set:html={ICONS.calendar} /> Add ship date to calendar</button>
       </section>

@@ -102,7 +102,7 @@ export const PHASE_PLANS: PhasePlan[] = [
   {
     id: 'launch',
     title: 'Launch',
-    dates: '17 Nov 2026 – 28 Feb 2027',
+    dates: '17 Nov 2026 – 2 May 2027',
     goal: 'Open public pre-orders and turn attention into bookings while the story is loudest.',
     landing: [
       { href: '/lp/launch/', name: 'Launch page for paid social, press and Product Hunt' },

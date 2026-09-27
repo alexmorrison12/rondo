@@ -1,5 +1,5 @@
 ---
-import { NAV } from '@/data/site';
+import { NAV, SITE_MODE } from '@/data/site';
 import { ICONS } from '@/lib/icons';
 import { stripBase, url } from '@/lib/url';
 import Cta from './Cta.astro';
@@ -16,9 +16,12 @@ const current = stripBase(Astro.url.pathname);
 
 <header class="site-header" data-header data-theme={theme}>
   <div class="site-header__bar wrap">
-    <a class="brand" href={url('/')} aria-label="Rondo — home">
-      <Logo />
-    </a>
+    <div class="brand-wrap">
+      <a class="brand" href={url('/')} aria-label="Rondo — home">
+        <Logo />
+      </a>
+      <button class="proto-badge" type="button" popovertarget="phase-pop" data-phase-badge hidden={SITE_MODE === 'live'}>Prototype</button>
+    </div>
     {
       !minimal && (
         <nav class="site-nav" aria-label="Primary">

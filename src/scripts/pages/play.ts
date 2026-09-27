@@ -507,7 +507,12 @@ function bindArrival() {
     ta.placeholder = arrivalFrom ? `A moment for ${arrivalFrom}, in a few words` : 'A moment, in a few words';
     ta.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
     ta.focus({ preventScroll: true });
-    toast(arrivalFrom ? `Make one for ${arrivalFrom}, then tap Share loop.` : 'Make one back, then tap Share loop.', { icon: 'wand' });
+    // Guidance lives beside the form, not in a toast that could sit over Share loop.
+    const hint = $('[data-mood-reply]');
+    hint.textContent = arrivalFrom
+      ? `Making one for ${arrivalFrom}. When it sounds right, tap Share loop to send it back.`
+      : 'When it sounds right, tap Share loop to send it back.';
+    hint.hidden = false;
   });
   const sheet = $<HTMLDialogElement>('[data-share-sheet]');
   $<HTMLFormElement>('[data-share-form]').addEventListener('submit', (e) => {

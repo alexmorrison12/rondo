@@ -4,7 +4,8 @@ import { PAYMENT, PRODUCT } from '@/data/site';
 import { ICONS } from '@/lib/icons';
 import { url } from '@/lib/url';
 
-const countries = ['United States', 'Canada', 'United Kingdom', 'Ireland', 'Portugal', 'Spain', 'France', 'Germany', 'Netherlands', 'Sweden', 'Denmark', 'Norway', 'Japan', 'Australia', 'New Zealand'];
+// Launch markets only (PAYMENT.markets): the UK, EU and Japan follow in 2027 with local prices.
+const countries = ['United States', 'Canada'];
 ---
 
 <Base
@@ -78,9 +79,10 @@ const countries = ['United States', 'Canada', 'United Kingdom', 'Ireland', 'Port
             </div>
             <div class="field">
               <label for="co-country">Country</label>
-              <select class="select" id="co-country" name="country" autocomplete="shipping country-name">
+              <select class="select" id="co-country" name="country" autocomplete="shipping country-name" aria-describedby="co-country-note">
                 {countries.map((c) => <option>{c}</option>)}
               </select>
+              <p class="field__hint" id="co-country-note">UK, EU and Japan in 2027, with local prices.</p>
             </div>
           </div>
           <label class="check">

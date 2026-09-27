@@ -1371,9 +1371,38 @@
     text-decoration: underline;
     text-underline-offset: 0.2em;
   }
+  /* Phones carry the prototype label in the header, under the logo, where it never covers copy. */
+  .brand-wrap {
+    display: grid;
+    justify-items: start;
+    align-content: center;
+  }
+  .proto-badge {
+    display: none;
+  }
   @media (max-width: 860px) {
     .phase-chip {
       display: none;
+    }
+    .proto-badge:not([hidden]) {
+      display: inline-flex;
+      align-items: center;
+      margin: -0.1rem 0 0 0.4rem;
+      padding: 0.3rem 0.5rem;
+      border-radius: var(--r-pill);
+      box-shadow: inset 0 0 0 1px color-mix(in oklch, currentColor 45%, transparent);
+      font-size: 0.625rem;
+      font-weight: 650;
+      line-height: 1;
+      color: inherit;
+    }
+    .proto-badge[data-previewing='true'] {
+      background: var(--sun);
+      color: var(--ink);
+      box-shadow: none;
+    }
+    .phase-pop {
+      inset: calc(var(--header-h) + var(--s-2)) var(--s-3) auto auto;
     }
   }
 }

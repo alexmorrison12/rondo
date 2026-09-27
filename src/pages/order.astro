@@ -1,5 +1,6 @@
 ---
 import Base from '@/layouts/Base.astro';
+import { SITE_MODE } from '@/data/site';
 import { ICONS } from '@/lib/icons';
 import { url } from '@/lib/url';
 ---
@@ -25,6 +26,7 @@ import { url } from '@/lib/url';
     <h1 id="confirm-title" class="display-l" data-title>You're in orbit.</h1>
     <p class="lead soft" data-lead>Your pre-order is confirmed. A receipt is on its way to your inbox.</p>
     <p class="confirm__number engrave" data-number></p>
+    {SITE_MODE === 'prototype' && <p class="confirm__proto">This is a design prototype: nothing was charged and no email was sent.</p>}
 
     <div class="confirm__grid">
       <section aria-labelledby="next-title">
@@ -100,6 +102,11 @@ import { url } from '@/lib/url';
     }
     .confirm__number {
       color: var(--star-soft);
+    }
+    .confirm__proto {
+      font-size: var(--text-small);
+      color: var(--star-soft);
+      margin-top: calc(var(--s-3) * -1);
     }
     .confirm__grid {
       display: grid;

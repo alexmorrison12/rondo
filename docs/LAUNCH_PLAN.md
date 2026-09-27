@@ -107,7 +107,7 @@ Dated gates. If one slips, the phase after it slips with it.
 - The shop shows the Founders Edition first and routes to the claim flow.
 - Primary CTA: “Claim a Founders number” → `/lp/founders/`
 
-### Launch · 17 Nov 2026 – 28 Feb 2027
+### Launch · 17 Nov 2026 – 2 May 2027
 
 **Goal:** Open public pre-orders and turn attention into bookings while the story is loudest.
 

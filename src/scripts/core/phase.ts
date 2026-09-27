@@ -90,6 +90,12 @@ function initChip() {
     // Live sites only show the chip while someone is previewing another phase.
     if (SITE_MODE === 'live') chip.hidden = p === base;
     if (label) label.textContent = p === base && SITE_MODE === 'prototype' ? `Prototype · ${PHASES[p].name} phase` : `Previewing ${PHASES[p].name}`;
+    // The phone header's short version of the same label.
+    document.querySelectorAll<HTMLElement>('[data-phase-badge]').forEach((b) => {
+      b.textContent = p === base ? 'Prototype' : `Preview: ${PHASES[p].name}`;
+      b.dataset.previewing = String(p !== base);
+      if (SITE_MODE === 'live') b.hidden = p === base;
+    });
     buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.phasePick === p)));
   });
   buttons.forEach((b) =>

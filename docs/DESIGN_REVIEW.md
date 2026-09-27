@@ -57,6 +57,25 @@ All three agreed on the idea: the site is the demo, the sky runs from morning to
 - WAV exports are limited and normalised to −1 dBFS.
 - Rolled loops get names ("Paper Comet", "Late Ferry") instead of "Rolled loop", and the "loop of your own" star needs six notes you placed yourself.
 
+## Verification round
+
+After the fixes went live, a fourth independent reviewer re-tested the deployed site in headless Chrome with real WebGL, at 1440×900 and 390×844 with touch, using a fresh browser profile for each flow. It checked every earlier blocker, the key flows, and 16 pages for errors, overflow and dead links.
+
+| | Design | Usability | Creativity | Content | Conversion | Robustness |
+|---|---|---|---|---|---|---|
+| First build (mean of A–C) | 7.7 | 5.8 | 8.2 | 6.7 | 5.0 | 6.5 |
+| After fixes | 8.0 | 7.5 | 8.5 | 7.0 | 7.0 | 8.5 |
+
+Verdict: now a Site of the Day contender. An Honorable Mention looks near-certain and a Developer Award realistic, but Site of the Day isn't a lock while the pages beyond the home lean on familiar layouts.
+
+Its remaining findings were fixed and re-checked on the live site the same day:
+
+- Phones had no prototype label. They now show "Prototype" (or "Preview: Signal") under the logo, and it opens the phase panel.
+- The Founders confirmation said both "deposit paid" and "nothing charged". That fix hadn't been deployed when the reviewer tested; it is live now.
+- /story/ and a support answer claimed a beta-test programme. Both now describe the work without numbers anyone could check.
+- Checkout offered countries the site doesn't ship to at launch; it now lists the US and Canada. The confirmation page says the prototype charged nothing and sent no email. Mission Control's launch window matches the rest of the site.
+- On /play/, toasts moved clear of the controls, and "Make one back" guidance now sits beside the Mood form instead of in a toast.
+
 ## Deferred, on purpose
 
 As agreed in the brief, these wait until after the first release (full list with dates in [LAUNCH_PLAN.md](LAUNCH_PLAN.md)):
